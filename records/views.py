@@ -66,10 +66,10 @@ def dashboard(request):
         category_summary.append(item_dict)
 
     # 按储蓄状态汇总（使用所有记录）
-    status_summary_raw = all_records.values('savings_status').annotate(
+    status_summary_raw = active_records.values('savings_status').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
-    )
+    ).order_by('-total_amount')
 
     # 转换储蓄状态汇总数据，添加显示标签
     status_summary = []
