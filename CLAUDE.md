@@ -7,11 +7,16 @@
 **Money Journey** 是一个基于Django的个人资金管理与追踪系统。用户可以通过后台录入资金记录，前端展示按所有者、银行等分类的资金总额和图表分析。
 
 ### 核心功能
-- 资金记录管理（银行、所有者、类别、金额、利率、存期等字段）
-- 数据汇总展示（按所有者、银行、类别、储蓄状态）
-- 图表可视化（使用Chart.js）
-- 用户认证（Django内置认证）
-- 后台管理（Django Admin）
+- **资金记录管理**：银行、所有者、类别、金额、利率、存期（年）、到期日等字段
+- **智能分类展示**：活期存款单独表格，定期存款完整信息表格
+- **自动利息计算**：金额 × 利率 × 存期（年） ÷ 100
+- **数据汇总展示**：按所有者、银行、类别、储蓄状态汇总（仅ACTIVE状态）
+- **图表可视化**：使用Chart.js展示资金分布（仅ACTIVE状态）
+- **用户认证与批准系统**：新用户需要管理员批准，超级管理员直接登录
+- **权限控制**：管理员显示批准页面链接，普通用户不显示
+- **后台管理**：Django Admin，支持用户批准状态管理
+- **批量数据导入**：CSV文件上传，智能数据映射和验证
+- **CSV模板下载**：提供标准格式模板文件
 
 ### 技术栈
 - **后端**: Django 6.0.3
@@ -44,12 +49,17 @@ money_journey/                          # Django项目根目录
 │   └── templates/records/              # 应用模板目录
 │       ├── index.html                  # 首页模板
 │       ├── dashboard.html              # 仪表板模板（关键文件）
-│       ├── record_list.html            # 记录列表模板
-│       └── charts.html                 # 图表分析模板（关键文件）
+│       ├── record_list.html            # 记录列表模板（含活期/定期分离展示）
+│       ├── charts.html                 # 图表分析模板（关键文件）
+│       ├── add_record.html             # 添加记录表单模板
+│       ├── edit_record.html            # 编辑记录表单模板
+│       └── upload_csv.html             # CSV上传模板
 ├── templates/                          # 全局模板目录
-│   ├── base.html                       # 基础模板（关键文件）
+│   ├── base.html                       # 基础模板（关键文件，含导航栏权限控制）
 │   └── registration/
-│       └── login.html                  # 登录页面模板
+│       ├── login.html                  # 登录页面模板
+│       ├── register.html               # 用户注册页面模板
+│       └── user_approval_list.html     # 管理员批准用户页面模板
 └── static/                             # 静态文件目录
     ├── css/
     │   └── style.css                   # 自定义样式
@@ -69,8 +79,8 @@ money_journey/                          # Django项目根目录
 - **records/admin.py** - Django Admin配置，自定义显示和过滤选项
 
 ### 3. 业务逻辑
-- **records/views.py** - 视图函数，包括仪表板、记录列表、图表视图
-- **records/urls.py** - 应用URL路由配置
+- **records/views.py** - 视图函数，包括仪表板、记录列表、图表视图、用户认证与批准、CSV批量导入、记录添加/编辑
+- **records/urls.py** - 应用URL路由配置，包含所有功能端点
 
 ### 4. 前端展示
 - **templates/base.html** - 基础模板，使用Bootstrap 5，包含导航栏
@@ -90,7 +100,8 @@ money_journey/                          # Django项目根目录
 | savings_status | CharField | 储蓄状态 | 使用SAVINGS_STATUS_CHOICES，默认'ACTIVE' |
 | amount | DecimalField | 金额 | max_digits=15, decimal_places=2，必须为正数 |
 | interest_rate | DecimalField | 利率 | 百分比，可为空 |
-| deposit_period | IntegerField | 存期 | 单位为月，可为空 |
+| deposit_period | IntegerField | 存期 | 单位为年，可为空 |
+| interest_amount | 属性方法 | 计算利息 | 金额 × 利率 × 存期（年） ÷ 100，自动计算 |
 | due_date | DateField | 到期日 | 可为空 |
 | due_month | CharField | 到期月 | YYYY-MM格式，可为空 |
 | created_at | DateTimeField | 创建时间 | 自动设置当前时间 |
@@ -102,14 +113,33 @@ money_journey/                          # Django项目根目录
 BANK_CHOICES = [
     ('ICBC', '工商银行'),
     ('CCB', '建设银行'),
-    # ... 共11个选项
+    ('ABC', '农业银行'),
+    ('RCB', '农商银行'),
+    ('BOC', '中国银行'),
+    ('CMB', '招商银行'),
+    ('CITIC', '中信银行'),
+    ('SPDB', '浦发银行'),
+    ('CIB', '兴业银行'),
+    ('CMBC', '民生银行'),
+    ('PINGAN', '平安银行'),
+    ('ALIPAY', '支付宝'),
+    ('WECHAT', '微信支付'),
+    ('HPP', '公积金'),
+    ('STOCK', '股票'),
+    ('OTHER', '其他银行'),
 ]
 
 # 类别选择项
 CATEGORY_CHOICES = [
+    ('CURRENT', '活期存款'),
     ('SAVINGS', '储蓄存款'),
     ('TIME_DEPOSIT', '定期存款'),
-    # ... 共8个选项
+    ('WEALTH_MANAGEMENT', '理财产品'),
+    ('FUND', '基金'),
+    ('STOCK', '股票'),
+    ('BOND', '债券'),
+    ('INSURANCE', '保险'),
+    ('OTHER', '其他'),
 ]
 
 # 储蓄状态选择项
@@ -265,11 +295,11 @@ python manage.py test
 
 ## 📈 扩展功能建议
 
-### 短期改进
-1. 数据导入/导出功能（CSV、Excel）
+### 短期改进（部分已实现✅）
+1. ✅ 数据导入/导出功能（CSV、Excel）- 已实现CSV批量导入和模板下载
 2. 搜索和过滤功能
 3. 分页功能
-4. 数据验证增强
+4. ✅ 数据验证增强 - 已实现表单验证、CSV数据验证、用户输入验证
 
 ### 中期功能
 1. 报表生成（PDF、Excel）
@@ -338,6 +368,6 @@ python manage.py test
 
 ---
 
-**最后更新**：2026-03-27
+**最后更新**：2026-03-27（已更新反映最新功能：用户批准系统、CSV导入、存期单位年化、活期存款分离、金额右对齐等）
 **维护者**：Claude AI助手
 **项目状态**：开发完成，可运行
