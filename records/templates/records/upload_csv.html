@@ -24,7 +24,10 @@
                     <h5><i class="bi bi-info-circle"></i> 使用说明</h5>
                     <ul class="mb-0">
                         <li>上传的CSV文件必须包含以下列：<code>bank</code>, <code>category</code>, <code>amount</code></li>
-                        <li>可选列：<code>savings_status</code>, <code>interest_rate</code>, <code>deposit_period</code>, <code>due_date</code></li>
+                        <li>可选列：<code>owner</code>, <code>savings_status</code>, <code>interest_rate</code>, <code>deposit_period</code>, <code>due_date</code></li>
+                        <li>owner字段：如不填写则使用当前登录用户作为所有者</li>
+                        <li>普通用户只能使用自己的用户名作为owner</li>
+                        <li>超级管理员可以指定任意存在的用户名作为owner</li>
                         <li>支持中英文银行名称和类别名称</li>
                         <li>文件编码应为UTF-8</li>
                     </ul>
@@ -55,6 +58,13 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr>
+                                    <td><code>owner</code></td>
+                                    <td>所有者用户名</td>
+                                    <td><span class="badge bg-success">可选</span></td>
+                                    <td>{{ user.username }} 或 其他用户名</td>
+                                    <td>用户名，如不填写则使用当前登录用户<br>普通用户只能使用自己的用户名<br>超级管理员可以指定任意存在的用户名</td>
+                                </tr>
                                 <tr>
                                     <td><code>bank</code></td>
                                     <td>银行名称</td>

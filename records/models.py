@@ -23,6 +23,7 @@ class FundRecord(models.Model):
         ('ICBC', '工商银行'),
         ('CCB', '建设银行'),
         ('ABC', '农业银行'),
+        ('RCB', '农商银行'),
         ('BOC', '中国银行'),
         ('CMB', '招商银行'),
         ('CITIC', '中信银行'),
@@ -30,6 +31,10 @@ class FundRecord(models.Model):
         ('CIB', '兴业银行'),
         ('CMBC', '民生银行'),
         ('PINGAN', '平安银行'),
+        ('ALIPAY', '支付宝'), 
+        ('WECHAT', '微信支付'), 
+        ('HPP', '公积金'), 
+        ('STOCK', '股票'),
         ('OTHER', '其他银行'),
     ]
 

@@ -23,6 +23,18 @@
                 <form method="post" action="{% url 'add_record' %}">
                     {% csrf_token %}
 
+                    <!-- 所有者信息 -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>所有者:</strong> {{ user.username }}
+                            </div>
+                            <div class="col-md-6 text-muted">
+                                <small>此记录将添加到您的账户下</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="id_bank" class="form-label">银行 *</label>

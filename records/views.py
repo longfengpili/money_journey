@@ -442,11 +442,39 @@ def upload_csv(request):
                             error_count += 1
                             continue
 
+                    # 处理所有者字段
+                    owner_username = None
+                    user_obj = request.user
+
+                    if row.get('owner'):
+                        owner_username = row['owner'].strip()
+                        if owner_username:
+                            # 检查用户权限
+                            if request.user.is_superuser:
+                                # 超级管理员可以指定任意用户
+                                try:
+                                    user_obj = User.objects.get(username=owner_username)
+                                except User.DoesNotExist:
+                                    errors.append(f'第{i}行: 所有者"{owner_username}"不存在')
+                                    error_count += 1
+                                    continue
+                            else:
+                                # 普通用户只能指定自己
+                                if owner_username != request.user.username:
+                                    errors.append(f'第{i}行: 您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
+                                    error_count += 1
+                                    continue
+                                else:
+                                    user_obj = request.user
+
+                    # 确定最终的所有者用户名
+                    final_owner = owner_username if owner_username else request.user.username
+
                     # 创建记录
                     record = FundRecord(
-                        user=request.user,
+                        user=user_obj,
                         bank=bank,
-                        owner=request.user.username,
+                        owner=final_owner,
                         category=category,
                         savings_status=savings_status,
                         amount=amount,
@@ -506,13 +534,14 @@ def download_csv_template(request):
 
     # 写入标题行
     headers = [
-        'bank', 'category', 'amount', 'savings_status',
+        'owner', 'bank', 'category', 'amount', 'savings_status',
         'interest_rate', 'deposit_period', 'due_date'
     ]
     writer.writerow(headers)
 
     # 写入示例数据
     writer.writerow([
+        '{{当前用户名}}',  # 所有者（可选，如不填写则使用当前登录用户）
         'ICBC',  # 银行（可用值: ICBC, CCB, ABC, BOC, CMB, CITIC, SPDB, CIB, CMBC, PINGAN, OTHER）
         'SAVINGS',  # 类别（可用值: CURRENT, SAVINGS, TIME_DEPOSIT, WEALTH_MANAGEMENT, FUND, STOCK, BOND, INSURANCE, OTHER）
         '10000.00',  # 金额（必须大于0）
@@ -526,10 +555,11 @@ def download_csv_template(request):
     writer.writerow([])
     writer.writerow(['说明:'])
     writer.writerow(['1. 第一行是标题行，请不要修改列名'])
-    writer.writerow(['2. bank字段可以使用中文名称或英文代码'])
-    writer.writerow(['3. category字段可以使用中文名称或英文代码'])
-    writer.writerow(['4. savings_status字段可以使用中文名称或英文代码'])
-    writer.writerow(['5. amount必须为大于0的数字'])
-    writer.writerow(['6. interest_rate、deposit_period、due_date为可选字段'])
+    writer.writerow(['2. owner字段为可选字段，如不填写则使用当前登录用户作为所有者'])
+    writer.writerow(['3. bank字段可以使用中文名称或英文代码'])
+    writer.writerow(['4. category字段可以使用中文名称或英文代码'])
+    writer.writerow(['5. savings_status字段可以使用中文名称或英文代码'])
+    writer.writerow(['6. amount必须为大于0的数字'])
+    writer.writerow(['7. interest_rate、deposit_period、due_date为可选字段'])
 
     return response
