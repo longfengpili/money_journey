@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}添加资金记录 - Money Journey{% endblock %}
+{% block title %}编辑资金记录 - Money Journey{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h4 class="mb-0">添加资金记录</h4>
+                <h4 class="mb-0">编辑资金记录</h4>
             </div>
             <div class="card-body">
                 {% if messages %}
@@ -20,7 +20,7 @@
                     {% endfor %}
                 {% endif %}
 
-                <form method="post" action="{% url 'add_record' %}">
+                <form method="post" action="{% url 'edit_record' record.id %}">
                     {% csrf_token %}
 
                     <!-- 所有者信息 -->
@@ -34,12 +34,12 @@
                                 <select name="owner" id="id_owner" class="form-select" required>
                                     <option value="">请选择所有者</option>
                                     {% for user_obj in users %}
-                                    <option value="{{ user_obj.username }}" {% if user_obj.username == user.username %}selected{% endif %}>
+                                    <option value="{{ user_obj.username }}" {% if user_obj.username == record.owner %}selected{% endif %}>
                                         {{ user_obj.username }}
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">作为超级管理员，您可以为任意用户添加记录</div>
+                                <div class="form-text">作为超级管理员，您可以为任意用户编辑记录</div>
                             </div>
                         </div>
                         {% else %}
@@ -50,7 +50,7 @@
                                     <strong>所有者:</strong> {{ user.username }}
                                 </div>
                                 <div class="col-md-6 text-muted">
-                                    <small>此记录将添加到您的账户下，您只能为自己添加记录</small>
+                                    <small>此记录属于您的账户，您只能编辑自己的记录</small>
                                 </div>
                             </div>
                             <input type="hidden" name="owner" value="{{ user.username }}">
@@ -64,7 +64,7 @@
                             <select name="bank" id="id_bank" class="form-select" required>
                                 <option value="">请选择银行</option>
                                 {% for bank_value, bank_label in bank_choices %}
-                                <option value="{{ bank_value }}">{{ bank_label }}</option>
+                                <option value="{{ bank_value }}" {% if bank_value == record.bank %}selected{% endif %}>{{ bank_label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -74,7 +74,7 @@
                             <select name="category" id="id_category" class="form-select" required>
                                 <option value="">请选择类别</option>
                                 {% for category_value, category_label in category_choices %}
-                                <option value="{{ category_value }}">{{ category_label }}</option>
+                                <option value="{{ category_value }}" {% if category_value == record.category %}selected{% endif %}>{{ category_label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -85,14 +85,14 @@
                             <label for="id_savings_status" class="form-label">储蓄状态</label>
                             <select name="savings_status" id="id_savings_status" class="form-select">
                                 {% for status_value, status_label in savings_status_choices %}
-                                <option value="{{ status_value }}" {% if status_value == 'ACTIVE' %}selected{% endif %}>{{ status_label }}</option>
+                                <option value="{{ status_value }}" {% if status_value == record.savings_status %}selected{% endif %}>{{ status_label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label for="id_amount" class="form-label">金额 (元) *</label>
-                            <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" required>
+                            <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" required value="{{ record.amount|floatformat:2 }}">
                             <div class="form-text">请输入正数金额</div>
                         </div>
                     </div>
@@ -100,31 +100,31 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="id_interest_rate" class="form-label">利率 (%)</label>
-                            <input type="number" name="interest_rate" id="id_interest_rate" class="form-control" step="0.01" min="0">
+                            <input type="number" name="interest_rate" id="id_interest_rate" class="form-control" step="0.01" min="0" value="{% if record.interest_rate %}{{ record.interest_rate|floatformat:2 }}{% endif %}">
                             <div class="form-text">例如：3.5</div>
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label for="id_deposit_period" class="form-label">存期 (年)</label>
-                            <input type="number" name="deposit_period" id="id_deposit_period" class="form-control" min="1">
+                            <input type="number" name="deposit_period" id="id_deposit_period" class="form-control" min="1" value="{% if record.deposit_period %}{{ record.deposit_period }}{% endif %}">
                             <div class="form-text">单位为年</div>
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label for="id_due_date" class="form-label">到期日</label>
-                            <input type="date" name="due_date" id="id_due_date" class="form-control">
+                            <input type="date" name="due_date" id="id_due_date" class="form-control" value="{% if record.due_date %}{{ record.due_date|date:'Y-m-d' }}{% endif %}">
                             <div class="form-text">到期月将自动计算</div>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{% url 'record_list' %}" class="btn btn-outline-secondary me-md-2">返回列表</a>
-                        <button type="submit" class="btn btn-primary">保存记录</button>
+                        <button type="submit" class="btn btn-primary">更新记录</button>
                     </div>
                 </form>
             </div>
             <div class="card-footer text-muted">
-                <small>注意：带 * 的字段为必填项。到期日将自动计算到期月。{% if is_superuser %}超级管理员必须指定所有者。{% else %}普通用户只能为自己添加记录。{% endif %}</small>
+                <small>注意：带 * 的字段为必填项。到期日将自动计算到期月。{% if is_superuser %}超级管理员可以修改所有者。{% else %}普通用户只能编辑自己的记录。{% endif %}</small>
             </div>
         </div>
     </div>

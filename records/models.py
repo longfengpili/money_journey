@@ -66,7 +66,7 @@ class FundRecord(models.Model):
     savings_status = models.CharField('储蓄状态', max_length=50, choices=SAVINGS_STATUS_CHOICES, default='ACTIVE')
     amount = models.DecimalField('金额', max_digits=15, decimal_places=2, validators=[MinValueValidator(0)])
     interest_rate = models.DecimalField('利率(%)', max_digits=5, decimal_places=2, null=True, blank=True)
-    deposit_period = models.IntegerField('存期(月)', null=True, blank=True, help_text='单位为月')
+    deposit_period = models.IntegerField('存期(年)', null=True, blank=True, help_text='单位为年')
     due_date = models.DateField('到期日', null=True, blank=True)
     due_month = models.CharField('到期月', max_length=7, null=True, blank=True, help_text='格式: YYYY-MM')
     created_at = models.DateTimeField('创建时间', default=timezone.now)
@@ -79,6 +79,14 @@ class FundRecord(models.Model):
 
     def __str__(self):
         return f"{self.owner} - {self.get_bank_display()} - {self.amount}"
+
+    @property
+    def interest_amount(self):
+        """计算利息（金额 × 利率 × 存期（年） ÷ 100）"""
+        if self.interest_rate:
+            years = self.deposit_period if self.deposit_period else 1
+            return self.amount * self.interest_rate * years / 100
+        return 0
 
     def save(self, *args, **kwargs):
         # 自动填充所有者信息
