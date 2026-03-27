@@ -26,12 +26,15 @@ def dashboard(request):
     savings_status_choices = dict(FundRecord.SAVINGS_STATUS_CHOICES)
 
     # 根据用户权限确定查询集
-    if request.user.is_superuser:
-        active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
-        all_records = FundRecord.objects.all()
-    else:
-        active_records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('-due_date')
-        all_records = FundRecord.objects.filter(user=request.user)
+    # if request.user.is_superuser:
+    #     active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
+    #     all_records = FundRecord.objects.all()
+    # else:
+    #     active_records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('-due_date')
+    #     all_records = FundRecord.objects.filter(user=request.user)
+
+    active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
+    all_records = FundRecord.objects.all()
 
     # 按所有者汇总（使用ACTIVE记录）
     owner_summary = active_records.values('owner').annotate(
@@ -93,20 +96,31 @@ def dashboard(request):
 @login_required
 def record_list(request):
     """资金记录列表"""
-    if request.user.is_superuser:
-        records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
-    else:
-        records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
-    return render(request, 'records/record_list.html', {'records': records})
+    records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
+    # 非定期存款记录
+    current_records = records.exclude(category='SAVINGS').order_by('-amount')
+    # 定期存款
+    other_records = records.filter(category='SAVINGS')
+    # if request.user.is_superuser:
+    #     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
+    # else:
+    #     records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
+    return render(request, 'records/record_list.html', {
+        'records': records,
+        'current_records': current_records,
+        'other_records': other_records
+    })
 
 @login_required
 def charts(request):
     """图表展示页面"""
     # 根据用户权限确定查询集
-    if request.user.is_superuser:
-        records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
-    else:
-        records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
+    # if request.user.is_superuser:
+    #     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
+    # else:
+    #     records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
+
+    records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
 
     # 获取图表数据
     owner_data = records.values('owner').annotate(total=Sum('amount')).order_by('-total')
