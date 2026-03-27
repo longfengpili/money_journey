@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}批量上传资金记录 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">批量上传资金记录 (CSV格式)</h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-info-circle"></i> 使用说明</h5>
+                    <ul class="mb-0">
+                        <li>上传的CSV文件必须包含以下列：<code>bank</code>, <code>category</code>, <code>amount</code></li>
+                        <li>可选列：<code>savings_status</code>, <code>interest_rate</code>, <code>deposit_period</code>, <code>due_date</code></li>
+                        <li>支持中英文银行名称和类别名称</li>
+                        <li>文件编码应为UTF-8</li>
+                    </ul>
+                </div>
+
+                <form method="post" action="{% url 'upload_csv' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <h5>1. 下载模板文件</h5>
+                        <p>下载模板文件查看正确的格式和示例数据：</p>
+                        <a href="{% url 'download_csv_template' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-download"></i> 下载CSV模板
+                        </a>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>2. 准备CSV文件</h5>
+                        <p>使用Excel或文本编辑器创建CSV文件，确保包含以下列：</p>
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>列名</th>
+                                    <th>说明</th>
+                                    <th>必填/可选</th>
+                                    <th>示例值</th>
+                                    <th>允许的值</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>bank</code></td>
+                                    <td>银行名称</td>
+                                    <td><span class="badge bg-danger">必填</span></td>
+                                    <td>ICBC 或 工商银行</td>
+                                    <td>ICBC, CCB, ABC, BOC, CMB, CITIC, SPDB, CIB, CMBC, PINGAN, OTHER<br>或对应的中文名称</td>
+                                </tr>
+                                <tr>
+                                    <td><code>category</code></td>
+                                    <td>资金类别</td>
+                                    <td><span class="badge bg-danger">必填</span></td>
+                                    <td>SAVINGS 或 储蓄存款</td>
+                                    <td>CURRENT, SAVINGS, TIME_DEPOSIT, WEALTH_MANAGEMENT, FUND, STOCK, BOND, INSURANCE, OTHER<br>或对应的中文名称</td>
+                                </tr>
+                                <tr>
+                                    <td><code>amount</code></td>
+                                    <td>金额</td>
+                                    <td><span class="badge bg-danger">必填</span></td>
+                                    <td>10000.00</td>
+                                    <td>大于0的数字</td>
+                                </tr>
+                                <tr>
+                                    <td><code>savings_status</code></td>
+                                    <td>储蓄状态</td>
+                                    <td><span class="badge bg-success">可选</span></td>
+                                    <td>ACTIVE 或 存续中</td>
+                                    <td>ACTIVE, MATURED, WITHDRAWN, ROLLED_OVER<br>或对应的中文名称，默认为ACTIVE</td>
+                                </tr>
+                                <tr>
+                                    <td><code>interest_rate</code></td>
+                                    <td>利率(%)</td>
+                                    <td><span class="badge bg-success">可选</span></td>
+                                    <td>2.5</td>
+                                    <td>百分比数字，如2.5表示2.5%</td>
+                                </tr>
+                                <tr>
+                                    <td><code>deposit_period</code></td>
+                                    <td>存期(月)</td>
+                                    <td><span class="badge bg-success">可选</span></td>
+                                    <td>12</td>
+                                    <td>正整数，单位为月</td>
+                                </tr>
+                                <tr>
+                                    <td><code>due_date</code></td>
+                                    <td>到期日</td>
+                                    <td><span class="badge bg-success">可选</span></td>
+                                    <td>2026-12-31</td>
+                                    <td>YYYY-MM-DD格式</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>3. 上传CSV文件</h5>
+                        <div class="mb-3">
+                            <label for="id_csv_file" class="form-label">选择CSV文件 *</label>
+                            <input type="file" name="csv_file" id="id_csv_file" class="form-control" accept=".csv" required>
+                            <div class="form-text">仅支持CSV格式文件，最大文件大小根据服务器配置而定</div>
+                        </div>
+
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-exclamation-triangle"></i> 注意事项</h5>
+                        <ul class="mb-0">
+                            <li>上传前请备份现有数据</li>
+                            <li>系统会自动填充所有者信息（当前登录用户名）</li>
+                            <li>如果提供了到期日，系统会自动计算到期月</li>
+                            <li>导入过程可能需要一些时间，请耐心等待</li>
+                            <li>导入完成后会显示成功和失败的数量</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'record_list' %}" class="btn btn-outline-secondary me-md-2">返回列表</a>
+                        <button type="submit" class="btn btn-primary">开始上传</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-muted">
+                <small>提示：建议先下载模板文件，在模板基础上修改数据后再上传。</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

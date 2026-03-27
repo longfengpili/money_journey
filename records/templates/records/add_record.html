@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}添加资金记录 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">添加资金记录</h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'add_record' %}">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_bank" class="form-label">银行 *</label>
+                            <select name="bank" id="id_bank" class="form-select" required>
+                                <option value="">请选择银行</option>
+                                {% for bank_value, bank_label in bank_choices %}
+                                <option value="{{ bank_value }}">{{ bank_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label">类别 *</label>
+                            <select name="category" id="id_category" class="form-select" required>
+                                <option value="">请选择类别</option>
+                                {% for category_value, category_label in category_choices %}
+                                <option value="{{ category_value }}">{{ category_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_savings_status" class="form-label">储蓄状态</label>
+                            <select name="savings_status" id="id_savings_status" class="form-select">
+                                {% for status_value, status_label in savings_status_choices %}
+                                <option value="{{ status_value }}" {% if status_value == 'ACTIVE' %}selected{% endif %}>{{ status_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_amount" class="form-label">金额 (元) *</label>
+                            <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" required>
+                            <div class="form-text">请输入正数金额</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_interest_rate" class="form-label">利率 (%)</label>
+                            <input type="number" name="interest_rate" id="id_interest_rate" class="form-control" step="0.01" min="0">
+                            <div class="form-text">例如：3.5</div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="id_deposit_period" class="form-label">存期 (月)</label>
+                            <input type="number" name="deposit_period" id="id_deposit_period" class="form-control" min="1">
+                            <div class="form-text">单位为月</div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="id_due_date" class="form-label">到期日</label>
+                            <input type="date" name="due_date" id="id_due_date" class="form-control">
+                            <div class="form-text">到期月将自动计算</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'record_list' %}" class="btn btn-outline-secondary me-md-2">返回列表</a>
+                        <button type="submit" class="btn btn-primary">保存记录</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-muted">
+                <small>注意：带 * 的字段为必填项。到期日将自动计算到期月。</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

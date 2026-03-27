@@ -1,6 +1,21 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
+
+class UserProfile(models.Model):
+    """用户扩展资料"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='用户')
+    is_approved = models.BooleanField('已批准', default=False, help_text='用户注册后需要管理员批准才能登录')
+    created_at = models.DateTimeField('创建时间', default=timezone.now)
+
+    class Meta:
+        verbose_name = '用户资料'
+        verbose_name_plural = '用户资料'
+
+    def __str__(self):
+        return f"{self.user.username} - {'已批准' if self.is_approved else '待批准'}"
+
 
 class FundRecord(models.Model):
     # 银行选择
@@ -40,7 +55,8 @@ class FundRecord(models.Model):
     ]
 
     bank = models.CharField('银行', max_length=50, choices=BANK_CHOICES)
-    owner = models.CharField('所有者', max_length=100)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', null=True, blank=True, help_text='记录所属用户')
+    owner = models.CharField('所有者', max_length=100, blank=True, help_text='自动从用户信息填充')
     category = models.CharField('类别', max_length=50, choices=CATEGORY_CHOICES)
     savings_status = models.CharField('储蓄状态', max_length=50, choices=SAVINGS_STATUS_CHOICES, default='ACTIVE')
     amount = models.DecimalField('金额', max_digits=15, decimal_places=2, validators=[MinValueValidator(0)])
@@ -60,7 +76,12 @@ class FundRecord(models.Model):
         return f"{self.owner} - {self.get_bank_display()} - {self.amount}"
 
     def save(self, *args, **kwargs):
-        # 如果提供了到期日，自动计算到期月
-        if self.due_date and not self.due_month:
+        # 自动填充所有者信息
+        if self.user and not self.owner:
+            self.owner = self.user.username
+
+        # 如果提供了到期日，自动计算到期月（强制计算，不允许手动修改）
+        if self.due_date:
             self.due_month = self.due_date.strftime('%Y-%m')
+
         super().save(*args, **kwargs)

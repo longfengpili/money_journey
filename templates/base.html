@@ -24,11 +24,22 @@
                         <a class="nav-link" href="{% url 'record_list' %}">资金记录</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add_record' %}">添加记录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'upload_csv' %}">批量上传</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'charts' %}">图表分析</a>
+                    </li>
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'user_approval_list' %}">批准页面</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/admin/">后台管理</a>
                     </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
@@ -39,6 +50,9 @@
                         <a class="nav-link" href="{% url 'logout' %}">注销</a>
                     </li>
                     {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">注册</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'login' %}">登录</a>
                     </li>

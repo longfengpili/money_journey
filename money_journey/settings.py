@@ -130,3 +130,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# CSRF设置
+CSRF_COOKIE_SECURE = False  # 开发环境中设为False，生产环境应为True
+CSRF_COOKIE_HTTPONLY = False  # 允许JavaScript访问CSRF令牌
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# Session设置
+SESSION_COOKIE_SECURE = False  # 开发环境中设为False，生产环境应为True
+SESSION_COOKIE_SAMESITE = 'Lax'  # 防止CSRF攻击
