@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center">
+        <h1 class="display-4 mb-4">💰 Money Journey</h1>
+        <p class="lead">个人资金管理与追踪系统</p>
+        <hr class="my-4">
+        <p>记录、分析和管理您的资金旅程，轻松掌握财务状况。</p>
+
+        {% if user.is_authenticated %}
+        <div class="mt-5">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg me-3">进入仪表板</a>
+            <a href="{% url 'record_list' %}" class="btn btn-outline-primary btn-lg me-3">查看资金记录</a>
+            <a href="{% url 'charts' %}" class="btn btn-outline-primary btn-lg">图表分析</a>
+        </div>
+        {% else %}
+        <div class="mt-5">
+            <p>请先登录以使用完整功能</p>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg">登录</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card summary-card">
+            <div class="card-body">
+                <h5 class="card-title">资金记录</h5>
+                <p class="card-text">记录您的银行存款、理财产品、基金等各类资金信息。</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card">
+            <div class="card-body">
+                <h5 class="card-title">数据分析</h5>
+                <p class="card-text">按所有者、银行、类别等多维度分析您的资金分布。</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card">
+            <div class="card-body">
+                <h5 class="card-title">可视化图表</h5>
+                <p class="card-text">通过图表直观展示您的资金构成和变化趋势。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

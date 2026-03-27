@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}图表分析 - Money Journey{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 所有者分布饼图
+    const ownerCtx = document.getElementById('ownerChart').getContext('2d');
+    const ownerChart = new Chart(ownerCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ owner_labels|safe }},
+            datasets: [{
+                data: {{ owner_totals|safe }},
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#8AC926', '#1982C4',
+                    '#6A4C93', '#F15BB5'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                title: {
+                    display: true,
+                    text: '按所有者资金分布'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += '¥' + context.parsed.toLocaleString();
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 银行分布柱状图
+    const bankCtx = document.getElementById('bankChart').getContext('2d');
+    const bankChart = new Chart(bankCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ bank_labels|safe }},
+            datasets: [{
+                label: '金额',
+                data: {{ bank_totals|safe }},
+                backgroundColor: '#36A2EB',
+                borderColor: '#1E7FC0',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '按银行资金分布'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '¥' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '¥' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 类别分布饼图
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_totals|safe }},
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#8AC926', '#1982C4'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                title: {
+                    display: true,
+                    text: '按类别资金分布'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += '¥' + context.parsed.toLocaleString();
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">📊 图表分析</h1>
+        <p class="lead">通过可视化图表了解您的资金分布情况</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>按所有者资金分布</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ownerChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>按银行资金分布</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="bankChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>按类别资金分布</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>数据说明</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>所有者分布</strong>: 显示每个所有者的资金总额占比</li>
+                    <li><strong>银行分布</strong>: 显示资金在不同银行的分布情况</li>
+                    <li><strong>类别分布</strong>: 显示资金在不同类别（储蓄、理财、基金等）的分布</li>
+                </ul>
+                <p class="text-muted mb-0">数据基于所有资金记录计算，实时更新。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
