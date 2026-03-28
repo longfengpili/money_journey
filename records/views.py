@@ -216,7 +216,7 @@ def register(request):
             user.save()
 
             # 创建用户资料
-            UserProfile.objects.create(user=user, first_name=first_name, is_approved=False)
+            UserProfile.objects.create(user=user, is_approved=False)
 
             messages.success(request, '注册成功！请等待管理员批准您的账户。')
             return redirect('login')
@@ -349,11 +349,11 @@ def add_record(request):
 
     # 如果是超级管理员，获取用户列表
     if request.user.is_superuser:
-        users = UserProfile.objects.all().order_by('user')
+        users = User.objects.all().order_by('username')
         context['users'] = users
     else:
         # 普通用户只能看到自己的用户名
-        context['users'] = UserProfile.objects.filter(user=request.user)
+        context['users'] = User.objects.filter(username=request.user.username)
     return render(request, 'records/add_record.html', context)
 
 

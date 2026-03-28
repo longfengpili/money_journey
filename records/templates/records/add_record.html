@@ -34,8 +34,8 @@
                                 <select name="owner" id="id_owner" class="form-select" required>
                                     <option value="">请选择所有者</option>
                                     {% for user_obj in users %}
-                                    <option value="{{ user_obj.first_name }}" {% if user_obj.username == user.username %}selected{% endif %}>
-                                        {{ user_obj.first_name }}
+                                    <option value="{{ user_obj.username }}" {% if user_obj.username == user.username %}selected{% endif %}>
+                                        {% if user_obj.first_name %}{{ user_obj.first_name }} ({{ user_obj.username }}){% else %}{{ user_obj.username }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -43,21 +43,17 @@
                             </div>
                         </div>
                         {% else %}
-                        <script>
-                            console.log('h1内容:', user_obj);
-                        </script>
-
                         <!-- 普通用户：只能使用自己的用户名 -->
                         <div class="alert alert-info">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>所有者:</strong> {{ users.first.first_name }}
+                                    <strong>所有者:</strong> {% if user.first_name %}{{ user.first_name }} ({{ user.username }}){% else %}{{ user.username }}{% endif %}
                                 </div>
                                 <div class="col-md-6 text-muted">
                                     <small>此记录将添加到您的账户下，您只能为自己添加记录</small>
                                 </div>
                             </div>
-                            <input type="hidden" name="owner" value="{{ users.first.first_name }}">
+                            <!-- <input type="hidden" name="owner" value="{{ user.username }}"> -->
                         </div>
                         {% endif %}
                     </div>

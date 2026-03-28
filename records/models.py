@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 class UserProfile(models.Model):
     """用户扩展资料"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='用户')
-    first_name = models.CharField('姓名', max_length=100, blank=True, help_text='用户姓名')
     is_approved = models.BooleanField('已批准', default=False, help_text='用户注册后需要管理员批准才能登录')
     created_at = models.DateTimeField('创建时间', default=timezone.now)
 
