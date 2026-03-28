@@ -87,3 +87,27 @@ class FundRecord(models.Model):
             self.due_month = self.due_date.strftime('%Y-%m')
 
         super().save(*args, **kwargs)
+
+
+class FundSnapshot(models.Model):
+    """资金快照模型，保存特定时间点的资金状态"""
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者')
+    snapshot_date = models.DateTimeField('快照时间', default=timezone.now)
+    total_amount = models.DecimalField('总金额', max_digits=20, decimal_places=2)
+    record_count = models.IntegerField('记录数量')
+
+    # JSON字段存储聚合数据
+    owner_summary = models.JSONField('所有者汇总', default=dict)  # {"owner1": 10000, "owner2": 20000}
+    bank_summary = models.JSONField('银行汇总', default=dict)    # {"ICBC": 15000, "CCB": 5000}
+    category_summary = models.JSONField('类别汇总', default=dict) # {"SAVINGS": 10000, "CURRENT": 5000}
+
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '资金快照'
+        verbose_name_plural = '资金快照'
+        ordering = ['-snapshot_date']
+
+    def __str__(self):
+        return f"快照 {self.snapshot_date.strftime('%Y-%m-%d %H:%M')} - ¥{self.total_amount}"

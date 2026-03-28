@@ -8,8 +8,10 @@ from django.views.decorators.csrf import csrf_protect
 import csv
 import io
 from datetime import datetime
+from decimal import Decimal
 
-from funds.models import FundRecord
+from funds.models import FundRecord, FundSnapshot
+from django.db.models import Sum
 from accounts.models import UserProfile
 
 
@@ -499,3 +501,59 @@ def download_csv_template(request):
     writer.writerow(['8. deposit_period字段单位为年'])
 
     return response
+
+
+@login_required
+@require_POST
+def create_snapshot(request):
+    """创建资金快照（仅限管理员）"""
+    if not request.user.is_superuser:
+        messages.error(request, '只有管理员可以创建快照')
+        return redirect('record_list')
+
+    try:
+        # 获取当前所有ACTIVE状态的记录
+        active_records = FundRecord.objects.filter(savings_status='ACTIVE')
+
+        # 计算总金额和记录数量
+        total_amount_result = active_records.aggregate(total=Sum('amount'))['total']
+        total_amount = total_amount_result if total_amount_result is not None else Decimal('0')
+        record_count = active_records.count()
+
+        # 按所有者汇总（将Decimal转换为float以便JSON序列化）
+        owner_summary = {}
+        for owner, total in active_records.values('owner').annotate(
+            total=Sum('amount')
+        ).values_list('owner', 'total'):
+            owner_summary[owner] = float(total) if total else 0.0
+
+        # 按银行汇总（将Decimal转换为float以便JSON序列化）
+        bank_summary = {}
+        for bank, total in active_records.values('bank').annotate(
+            total=Sum('amount')
+        ).values_list('bank', 'total'):
+            bank_summary[bank] = float(total) if total else 0.0
+
+        # 按类别汇总（将Decimal转换为float以便JSON序列化）
+        category_summary = {}
+        for category, total in active_records.values('category').annotate(
+            total=Sum('amount')
+        ).values_list('category', 'total'):
+            category_summary[category] = float(total) if total else 0.0
+
+        # 创建快照
+        snapshot = FundSnapshot.objects.create(
+            created_by=request.user,
+            total_amount=total_amount,
+            record_count=record_count,
+            owner_summary=owner_summary,
+            bank_summary=bank_summary,
+            category_summary=category_summary
+        )
+
+        messages.success(request, f'快照创建成功！总金额：¥{total_amount:,.2f}，记录数：{record_count}')
+
+    except Exception as e:
+        messages.error(request, f'创建快照失败：{str(e)}')
+
+    return redirect('record_list')

@@ -131,6 +131,78 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // 快照历史趋势图
+    {% if has_snapshots %}
+    const snapshotCtx = document.getElementById('snapshotChart').getContext('2d');
+    const snapshotChart = new Chart(snapshotCtx, {
+        type: 'line',
+        data: {
+            labels: {{ snapshot_dates|safe }},
+            datasets: [{
+                label: '总金额',
+                data: {{ snapshot_totals|safe }},
+                borderColor: '#FF6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '资金快照历史趋势'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '¥' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '¥' + value.toLocaleString();
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+
+    // 所有者选择切换
+    document.getElementById('ownerSelect').addEventListener('change', function() {
+        const selectedOwner = this.value;
+
+        if (selectedOwner === 'total') {
+            // 显示总金额趋势
+            snapshotChart.data.datasets[0].label = '总金额';
+            snapshotChart.data.datasets[0].data = {{ snapshot_totals|safe }};
+            snapshotChart.data.datasets[0].borderColor = '#FF6384';
+        } else {
+            // 显示特定所有者趋势
+            // 注意：这里需要预先计算所有者数据，目前暂时不实现
+            // 可以后续通过AJAX或预先计算的数据实现
+            alert('所有者细分趋势功能待实现');
+            return;
+        }
+
+        snapshotChart.update();
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}
@@ -181,6 +253,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快照历史趋势图 -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>📈 资金快照历史趋势</h5>
+                <div>
+                    <select id="ownerSelect" class="form-select form-select-sm" style="width: auto;">
+                        <option value="total">总金额趋势</option>
+                        {% for owner, display_name in owner_choices %}
+                        <option value="{{ owner }}">{{ display_name }} 的趋势</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if has_snapshots %}
+                <div class="chart-container">
+                    <canvas id="snapshotChart"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">暂无快照数据，请管理员在资金记录页面创建快照</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

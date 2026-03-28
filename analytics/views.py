@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
 from django.contrib.auth.models import User
 
-from funds.models import FundRecord
+from funds.models import FundRecord, FundSnapshot
 
 
 def index(request):
@@ -145,12 +145,33 @@ def charts(request):
     category_labels = [category_choices.get(item['category'], item['category']) for item in category_data]
     category_totals = [float(item['total']) for item in category_data]
 
+    # 新增：获取快照历史数据
+    snapshots = FundSnapshot.objects.all().order_by('snapshot_date')
+
+    # 准备快照数据
+    snapshot_dates = [s.snapshot_date.strftime('%Y-%m-%d %H:%M') for s in snapshots]
+    snapshot_totals = [float(s.total_amount) for s in snapshots]
+
+    # 获取所有所有者列表（用于下拉菜单）
+    all_owners = list(set([owner for snapshot in snapshots for owner in snapshot.owner_summary.keys()]))
+    owner_display_names = [user_map.get(owner, owner) for owner in all_owners]
+
+    # 创建所有者选择列表，包含原始值和显示名称
+    owner_choices = list(zip(all_owners, owner_display_names))
+
     context = {
+        # 现有数据
         'owner_labels': owner_labels,
         'owner_totals': owner_totals,
         'bank_labels': bank_labels,
         'bank_totals': bank_totals,
         'category_labels': category_labels,
         'category_totals': category_totals,
+
+        # 新增快照数据
+        'snapshot_dates': snapshot_dates,
+        'snapshot_totals': snapshot_totals,
+        'owner_choices': owner_choices,
+        'has_snapshots': snapshots.exists(),
     }
     return render(request, 'analytics/charts.html', context)
