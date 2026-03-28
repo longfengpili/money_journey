@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: money_journey_db_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-money_journey}
+      MYSQL_USER: ${MYSQL_USER:-money_journey_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-money_journey_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - money_journey_network_dev
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+  web:
+    build: .
+    container_name: money_journey_web_dev
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: money_journey.settings.base
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-money_journey}
+      MYSQL_USER: ${MYSQL_USER:-money_journey_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-money_journey_password}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE:-False}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-False}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-adminpassword}  
+    volumes:
+      - .:/app
+      - static_volume_dev:/app/staticfiles
+    ports:
+      - "8000:8000"
+    networks:
+      - money_journey_network_dev
+    command: python manage.py runserver 0.0.0.0:8000
+
+volumes:
+  mysql_data_dev:
+  static_volume_dev:
+
+networks:
+  money_journey_network_dev:
+    driver: bridge

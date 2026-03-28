@@ -1,0 +1,20 @@
+# Production dependencies for Money Journey
+# This file is used by Dockerfile for production builds
+
+# Core dependencies
+Django>=5.0,<6.0
+mysqlclient==2.2.8
+python-dotenv==1.2.2
+
+# Production WSGI server
+gunicorn==21.2.0
+
+# Static file serving
+whitenoise==6.6.0
+
+# Optional: PostgreSQL support (if switching from MySQL)
+# psycopg2-binary==2.9.9
+
+# Optional: API support (if adding REST API in future)
+# djangorestframework==3.14.0
+# django-cors-headers==4.3.1

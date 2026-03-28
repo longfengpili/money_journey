@@ -350,7 +350,7 @@ python manage.py test
 2. 修改前备份重要文件
 3. 修改后测试功能是否正常
 4. 更新相关文档
-5. 更新README.md和CLAUDEmd
+5. 更新README.md
 
 ### 新功能开发
 1. 先设计数据模型

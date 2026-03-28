@@ -18,8 +18,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-
+from django.http import JsonResponse
 from django.views.generic import RedirectView
+
+def health_check(request):
+    """Health check endpoint for Docker and monitoring"""
+    return JsonResponse({"status": "healthy", "service": "money_journey"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,10 +31,12 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
     path('analytics/', include('analytics.urls')),
-    # 旧records路由重定向到新的funds路由
-    path('records/', RedirectView.as_view(pattern_name='record_list', permanent=True)),
-    path('records/add/', RedirectView.as_view(pattern_name='add_record', permanent=True)),
-    path('records/<int:record_id>/edit/', RedirectView.as_view(pattern_name='edit_record', permanent=True)),
-    path('records/upload-csv/', RedirectView.as_view(pattern_name='upload_csv', permanent=True)),
-    path('records/download-template/', RedirectView.as_view(pattern_name='download_csv_template', permanent=True)),
+    # # 旧records路由重定向到新的funds路由
+    # path('records/', RedirectView.as_view(pattern_name='record_list', permanent=True)),
+    # path('records/add/', RedirectView.as_view(pattern_name='add_record', permanent=True)),
+    # path('records/<int:record_id>/edit/', RedirectView.as_view(pattern_name='edit_record', permanent=True)),
+    # path('records/upload-csv/', RedirectView.as_view(pattern_name='upload_csv', permanent=True)),
+    # path('records/download-template/', RedirectView.as_view(pattern_name='download_csv_template', permanent=True)),
+    # Health check endpoint
+    path('health/', health_check, name='health_check'),
 ]
