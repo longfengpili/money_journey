@@ -190,6 +190,7 @@ def register(request):
     """用户注册视图"""
     if request.method == 'POST':
         username = request.POST.get('username')
+        first_name = request.POST.get('first_name', '')  
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
         email = request.POST.get('email', '')
@@ -210,12 +211,12 @@ def register(request):
 
         # 创建用户
         try:
-            user = User.objects.create_user(username=username, password=password, email=email)
+            user = User.objects.create_user(username=username, password=password, first_name=first_name, email=email)
             user.is_active = True  # 用户可登录，但需要批准
             user.save()
 
             # 创建用户资料
-            UserProfile.objects.create(user=user, is_approved=False)
+            UserProfile.objects.create(user=user, first_name=first_name, is_approved=False)
 
             messages.success(request, '注册成功！请等待管理员批准您的账户。')
             return redirect('login')
@@ -348,9 +349,11 @@ def add_record(request):
 
     # 如果是超级管理员，获取用户列表
     if request.user.is_superuser:
-        users = User.objects.all().order_by('username')
+        users = UserProfile.objects.all().order_by('user')
         context['users'] = users
-
+    else:
+        # 普通用户只能看到自己的用户名
+        context['users'] = UserProfile.objects.filter(user=request.user)
     return render(request, 'records/add_record.html', context)
 
 
