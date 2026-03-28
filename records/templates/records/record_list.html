@@ -21,6 +21,7 @@
                         <tr>
                             <th>所有者</th>
                             <th>银行</th>
+                            <th>类别</th>
                             <th>金额</th>
                             <th>状态</th>
                             <th>操作</th>
@@ -31,6 +32,7 @@
                         <tr>
                             <td>{% if record.user and record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}</td>
                             <td>{{ record.get_bank_display }}</td>
+                            <td>{{ record.get_category_display }}</td>
                             <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
                             <td>
                                 <span class="badge
@@ -68,7 +70,7 @@
                         <tr>
                             <th>所有者</th>
                             <th>银行</th>
-                            <th>类别</th>
+                            
                             <th>金额</th>
                             <th>利率</th>
                             <th>存期</th>
@@ -83,7 +85,7 @@
                         <tr>
                             <td>{% if record.user and record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}</td>
                             <td>{{ record.get_bank_display }}</td>
-                            <td>{{ record.get_category_display }}</td>
+                            
                             <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
                             <td>
                                 {% if record.interest_rate %}
