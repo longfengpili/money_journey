@@ -13,7 +13,7 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = '用户资料'
         verbose_name_plural = '用户资料'
-        db_table = 'records_userprofile'  # 使用原表名以保持数据兼容
+        db_table = 'accounts_userprofile'
 
     def __str__(self):
         return f"{self.user.username} - {'已批准' if self.is_approved else '待批准'}"

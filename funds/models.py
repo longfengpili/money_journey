@@ -64,7 +64,7 @@ class FundRecord(models.Model):
         verbose_name = '资金记录'
         verbose_name_plural = '资金记录'
         ordering = ['-created_at']
-        db_table = 'records_fundrecord'  # 使用原表名以保持数据兼容
+        db_table = 'funds_fundrecord'  # 使用原表名以保持数据兼容
 
     def __str__(self):
         return f"{self.owner} - {self.get_bank_display()} - {self.amount}"
