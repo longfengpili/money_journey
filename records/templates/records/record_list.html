@@ -45,7 +45,13 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{% url 'edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                                <!-- 判断是否可以编辑 -->
+                                {% if user.is_superuser or record.user.id == request.user.id %}
+                                    <a href="{% url 'edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                                {% else %}
+                                    <!-- 置灰不可点击的按钮 -->
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -126,7 +132,13 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                                <!-- 判断是否可以编辑 -->
+                                {% if user.is_superuser or record.user.id == request.user.id %}
+                                    <a href="{% url 'edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                                {% else %}
+                                    <!-- 置灰不可点击的按钮 -->
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
