@@ -726,7 +726,7 @@ def edit_record(request, record_id):
             record.amount = amount
             record.interest_rate = interest_rate if interest_rate else None
             record.deposit_period = int(deposit_period) if deposit_period and deposit_period.isdigit() else None
-            record.due_date = due_date if due_date else None
+            record.due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
 
             # 保存记录（会触发save()方法中的自动计算）
             record.save()
