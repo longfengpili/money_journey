@@ -35,7 +35,7 @@
                                     <option value="">请选择所有者</option>
                                     {% for user_obj in users %}
                                     <option value="{{ user_obj.username }}" {% if user_obj.username == user.username %}selected{% endif %}>
-                                        {% if user_obj.first_name %}{{ user_obj.first_name }} ({{ user_obj.username }}){% else %}{{ user_obj.username }}{% endif %}
+                                        {% if user_obj.first_name.strip %}{{ user_obj.first_name }} ({{ user_obj.username }}){% else %}{{ user_obj.username }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -47,7 +47,7 @@
                         <div class="alert alert-info">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>所有者:</strong> {% if user.first_name %}{{ user.first_name }} ({{ user.username }}){% else %}{{ user.username }}{% endif %}
+                                    <strong>所有者:</strong> {% if user.first_name.strip %}{{ user.first_name }} ({{ user.username }}){% else %}{{ user.username }}{% endif %}
                                 </div>
                                 <div class="col-md-6 text-muted">
                                     <small>此记录将添加到您的账户下，您只能为自己添加记录</small>

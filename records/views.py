@@ -37,10 +37,27 @@ def dashboard(request):
     all_records = FundRecord.objects.all()
 
     # 按所有者汇总（使用ACTIVE记录）
-    owner_summary = active_records.values('owner').annotate(
+    owner_summary_raw = active_records.values('owner').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
     ).order_by('-total_amount')
+
+    # 获取所有用户名的first_name映射
+    usernames = [item['owner'] for item in owner_summary_raw]
+    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
+    user_map = {}
+    for user in users:
+        # 如果first_name为空或只包含空格，使用username
+        first_name = user.first_name.strip()
+        user_map[user.username] = first_name if first_name else user.username
+
+    # 转换owner_summary，添加first_name
+    owner_summary = []
+    for item in owner_summary_raw:
+        item_dict = dict(item)
+        username = item['owner']
+        item_dict['first_name'] = user_map.get(username, username)  # 如果没有first_name，显示用户名
+        owner_summary.append(item_dict)
 
     # 按银行汇总（使用ACTIVE记录）
     bank_summary_raw = active_records.values('bank').annotate(
@@ -96,7 +113,7 @@ def dashboard(request):
 @login_required
 def record_list(request):
     """资金记录列表"""
-    records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
+    records = FundRecord.objects.filter(savings_status='ACTIVE').select_related('user').order_by('due_date')
     # 非定期存款记录
     current_records = records.exclude(category='SAVINGS').order_by('-amount')
     # 定期存款
@@ -131,8 +148,17 @@ def charts(request):
     bank_choices = dict(FundRecord.BANK_CHOICES)
     category_choices = dict(FundRecord.CATEGORY_CHOICES)
 
+    # 获取所有用户名的first_name映射
+    usernames = [item['owner'] for item in owner_data]
+    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
+    user_map = {}
+    for user in users:
+        # 如果first_name为空或只包含空格，使用username
+        first_name = user.first_name.strip()
+        user_map[user.username] = first_name if first_name else user.username
+
     # 转换数据格式便于Chart.js使用
-    owner_labels = [item['owner'] for item in owner_data]
+    owner_labels = [user_map.get(item['owner'], item['owner']) for item in owner_data]
     owner_totals = [float(item['total']) for item in owner_data]
 
     bank_labels = [bank_choices.get(item['bank'], item['bank']) for item in bank_data]

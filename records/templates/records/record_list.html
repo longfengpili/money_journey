@@ -29,7 +29,7 @@
                     <tbody>
                         {% for record in current_records %}
                         <tr>
-                            <td>{{ record.owner }}</td>
+                            <td>{% if record.user and record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}</td>
                             <td>{{ record.get_bank_display }}</td>
                             <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
                             <td>
@@ -81,7 +81,7 @@
                     <tbody>
                         {% for record in other_records %}
                         <tr>
-                            <td>{{ record.owner }}</td>
+                            <td>{% if record.user and record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}</td>
                             <td>{{ record.get_bank_display }}</td>
                             <td>{{ record.get_category_display }}</td>
                             <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
