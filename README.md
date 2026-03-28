@@ -329,7 +329,10 @@ python manage.py test
 ### 迁移失败
 1. 删除迁移文件并重新生成
 ```bash
-rm -rf records/migrations/0001_initial.py
+# 删除所有应用的迁移文件（谨慎操作，备份数据）
+rm -rf funds/migrations/0*.py
+rm -rf accounts/migrations/0*.py
+rm -rf analytics/migrations/0*.py
 python manage.py makemigrations
 python manage.py migrate
 ```
@@ -363,4 +366,5 @@ python manage.py migrate
 
 ---
 
+**最后更新**：2026-03-29
 **注意**：本应用为开发版本，生产环境部署前请进行充分测试和安全配置。
