@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}用户批准管理 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">用户批准管理</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">待批准用户列表</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_users %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>注册时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_profile in pending_users %}
+                        <tr>
+                            <td>{{ user_profile.user.username }}</td>
+                            <td>{{ user_profile.user.email|default:"未填写" }}</td>
+                            <td>{{ user_profile.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'approve_user' user_profile.user.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">批准</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">暂无待批准的用户</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="/admin/auth/user/" class="btn btn-outline-primary btn-sm">管理所有用户</a>
+                <a href="/admin/records/userprofile/" class="btn btn-outline-primary btn-sm">管理用户资料</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

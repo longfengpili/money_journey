@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}用户注册 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">用户注册</h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'register' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">用户名</label>
+                        <input type="text" name="username" id="id_username" class="form-control" required autofocus>
+                        <div class="form-text">请输入您想要的用户名</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_first_name" class="form-label">姓名</label>
+                        <input type="text" name="first_name" id="id_first_name" class="form-control" required>
+                        <div class="form-text">请输入您的姓名</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">邮箱地址（可选）</label>
+                        <input type="email" name="email" id="id_email" class="form-control">
+                        <div class="form-text">用于接收通知（可选）</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">密码</label>
+                        <input type="password" name="password" id="id_password" class="form-control" required>
+                        <div class="form-text">请输入至少6位字符的密码</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password2" class="form-label">确认密码</label>
+                        <input type="password" name="password2" id="id_password2" class="form-control" required>
+                        <div class="form-text">请再次输入密码</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <p class="text-muted">注册后需要管理员批准才能登录使用系统</p>
+                        <p class="mb-0">已有账户？<a href="{% url 'login' %}">立即登录</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

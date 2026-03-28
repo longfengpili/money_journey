@@ -1,116 +1,18 @@
 from django.shortcuts import render, redirect
-from django.db.models import Sum, Count
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
-from django.utils import timezone
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
-from .models import FundRecord, UserProfile
 import csv
 import io
 from datetime import datetime
 
-def index(request):
-    """首页视图"""
-    return render(request, 'records/index.html')
+from funds.models import FundRecord
+from accounts.models import UserProfile
 
-@login_required
-def dashboard(request):
-    """仪表板视图 - 显示汇总数据"""
-    # 创建选择项映射字典
-    bank_choices = dict(FundRecord.BANK_CHOICES)
-    category_choices = dict(FundRecord.CATEGORY_CHOICES)
-    savings_status_choices = dict(FundRecord.SAVINGS_STATUS_CHOICES)
 
-    # 根据用户权限确定查询集
-    # if request.user.is_superuser:
-    #     active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
-    #     all_records = FundRecord.objects.all()
-    # else:
-    #     active_records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('-due_date')
-    #     all_records = FundRecord.objects.filter(user=request.user)
-
-    active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
-    all_records = FundRecord.objects.all()
-
-    # 按所有者汇总（使用ACTIVE记录）
-    owner_summary_raw = active_records.values('owner').annotate(
-        total_amount=Sum('amount'),
-        record_count=Count('id')
-    ).order_by('-total_amount')
-
-    # 获取所有用户名的first_name映射
-    usernames = [item['owner'] for item in owner_summary_raw]
-    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
-    user_map = {}
-    for user in users:
-        # 如果first_name为空或只包含空格，使用username
-        first_name = user.first_name.strip()
-        user_map[user.username] = first_name if first_name else user.username
-
-    # 转换owner_summary，添加first_name
-    owner_summary = []
-    for item in owner_summary_raw:
-        item_dict = dict(item)
-        username = item['owner']
-        item_dict['first_name'] = user_map.get(username, username)  # 如果没有first_name，显示用户名
-        owner_summary.append(item_dict)
-
-    # 按银行汇总（使用ACTIVE记录）
-    bank_summary_raw = active_records.values('bank').annotate(
-        total_amount=Sum('amount'),
-        record_count=Count('id')
-    ).order_by('-total_amount')
-
-    # 转换银行汇总数据，添加显示标签
-    bank_summary = []
-    for item in bank_summary_raw:
-        item_dict = dict(item)
-        item_dict['bank_display'] = bank_choices.get(item['bank'], item['bank'])
-        bank_summary.append(item_dict)
-
-    # 按类别汇总（使用ACTIVE记录）
-    category_summary_raw = active_records.values('category').annotate(
-        total_amount=Sum('amount'),
-        record_count=Count('id')
-    ).order_by('-total_amount')
-
-    # 转换类别汇总数据，添加显示标签
-    category_summary = []
-    for item in category_summary_raw:
-        item_dict = dict(item)
-        item_dict['category_display'] = category_choices.get(item['category'], item['category'])
-        category_summary.append(item_dict)
-
-    # 按储蓄状态汇总（使用所有记录）
-    status_summary_raw = active_records.values('savings_status').annotate(
-        total_amount=Sum('amount'),
-        record_count=Count('id')
-    ).order_by('-total_amount')
-
-    # 转换储蓄状态汇总数据，添加显示标签
-    status_summary = []
-    for item in status_summary_raw:
-        item_dict = dict(item)
-        item_dict['savings_status_display'] = savings_status_choices.get(item['savings_status'], item['savings_status'])
-        status_summary.append(item_dict)
-
-    # 总金额（使用ACTIVE记录）
-    total_amount = active_records.aggregate(total=Sum('amount'))['total'] or 0
-
-    context = {
-        'owner_summary': owner_summary,
-        'bank_summary': bank_summary,
-        'category_summary': category_summary,
-        'status_summary': status_summary,
-        'total_amount': total_amount,
-    }
-    return render(request, 'records/dashboard.html', context)
-
-@login_required
 def record_list(request):
     """资金记录列表"""
     records = FundRecord.objects.filter(savings_status='ACTIVE').select_related('user').order_by('due_date')
@@ -122,166 +24,11 @@ def record_list(request):
     #     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
     # else:
     #     records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
-    return render(request, 'records/record_list.html', {
+    return render(request, 'funds/record_list.html', {
         'records': records,
         'current_records': current_records,
         'other_records': other_records
     })
-
-@login_required
-def charts(request):
-    """图表展示页面"""
-    # 根据用户权限确定查询集
-    # if request.user.is_superuser:
-    #     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
-    # else:
-    #     records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
-
-    records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
-
-    # 获取图表数据
-    owner_data = records.values('owner').annotate(total=Sum('amount')).order_by('-total')
-    bank_data = records.values('bank').annotate(total=Sum('amount')).order_by('-total')
-    category_data = records.values('category').annotate(total=Sum('amount')).order_by('-total')
-
-    # 创建银行选择项映射字典
-    bank_choices = dict(FundRecord.BANK_CHOICES)
-    category_choices = dict(FundRecord.CATEGORY_CHOICES)
-
-    # 获取所有用户名的first_name映射
-    usernames = [item['owner'] for item in owner_data]
-    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
-    user_map = {}
-    for user in users:
-        # 如果first_name为空或只包含空格，使用username
-        first_name = user.first_name.strip()
-        user_map[user.username] = first_name if first_name else user.username
-
-    # 转换数据格式便于Chart.js使用
-    owner_labels = [user_map.get(item['owner'], item['owner']) for item in owner_data]
-    owner_totals = [float(item['total']) for item in owner_data]
-
-    bank_labels = [bank_choices.get(item['bank'], item['bank']) for item in bank_data]
-    bank_totals = [float(item['total']) for item in bank_data]
-
-    category_labels = [category_choices.get(item['category'], item['category']) for item in category_data]
-    category_totals = [float(item['total']) for item in category_data]
-
-    context = {
-        'owner_labels': owner_labels,
-        'owner_totals': owner_totals,
-        'bank_labels': bank_labels,
-        'bank_totals': bank_totals,
-        'category_labels': category_labels,
-        'category_totals': category_totals,
-    }
-    return render(request, 'records/charts.html', context)
-
-
-from django.contrib.auth.views import LoginView
-from django.http import HttpResponseRedirect
-
-
-class CustomLoginView(LoginView):
-    """自定义登录视图，检查用户是否被批准"""
-
-    def form_valid(self, form):
-        # 先执行父类的登录逻辑
-        response = super().form_valid(form)
-        user = self.request.user
-
-        # 超级管理员无需批准检查
-        if user.is_superuser:
-            return response
-
-        # 检查用户是否被批准
-        try:
-            profile = UserProfile.objects.get(user=user)
-            if not profile.is_approved:
-                # 用户未批准，注销并显示消息
-                logout(self.request)
-                messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
-                return redirect('login')
-        except UserProfile.DoesNotExist:
-            # 如果没有用户资料，创建并标记为未批准
-            UserProfile.objects.create(user=user, is_approved=False)
-            messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
-            logout(self.request)
-            return redirect('login')
-
-        return response
-
-
-def register(request):
-    """用户注册视图"""
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        first_name = request.POST.get('first_name', '')  
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-        email = request.POST.get('email', '')
-
-        # 验证输入
-        if not username or not password:
-            messages.error(request, '用户名和密码不能为空')
-            return redirect('register')
-
-        if password != password2:
-            messages.error(request, '两次输入的密码不一致')
-            return redirect('register')
-
-        # 检查用户名是否已存在
-        if User.objects.filter(username=username).exists():
-            messages.error(request, '用户名已存在')
-            return redirect('register')
-
-        # 创建用户
-        try:
-            user = User.objects.create_user(username=username, password=password, first_name=first_name, email=email)
-            user.is_active = True  # 用户可登录，但需要批准
-            user.save()
-
-            # 创建用户资料
-            UserProfile.objects.create(user=user, is_approved=False)
-
-            messages.success(request, '注册成功！请等待管理员批准您的账户。')
-            return redirect('login')
-        except Exception as e:
-            messages.error(request, f'注册失败: {str(e)}')
-            return redirect('register')
-
-    return render(request, 'registration/register.html')
-
-
-@login_required
-def user_approval_list(request):
-    """管理员查看待批准用户列表"""
-    if not request.user.is_superuser:
-        messages.error(request, '只有管理员可以访问此页面')
-        return redirect('index')
-
-    pending_users = UserProfile.objects.filter(is_approved=False).select_related('user')
-    return render(request, 'registration/user_approval_list.html', {'pending_users': pending_users})
-
-
-@login_required
-@require_POST
-@csrf_protect
-def approve_user(request, user_id):
-    """管理员批准用户（POST请求）"""
-    if not request.user.is_superuser:
-        messages.error(request, '只有管理员可以执行此操作')
-        return redirect('index')
-
-    try:
-        user_profile = UserProfile.objects.get(user_id=user_id)
-        user_profile.is_approved = True
-        user_profile.save()
-        messages.success(request, f'用户 {user_profile.user.username} 已批准')
-    except UserProfile.DoesNotExist:
-        messages.error(request, '用户不存在')
-
-    return redirect('user_approval_list')
 
 
 @login_required
@@ -380,7 +127,115 @@ def add_record(request):
     else:
         # 普通用户只能看到自己的用户名
         context['users'] = User.objects.filter(username=request.user.username)
-    return render(request, 'records/add_record.html', context)
+    return render(request, 'funds/add_record.html', context)
+
+
+@login_required
+def edit_record(request, record_id):
+    """编辑资金记录"""
+    # 获取记录
+    try:
+        record = FundRecord.objects.get(id=record_id)
+    except FundRecord.DoesNotExist:
+        messages.error(request, '资金记录不存在')
+        return redirect('record_list')
+
+    # 检查用户权限
+    if not request.user.is_superuser and record.user != request.user:
+        messages.error(request, '您没有权限编辑此记录')
+        return redirect('record_list')
+
+    # 超级管理员无需批准检查，普通用户需要检查是否已批准
+    if not request.user.is_superuser:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            if not profile.is_approved:
+                messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
+                return redirect('index')
+        except UserProfile.DoesNotExist:
+            UserProfile.objects.create(user=request.user, is_approved=False)
+            messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
+            return redirect('index')
+
+    if request.method == 'POST':
+        try:
+            # 获取表单数据
+            bank = request.POST.get('bank')
+            category = request.POST.get('category')
+            savings_status = request.POST.get('savings_status', 'ACTIVE')
+            amount = request.POST.get('amount')
+            interest_rate = request.POST.get('interest_rate', None)
+            deposit_period = request.POST.get('deposit_period', None)
+            due_date = request.POST.get('due_date', None)
+            owner = request.POST.get('owner', '').strip()
+
+            # 验证必填字段
+            if not bank or not category or not amount:
+                messages.error(request, '银行、类别和金额是必填字段')
+                return redirect('edit_record', record_id=record_id)
+
+            # 处理所有者字段
+            user_obj = request.user
+            final_owner = request.user.username
+
+            if owner:
+                # 检查用户权限
+                if request.user.is_superuser:
+                    # 超级管理员可以指定任意用户
+                    try:
+                        user_obj = User.objects.get(username=owner)
+                        final_owner = owner
+                    except User.DoesNotExist:
+                        messages.error(request, f'所有者"{owner}"不存在')
+                        return redirect('edit_record', record_id=record_id)
+                else:
+                    # 普通用户只能指定自己
+                    if owner != request.user.username:
+                        messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
+                        return redirect('edit_record', record_id=record_id)
+                    else:
+                        user_obj = request.user
+                        final_owner = owner
+            else:
+                # 未指定所有者，使用当前用户
+                user_obj = request.user
+                final_owner = request.user.username
+
+            # 更新记录
+            record.bank = bank
+            record.user = user_obj
+            record.owner = final_owner
+            record.category = category
+            record.savings_status = savings_status
+            record.amount = amount
+            record.interest_rate = interest_rate if interest_rate else None
+            record.deposit_period = int(deposit_period) if deposit_period and deposit_period.isdigit() else None
+            record.due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
+
+            # 保存记录（会触发save()方法中的自动计算）
+            record.save()
+
+            messages.success(request, '资金记录更新成功！')
+            return redirect('record_list')
+        except Exception as e:
+            messages.error(request, f'更新记录失败: {str(e)}')
+            return redirect('edit_record', record_id=record_id)
+
+    # GET请求：显示编辑表单
+    context = {
+        'record': record,
+        'bank_choices': FundRecord.BANK_CHOICES,
+        'category_choices': FundRecord.CATEGORY_CHOICES,
+        'savings_status_choices': FundRecord.SAVINGS_STATUS_CHOICES,
+        'is_superuser': request.user.is_superuser,
+    }
+
+    # 如果是超级管理员，获取用户列表
+    if request.user.is_superuser:
+        users = User.objects.all().order_by('username')
+        context['users'] = users
+
+    return render(request, 'funds/edit_record.html', context)
 
 
 @login_required
@@ -588,7 +443,7 @@ def upload_csv(request):
             return redirect('upload_csv')
 
     # GET请求：显示上传表单
-    return render(request, 'records/upload_csv.html')
+    return render(request, 'funds/upload_csv.html')
 
 
 @login_required
@@ -644,111 +499,3 @@ def download_csv_template(request):
     writer.writerow(['8. deposit_period字段单位为年'])
 
     return response
-
-
-@login_required
-def edit_record(request, record_id):
-    """编辑资金记录"""
-    # 获取记录
-    try:
-        record = FundRecord.objects.get(id=record_id)
-    except FundRecord.DoesNotExist:
-        messages.error(request, '资金记录不存在')
-        return redirect('record_list')
-
-    # 检查用户权限
-    if not request.user.is_superuser and record.user != request.user:
-        messages.error(request, '您没有权限编辑此记录')
-        return redirect('record_list')
-
-    # 超级管理员无需批准检查，普通用户需要检查是否已批准
-    if not request.user.is_superuser:
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            if not profile.is_approved:
-                messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-                return redirect('index')
-        except UserProfile.DoesNotExist:
-            UserProfile.objects.create(user=request.user, is_approved=False)
-            messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-            return redirect('index')
-
-    if request.method == 'POST':
-        try:
-            # 获取表单数据
-            bank = request.POST.get('bank')
-            category = request.POST.get('category')
-            savings_status = request.POST.get('savings_status', 'ACTIVE')
-            amount = request.POST.get('amount')
-            interest_rate = request.POST.get('interest_rate', None)
-            deposit_period = request.POST.get('deposit_period', None)
-            due_date = request.POST.get('due_date', None)
-            owner = request.POST.get('owner', '').strip()
-
-            # 验证必填字段
-            if not bank or not category or not amount:
-                messages.error(request, '银行、类别和金额是必填字段')
-                return redirect('edit_record', record_id=record_id)
-
-            # 处理所有者字段
-            user_obj = request.user
-            final_owner = request.user.username
-
-            if owner:
-                # 检查用户权限
-                if request.user.is_superuser:
-                    # 超级管理员可以指定任意用户
-                    try:
-                        user_obj = User.objects.get(username=owner)
-                        final_owner = owner
-                    except User.DoesNotExist:
-                        messages.error(request, f'所有者"{owner}"不存在')
-                        return redirect('edit_record', record_id=record_id)
-                else:
-                    # 普通用户只能指定自己
-                    if owner != request.user.username:
-                        messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                        return redirect('edit_record', record_id=record_id)
-                    else:
-                        user_obj = request.user
-                        final_owner = owner
-            else:
-                # 未指定所有者，使用当前用户
-                user_obj = request.user
-                final_owner = request.user.username
-
-            # 更新记录
-            record.bank = bank
-            record.user = user_obj
-            record.owner = final_owner
-            record.category = category
-            record.savings_status = savings_status
-            record.amount = amount
-            record.interest_rate = interest_rate if interest_rate else None
-            record.deposit_period = int(deposit_period) if deposit_period and deposit_period.isdigit() else None
-            record.due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
-
-            # 保存记录（会触发save()方法中的自动计算）
-            record.save()
-
-            messages.success(request, '资金记录更新成功！')
-            return redirect('record_list')
-        except Exception as e:
-            messages.error(request, f'更新记录失败: {str(e)}')
-            return redirect('edit_record', record_id=record_id)
-
-    # GET请求：显示编辑表单
-    context = {
-        'record': record,
-        'bank_choices': FundRecord.BANK_CHOICES,
-        'category_choices': FundRecord.CATEGORY_CHOICES,
-        'savings_status_choices': FundRecord.SAVINGS_STATUS_CHOICES,
-        'is_superuser': request.user.is_superuser,
-    }
-
-    # 如果是超级管理员，获取用户列表
-    if request.user.is_superuser:
-        users = User.objects.all().order_by('username')
-        context['users'] = users
-
-    return render(request, 'records/edit_record.html', context)

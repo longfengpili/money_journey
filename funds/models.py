@@ -3,19 +3,6 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import User
 
-class UserProfile(models.Model):
-    """用户扩展资料"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='用户')
-    is_approved = models.BooleanField('已批准', default=False, help_text='用户注册后需要管理员批准才能登录')
-    created_at = models.DateTimeField('创建时间', default=timezone.now)
-
-    class Meta:
-        verbose_name = '用户资料'
-        verbose_name_plural = '用户资料'
-
-    def __str__(self):
-        return f"{self.user.username} - {'已批准' if self.is_approved else '待批准'}"
-
 
 class FundRecord(models.Model):
     # 银行选择
@@ -31,9 +18,9 @@ class FundRecord(models.Model):
         ('CIB', '兴业银行'),
         ('CMBC', '民生银行'),
         ('PINGAN', '平安银行'),
-        ('ALIPAY', '支付宝'), 
-        ('WECHAT', '微信支付'), 
-        ('HPP', '公积金'), 
+        ('ALIPAY', '支付宝'),
+        ('WECHAT', '微信支付'),
+        ('HPP', '公积金'),
         ('STOCK', '股票'),
         ('OTHER', '其他银行'),
     ]
@@ -59,6 +46,7 @@ class FundRecord(models.Model):
         ('ROLLED_OVER', '已续存'),
     ]
 
+    id = models.AutoField(primary_key=True)  # 显式定义主键字段
     bank = models.CharField('银行', max_length=50, choices=BANK_CHOICES)
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', null=True, blank=True, help_text='记录所属用户')
     owner = models.CharField('所有者', max_length=100, blank=True, help_text='自动从用户信息填充')
@@ -76,6 +64,7 @@ class FundRecord(models.Model):
         verbose_name = '资金记录'
         verbose_name_plural = '资金记录'
         ordering = ['-created_at']
+        db_table = 'records_fundrecord'  # 使用原表名以保持数据兼容
 
     def __str__(self):
         return f"{self.owner} - {self.get_bank_display()} - {self.amount}"

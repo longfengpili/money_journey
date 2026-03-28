@@ -18,14 +18,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from records.views import CustomLoginView, register, user_approval_list, approve_user
+
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('records.urls')),
-    path('accounts/login/', CustomLoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('accounts/register/', register, name='register'),
-    path('accounts/approval/', user_approval_list, name='user_approval_list'),
-    path('accounts/approve/<int:user_id>/', approve_user, name='approve_user'),
+    path('', include('analytics.urls')),  # 首页
+    path('accounts/', include('accounts.urls')),
+    path('funds/', include('funds.urls')),
+    path('analytics/', include('analytics.urls')),
+    # 旧records路由重定向到新的funds路由
+    path('records/', RedirectView.as_view(pattern_name='record_list', permanent=True)),
+    path('records/add/', RedirectView.as_view(pattern_name='add_record', permanent=True)),
+    path('records/<int:record_id>/edit/', RedirectView.as_view(pattern_name='edit_record', permanent=True)),
+    path('records/upload-csv/', RedirectView.as_view(pattern_name='upload_csv', permanent=True)),
+    path('records/download-template/', RedirectView.as_view(pattern_name='download_csv_template', permanent=True)),
 ]
