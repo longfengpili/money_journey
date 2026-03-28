@@ -355,7 +355,7 @@ def add_record(request):
                 amount=amount,
                 interest_rate=interest_rate if interest_rate else None,
                 deposit_period=int(deposit_period) if deposit_period and deposit_period.isdigit() else None,
-                due_date=due_date if due_date else None,
+                due_date=datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None,
             )
             record.save()
 
