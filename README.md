@@ -1,8 +1,9 @@
 # Money Journey - 资金旅程管理应用
 
 ![Django](https://img.shields.io/badge/Django-6.0.3-green)
-![Python](https://img.shields.io/badge/Python-3.13-blue)
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
+![Docker](https://img.shields.io/badge/Docker-支持-2496ED)
 
 一个基于Django的个人资金管理与追踪系统，帮助您记录、分析和管理资金旅程，轻松掌握财务状况。
 
@@ -45,21 +46,30 @@
 - **数据库**：MySQL 8.0
 - **前端**：Bootstrap 5 + Chart.js
 - **认证系统**：Django内置认证
-- **部署**：开发环境
+- **容器化**：Docker + Docker Compose
+- **配置管理**：环境变量 + 配置分离（开发/生产）
+- **部署**：支持开发环境、生产环境Docker部署
 
 ## 🚀 快速开始
 
 ### 环境要求
 
+#### 传统部署（无Docker）
 - Python 3.13+
 - MySQL 8.0+
-- Docker（可选，用于MySQL容器）
+
+#### Docker部署（推荐）
+- Docker 20.10+
+- Docker Compose 2.20+
+- MySQL 8.0+（可使用容器化MySQL或外部数据库）
+
+> **详细部署指南**：本项目支持完整的Docker化部署，包含开发和生产环境配置。请参阅 [DEPLOYMENT.md](DEPLOYMENT.md) 获取完整的Docker部署说明。
 
 ### 1. 克隆项目
 
 ```bash
 git clone <repository-url>
-cd wealth_journey
+cd money_journey
 ```
 
 ### 2. 设置虚拟环境
@@ -139,33 +149,65 @@ python manage.py runserver
 money_journey/
 ├── manage.py                          # Django管理脚本
 ├── requirements.txt                    # Python依赖包
-├── money_journey/                      # 主项目配置
-│   ├── settings.py                    # 项目配置（已配置MySQL）
+├── .env.example                       # 环境变量示例文件
+├── .env                               # 环境变量文件（本地配置，不提交）
+├── Dockerfile                         # Docker镜像构建文件
+├── docker-compose.yml                 # Docker Compose开发环境配置
+├── docker-compose.prod.yml            # Docker Compose生产环境配置
+├── CLAUDE.md                          # Claude AI助手项目指南
+├── DEPLOYMENT.md                      # 部署文档
+├── docker/                            # Docker相关配置目录
+├── money_journey/                     # 主项目配置
+│   ├── __init__.py
+│   ├── settings.py                    # 项目配置（已配置MySQL，支持环境变量）
 │   ├── urls.py                        # URL路由配置
-│   └── ...
-├── records/                           # 主要应用
-│   ├── models.py                      # FundRecord数据模型
+│   ├── wsgi.py
+│   └── asgi.py
+├── funds/                             # 资金记录管理应用（原records）
+│   ├── __init__.py
 │   ├── admin.py                       # 后台管理配置
-│   ├── views.py                       # 视图函数
-│   ├── urls.py                        # 应用路由
-│   └── templates/records/             # 应用模板
-│       ├── index.html                  # 首页模板
-│       ├── dashboard.html              # 仪表板模板
-│       ├── record_list.html            # 资金记录列表模板（含活期/定期分离）
-│       ├── charts.html                 # 图表分析模板
-│       ├── add_record.html             # 添加记录表单模板
-│       ├── edit_record.html            # 编辑记录表单模板
-│       ├── upload_csv.html             # CSV上传模板
-│       └── ...
-├── templates/                         # 全局模板
-│   ├── base.html                      # 基础模板（含导航栏、权限控制）
-│   └── registration/                  # 认证相关模板
+│   ├── apps.py
+│   ├── models.py                      # FundRecord数据模型定义
+│   ├── views.py                       # 视图函数（仪表板、记录列表、图表、CSV导入等）
+│   ├── urls.py                        # 应用URL路由
+│   └── templates/funds/               # 资金记录相关模板
+│       ├── add_record.html            # 添加记录表单模板
+│       ├── edit_record.html           # 编辑记录表单模板
+│       ├── record_list.html           # 资金记录列表模板（含活期/定期分离展示）
+│       └── upload_csv.html            # CSV上传模板
+├── accounts/                          # 用户账户与认证应用
+│   ├── __init__.py
+│   ├── admin.py                       # 用户管理后台配置
+│   ├── apps.py
+│   ├── models.py                      # UserProfile扩展模型
+│   ├── views.py                       # 用户认证与批准视图
+│   ├── urls.py                        # 认证相关URL路由
+│   └── templates/accounts/            # 用户认证相关模板
 │       ├── login.html                 # 登录页面
 │       ├── register.html              # 用户注册页面
 │       └── user_approval_list.html    # 管理员批准用户页面
-└── static/                            # 静态文件
-    ├── css/style.css                  # 自定义样式
-    └── js/main.js                     # JavaScript文件
+├── analytics/                         # 数据分析应用（预留）
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── views.py
+│   └── urls.py
+├── templates/                         # 全局模板目录
+│   ├── base.html                      # 基础模板（含导航栏、权限控制）
+│   └── registration/                  # 认证相关模板（兼容旧路径）
+│       ├── login.html                 # 登录页面（兼容旧路径）
+│       ├── register.html              # 用户注册页面（兼容旧路径）
+│       └── user_approval_list.html    # 管理员批准用户页面（兼容旧路径）
+├── static/                            # 静态文件目录
+│   ├── css/style.css                  # 自定义样式
+│   └── js/main.js                     # JavaScript文件
+├── staticfiles/                       # 收集的静态文件（生产环境）
+├── requirements/                      # 依赖包分离目录
+│   ├── base.txt                       # 基础依赖
+│   ├── dev.txt                        # 开发环境依赖
+│   └── prod.txt                       # 生产环境依赖
+└── venv/                              # Python虚拟环境（不提交）
 ```
 
 ## 🗄️ 数据模型
@@ -173,14 +215,14 @@ money_journey/
 ### FundRecord（资金记录）
 | 字段 | 类型 | 描述 | 可选值 |
 |------|------|------|--------|
-| bank | CharField | 银行 | 工商银行、建设银行等11个选项 |
-| owner | CharField | 所有者 | 自定义名称 |
-| category | CharField | 类别 | 储蓄存款、定期存款等8个选项 |
-| savings_status | CharField | 储蓄状态 | 存续中、已到期、已取出、已续存 |
-| amount | DecimalField | 金额 | 正数 |
-| interest_rate | DecimalField | 利率 | 百分比（可选） |
+| bank | CharField | 银行 | 工商银行、建设银行、农业银行、农商银行、中国银行、招商银行、中信银行、浦发银行、兴业银行、民生银行、平安银行、支付宝、微信支付、公积金、股票、其他银行（共16个选项） |
+| owner | CharField | 所有者 | 自定义名称，最大长度100 |
+| category | CharField | 类别 | 活期存款、储蓄存款、定期存款、理财产品、基金、股票、债券、保险、其他（共9个选项） |
+| savings_status | CharField | 储蓄状态 | 存续中、已到期、已取出、已续存（共4个选项） |
+| amount | DecimalField | 金额 | 正数，max_digits=15, decimal_places=2 |
+| interest_rate | DecimalField | 利率 | 百分比（可选），decimal_places=2 |
 | deposit_period | IntegerField | 存期 | 单位为年（可选） |
-| interest_amount | 属性方法 | 计算利息 | 金额 × 利率 × 存期（年） ÷ 100 |
+| interest_amount | 属性方法 | 计算利息 | 金额 × 利率 × 存期（年） ÷ 100，自动计算 |
 | due_date | DateField | 到期日 | YYYY-MM-DD格式（可选） |
 | due_month | CharField | 到期月 | YYYY-MM格式（可选） |
 | created_at | DateTimeField | 创建时间 | 自动生成 |
@@ -224,7 +266,7 @@ python manage.py test
 - **多维度汇总**：按所有者、银行、类别、储蓄状态汇总资金总额和记录数
 - **格式优化**：金额和记录数列右对齐显示，提升可读性
 
-### 3. 资金记录列表 (`/records/`)
+### 3. 资金记录列表 (`/funds/`)
 - **智能分类展示**：活期存款单独表格（简化显示：所有者、银行、金额、状态、操作）
 - **完整信息展示**：定期存款完整表格（所有者、银行、类别、金额、利率、存期、到期日、状态、利息、操作）
 - **数据格式优化**：金额、利率、存期、利息列右对齐显示，提升可读性

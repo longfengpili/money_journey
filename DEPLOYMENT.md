@@ -83,7 +83,7 @@ docker-compose exec web python manage.py createsuperuser
 ### 2. 部署步骤
 ```bash
 # 1. 克隆代码
-git clone <repository-url>
+git clone git@github.com:longfengpili/money_journey.git
 cd money_journey
 
 # 2. 配置生产环境变量
