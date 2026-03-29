@@ -255,6 +255,10 @@ def upload_csv(request):
             messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
             return redirect('index')
 
+    # 上传限制常量
+    MAX_ROWS = 10000  # 最大行数限制
+    BATCH_SIZE = 100  # 批量处理大小
+
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
 
@@ -264,167 +268,217 @@ def upload_csv(request):
             return redirect('upload_csv')
 
         try:
-            # 读取CSV文件
-            data_set = csv_file.read().decode('utf-8-sig')  # 处理BOM
-            io_string = io.StringIO(data_set)
+            # 检查文件大小（限制为10MB）
+            max_file_size = 10 * 1024 * 1024  # 10MB
+            if csv_file.size > max_file_size:
+                messages.error(request, f'文件过大（{csv_file.size // (1024*1024)}MB），请压缩文件或减少数据量，最大支持10MB')
+                return redirect('upload_csv')
 
-            # 读取CSV数据
-            reader = csv.DictReader(io_string)
-
-            # 检查CSV列名
-            required_fields = ['bank', 'category', 'amount']
-
+            # 迭代读取CSV文件，避免内存溢出
             success_count = 0
             error_count = 0
             errors = []
+            records_to_save = []  # 用于批量保存的临时列表
 
-            for i, row in enumerate(reader, start=2):  # 从第2行开始（跳过标题）
-                try:
-                    # 验证必填字段
-                    for field in required_fields:
-                        if not row.get(field):
-                            errors.append(f'第{i}行: {field}字段不能为空')
-                            error_count += 1
-                            continue
+            # 使用迭代器逐行读取CSV
+            try:
+                # 处理可能的BOM字符
+                csv_content = csv_file.read().decode('utf-8-sig')
+                io_string = io.StringIO(csv_content)
+                reader = csv.DictReader(io_string)
+            except UnicodeDecodeError:
+                messages.error(request, '文件编码错误，请使用UTF-8编码的CSV文件')
+                return redirect('upload_csv')
 
-                    # 处理银行字段
-                    bank = row['bank'].strip().upper()
-                    bank_values = [key for key, _ in FundRecord.BANK_CHOICES]
+            # 检查CSV列名
+            required_fields = ['bank', 'category', 'amount']
+            reader_fieldnames = reader.fieldnames or []
+            missing_fields = [field for field in required_fields if field not in reader_fieldnames]
 
-                    if bank not in bank_values:
-                        # 尝试通过中文名称匹配
-                        bank_mapping = {v: k for k, v in FundRecord.BANK_CHOICES}
-                        if row['bank'].strip() in bank_mapping:
-                            bank = bank_mapping[row['bank'].strip()]
-                        else:
-                            errors.append(f'第{i}行: 银行"{row["bank"]}"无效，请使用有效的银行名称')
-                            error_count += 1
-                            continue
+            if missing_fields:
+                messages.error(request, f'CSV文件缺少必要列：{", ".join(missing_fields)}')
+                return redirect('upload_csv')
 
-                    # 处理类别字段
-                    category = row['category'].strip().upper()
-                    category_values = [key for key, _ in FundRecord.CATEGORY_CHOICES]
+            # 导入Django事务模块
+            from django.db import transaction
 
-                    if category not in category_values:
-                        # 尝试通过中文名称匹配
-                        category_mapping = {v: k for k, v in FundRecord.CATEGORY_CHOICES}
-                        if row['category'].strip() in category_mapping:
-                            category = category_mapping[row['category'].strip()]
-                        else:
-                            errors.append(f'第{i}行: 类别"{row["category"]}"无效，请使用有效的类别名称')
-                            error_count += 1
-                            continue
+            # 使用事务处理批量导入
+            with transaction.atomic():
+                for i, row in enumerate(reader, start=2):  # 从第2行开始（跳过标题）
+                    # 行数限制检查
+                    if i - 1 > MAX_ROWS:  # i从2开始，所以i-1是实际行数
+                        messages.error(request, f'文件行数超过限制（最大{MAX_ROWS}行），请分批上传或减少数据量')
+                        raise ValueError(f'文件行数超过限制（最大{MAX_ROWS}行）')
 
-                    # 处理储蓄状态
-                    savings_status = row.get('savings_status', 'ACTIVE').strip().upper()
-                    if savings_status:
-                        status_values = [key for key, _ in FundRecord.SAVINGS_STATUS_CHOICES]
-                        if savings_status not in status_values:
-                            # 尝试通过中文名称匹配
-                            status_mapping = {v: k for k, v in FundRecord.SAVINGS_STATUS_CHOICES}
-                            if row.get('savings_status', '').strip() in status_mapping:
-                                savings_status = status_mapping[row['savings_status'].strip()]
-                            else:
-                                savings_status = 'ACTIVE'  # 默认值
-
-                    # 处理金额
                     try:
-                        amount = float(row['amount'])
-                        if amount <= 0:
-                            errors.append(f'第{i}行: 金额必须大于0')
-                            error_count += 1
-                            continue
-                    except ValueError:
-                        errors.append(f'第{i}行: 金额"{row["amount"]}"格式错误')
-                        error_count += 1
-                        continue
-
-                    # 处理利率
-                    interest_rate = None
-                    if row.get('interest_rate'):
-                        try:
-                            interest_rate = float(row['interest_rate'])
-                        except ValueError:
-                            errors.append(f'第{i}行: 利率"{row["interest_rate"]}"格式错误')
-                            error_count += 1
-                            continue
-
-                    # 处理存期
-                    deposit_period = None
-                    if row.get('deposit_period'):
-                        try:
-                            deposit_period = int(row['deposit_period'])
-                        except ValueError:
-                            errors.append(f'第{i}行: 存期"{row["deposit_period"]}"格式错误')
-                            error_count += 1
-                            continue
-
-                    # 处理到期日
-                    due_date = None
-                    if row.get('due_date'):
-                        try:
-                            # 尝试多种日期格式
-                            for fmt in ('%Y-%m-%d', '%Y/%m/%d', '%Y%m%d'):
-                                try:
-                                    due_date = datetime.strptime(row['due_date'], fmt).date()
-                                    break
-                                except ValueError:
-                                    continue
-                            if not due_date:
-                                errors.append(f'第{i}行: 到期日"{row["due_date"]}"格式错误，请使用YYYY-MM-DD格式')
+                        # 验证必填字段
+                        for field in required_fields:
+                            if not row.get(field):
+                                errors.append(f'第{i}行: {field}字段不能为空')
                                 error_count += 1
-                                continue
-                        except Exception:
-                            errors.append(f'第{i}行: 到期日"{row["due_date"]}"格式错误')
-                            error_count += 1
-                            continue
+                                raise ValueError(f'第{i}行: {field}字段不能为空')
 
-                    # 处理所有者字段
-                    owner_username = None
-                    user_obj = request.user
+                        # 处理银行字段
+                        bank = row['bank'].strip().upper()
+                        bank_values = [key for key, _ in FundRecord.BANK_CHOICES]
 
-                    if row.get('owner'):
-                        owner_username = row['owner'].strip()
-                        if owner_username:
-                            # 检查用户权限
-                            if request.user.is_superuser:
-                                # 超级管理员可以指定任意用户
-                                try:
-                                    user_obj = User.objects.get(username=owner_username)
-                                except User.DoesNotExist:
-                                    errors.append(f'第{i}行: 所有者"{owner_username}"不存在')
-                                    error_count += 1
-                                    continue
+                        if bank not in bank_values:
+                            # 尝试通过中文名称匹配
+                            bank_mapping = {v: k for k, v in FundRecord.BANK_CHOICES}
+                            if row['bank'].strip() in bank_mapping:
+                                bank = bank_mapping[row['bank'].strip()]
                             else:
-                                # 普通用户只能指定自己
-                                if owner_username != request.user.username:
-                                    errors.append(f'第{i}行: 您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                                    error_count += 1
-                                    continue
+                                errors.append(f'第{i}行: 银行"{row["bank"]}"无效，请使用有效的银行名称')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 银行"{row["bank"]}"无效')
+
+                        # 处理类别字段
+                        category = row['category'].strip().upper()
+                        category_values = [key for key, _ in FundRecord.CATEGORY_CHOICES]
+
+                        if category not in category_values:
+                            # 尝试通过中文名称匹配
+                            category_mapping = {v: k for k, v in FundRecord.CATEGORY_CHOICES}
+                            if row['category'].strip() in category_mapping:
+                                category = category_mapping[row['category'].strip()]
+                            else:
+                                errors.append(f'第{i}行: 类别"{row["category"]}"无效，请使用有效的类别名称')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 类别"{row["category"]}"无效')
+
+                        # 处理储蓄状态
+                        savings_status = row.get('savings_status', 'ACTIVE').strip().upper()
+                        if savings_status:
+                            status_values = [key for key, _ in FundRecord.SAVINGS_STATUS_CHOICES]
+                            if savings_status not in status_values:
+                                # 尝试通过中文名称匹配
+                                status_mapping = {v: k for k, v in FundRecord.SAVINGS_STATUS_CHOICES}
+                                if row.get('savings_status', '').strip() in status_mapping:
+                                    savings_status = status_mapping[row['savings_status'].strip()]
                                 else:
-                                    user_obj = request.user
+                                    savings_status = 'ACTIVE'  # 默认值
 
-                    # 确定最终的所有者用户名
-                    final_owner = owner_username if owner_username else request.user.username
+                        # 处理金额
+                        try:
+                            amount = float(row['amount'])
+                            if amount <= 0:
+                                errors.append(f'第{i}行: 金额必须大于0')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 金额必须大于0')
+                        except ValueError:
+                            errors.append(f'第{i}行: 金额"{row["amount"]}"格式错误')
+                            error_count += 1
+                            raise ValueError(f'第{i}行: 金额格式错误')
 
-                    # 创建记录
-                    record = FundRecord(
-                        user=user_obj,
-                        bank=bank,
-                        owner=final_owner,
-                        category=category,
-                        savings_status=savings_status,
-                        amount=amount,
-                        interest_rate=interest_rate,
-                        deposit_period=deposit_period,
-                        due_date=due_date,
-                    )
-                    record.save()
-                    success_count += 1
+                        # 处理利率
+                        interest_rate = None
+                        if row.get('interest_rate'):
+                            try:
+                                interest_rate = float(row['interest_rate'])
+                            except ValueError:
+                                errors.append(f'第{i}行: 利率"{row["interest_rate"]}"格式错误')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 利率格式错误')
 
-                except Exception as e:
-                    errors.append(f'第{i}行: {str(e)}')
-                    error_count += 1
+                        # 处理存期
+                        deposit_period = None
+                        if row.get('deposit_period'):
+                            try:
+                                deposit_period = int(row['deposit_period'])
+                            except ValueError:
+                                errors.append(f'第{i}行: 存期"{row["deposit_period"]}"格式错误')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 存期格式错误')
+
+                        # 处理到期日
+                        due_date = None
+                        if row.get('due_date'):
+                            try:
+                                # 尝试多种日期格式
+                                for fmt in ('%Y-%m-%d', '%Y/%m/%d', '%Y%m%d'):
+                                    try:
+                                        due_date = datetime.strptime(row['due_date'], fmt).date()
+                                        break
+                                    except ValueError:
+                                        continue
+                                if not due_date:
+                                    errors.append(f'第{i}行: 到期日"{row["due_date"]}"格式错误，请使用YYYY-MM-DD格式')
+                                    error_count += 1
+                                    raise ValueError(f'第{i}行: 到期日格式错误')
+                            except Exception:
+                                errors.append(f'第{i}行: 到期日"{row["due_date"]}"格式错误')
+                                error_count += 1
+                                raise ValueError(f'第{i}行: 到期日格式错误')
+
+                        # 处理所有者字段
+                        owner_username = None
+                        user_obj = request.user
+
+                        if row.get('owner'):
+                            owner_username = row['owner'].strip()
+                            if owner_username:
+                                # 检查用户权限
+                                if request.user.is_superuser:
+                                    # 超级管理员可以指定任意用户
+                                    try:
+                                        user_obj = User.objects.get(username=owner_username)
+                                    except User.DoesNotExist:
+                                        errors.append(f'第{i}行: 所有者"{owner_username}"不存在')
+                                        error_count += 1
+                                        raise ValueError(f'第{i}行: 所有者不存在')
+                                else:
+                                    # 普通用户只能指定自己
+                                    if owner_username != request.user.username:
+                                        errors.append(f'第{i}行: 您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
+                                        error_count += 1
+                                        raise ValueError(f'第{i}行: 所有者权限错误')
+                                    else:
+                                        user_obj = request.user
+
+                        # 确定最终的所有者用户名
+                        final_owner = owner_username if owner_username else request.user.username
+
+                        # 计算到期月（如果提供了到期日）
+                        due_month = None
+                        if due_date:
+                            due_month = due_date.strftime('%Y-%m')
+
+                        # 创建记录对象
+                        record = FundRecord(
+                            user=user_obj,
+                            bank=bank,
+                            owner=final_owner,
+                            category=category,
+                            savings_status=savings_status,
+                            amount=amount,
+                            interest_rate=interest_rate,
+                            deposit_period=deposit_period,
+                            due_date=due_date,
+                            due_month=due_month,
+                        )
+
+                        # 添加到批量保存列表
+                        records_to_save.append(record)
+
+                        # 批量保存，每BATCH_SIZE条提交一次
+                        if len(records_to_save) >= BATCH_SIZE:
+                            FundRecord.objects.bulk_create(records_to_save)
+                            success_count += len(records_to_save)
+                            records_to_save = []
+
+                    except ValueError as e:
+                        # 这是预期的验证错误，已经添加到errors列表
+                        # 继续处理下一行
+                        continue
+                    except Exception as e:
+                        # 捕获其他异常
+                        errors.append(f'第{i}行: {str(e)}')
+                        error_count += 1
+
+                # 保存剩余未提交的记录
+                if records_to_save:
+                    FundRecord.objects.bulk_create(records_to_save)
+                    success_count += len(records_to_save)
 
             # 显示结果
             if success_count > 0:
