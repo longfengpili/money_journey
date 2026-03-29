@@ -105,7 +105,7 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### 3. 配置外部反向代理
 应用容器暴露8000端口。配置你的反向代理（如Nginx或"lucky"服务）：
-- 代理请求到`http://localhost:8000`
+- 代理请求到`http://localhost:38000`
 - 配置SSL/TLS证书
 - 设置正确的HTTP头（X-Forwarded-For, X-Forwarded-Proto等）
 
