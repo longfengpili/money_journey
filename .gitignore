@@ -33,6 +33,7 @@ staticfiles/
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Virtual environments
 venv/

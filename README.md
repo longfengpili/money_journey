@@ -68,7 +68,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:longfengpili/money_journey.git
 cd money_journey
 ```
 

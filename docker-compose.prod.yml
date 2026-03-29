@@ -26,12 +26,12 @@ services:
     volumes:
       - static_volume_prod:/app/staticfiles
     ports:
-      - "8000:8000"  # Expose port for external proxy (lucky)
+      - "38000:8000"  # Expose port for external proxy (lucky)
     networks:
       - money_journey_network_prod
     # Health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:38000/health/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
