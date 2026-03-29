@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    container_name: money_journey_web_prod
+    container_name: money_journey_web
     restart: unless-stopped
     environment:
       DJANGO_SETTINGS_MODULE: money_journey.settings.production
@@ -24,11 +24,11 @@ services:
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
     volumes:
-      - static_volume_prod:/app/staticfiles
+      - static_volume:/app/staticfiles
     ports:
-      - "38000:8000"  # Expose port for external proxy (lucky)
+      - "38000:8000"
     networks:
-      - money_journey_network_prod
+      - money_journey_network
     # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:38000/health/ || exit 1"]
@@ -38,8 +38,8 @@ services:
       start_period: 40s
 
 volumes:
-  static_volume_prod:
+  static_volume:
 
 networks:
-  money_journey_network_prod:
+  money_journey_network:
     driver: bridge

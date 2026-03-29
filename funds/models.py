@@ -91,6 +91,7 @@ class FundRecord(models.Model):
 
 class FundSnapshot(models.Model):
     """资金快照模型，保存特定时间点的资金状态"""
+    id = models.AutoField(primary_key=True)  # 显式定义主键字段
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者')
     snapshot_date = models.DateTimeField('快照时间', default=timezone.now)
     total_amount = models.DecimalField('总金额', max_digits=20, decimal_places=2)
