@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
+from django.utils import timezone
 import csv
 import io
 from datetime import datetime
@@ -564,6 +565,13 @@ def create_snapshot(request):
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以创建快照')
         return redirect('record_list')
+    
+    today = timezone.now().date()
+    new_snapshot = FundSnapshot.objects.order_by('-created_at').first()  # 获取最新的快照记录
+    if FundSnapshot.objects.filter(snapshot_date=today).exists():
+        messages.warning(request, '今日已经创建了快照，无需重复创建')
+        return redirect('record_list')
+
 
     try:
         # 获取当前所有ACTIVE状态的记录
