@@ -42,6 +42,15 @@ INSTALLED_APPS = [
     "accounts",
     "funds",
     "analytics",
+    'django_crontab',  # For scheduled tasks
+]
+
+
+# 定时任务配置
+CRONJOBS = [
+    # 格式: ('定时表达式', '应用.模块.函数', '>> 日志文件路径')
+    # 查询过期任务
+    ('0 19-21 * * *', 'analytics.tasks.check_outdated_records', '>> /var/log/money_journey/crontab.log'),
 ]
 
 MIDDLEWARE = [
@@ -149,3 +158,154 @@ CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost:
 # Session settings - development defaults, override in production
 SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
 SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
+
+# Logging configuration
+# 创建日志目录
+LOG_DIR = '/app/log'
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    
+    # 格式化器
+    'formatters': {
+        'verbose': {
+            'format': '{levelname}-{asctime}-{module}-{process:d}-{thread:d}: {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname}: {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '[{asctime}]-{levelname}-{name}: {message}',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+            'style': '{',
+        },
+    },
+    
+    # 过滤器
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    
+    # 处理器
+    'handlers': {
+        # 控制台输出（开发环境）
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],  # 只在DEBUG=True时启用
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        
+        # 控制台输出（生产环境）
+        'console_prod': {
+            'level': 'INFO',
+            'filters': ['require_debug_false'],  # 只在DEBUG=False时启用
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        
+        # 错误日志文件
+        'file_error': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'error.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 5,  # 保留5个备份
+            'formatter': 'detailed',
+        },
+        
+        # 常规日志文件
+        'file_info': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'info.log'),
+            'when': 'midnight',  # 每天午夜分割
+            'backupCount': 30,  # 保留30天
+            'formatter': 'detailed',
+        },
+        
+        # 按日分割的文件
+        'file_daily': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'daily.log'),
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 7,
+            'formatter': 'detailed',
+        },
+        
+        # 邮件通知（错误时发送邮件）
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
+    },
+    
+    # 记录器配置
+    'loggers': {
+        # Django 框架自身的日志
+        'django': {
+            'handlers': ['console', 'console_prod', 'file_error'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        
+        # 数据库查询日志
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if os.environ.get('DEBUG', 'False') == 'True' else 'INFO',
+            'propagate': False,
+        },
+        
+        # 请求日志
+        'django.request': {
+            'handlers': ['file_error', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        
+        # 安全日志
+        'django.security': {
+            'handlers': ['file_error'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        
+        # 您自己应用的日志
+        'accounts': {  # 替换为您的应用名
+            'handlers': ['console', 'file_info', 'file_error'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        # 您自己应用的日志
+        'analytics': {  # 替换为您的应用名
+            'handlers': ['console', 'file_info', 'file_error'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        
+        # 第三方库的日志
+        'requests': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        
+        # 根记录器（捕获所有未指定的日志）
+        '': {
+            'handlers': ['console', 'console_prod', 'file_info', 'file_error'],
+            'level': 'WARNING',
+        },
+    },
+}

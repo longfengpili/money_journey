@@ -41,7 +41,8 @@ services:
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-False}
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
-      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-adminpassword}  
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-adminpassword}
+      PUSHPLUS: ${PUSHPLUS:-}
     volumes:
       - .:/app
       - static_volume_dev:/app/staticfiles

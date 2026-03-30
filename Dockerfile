@@ -16,7 +16,12 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     netcat-openbsd \
     curl \
+    cron \
     && rm -rf /var/lib/apt/lists/*
+
+# Set timezone
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install Python dependencies
 COPY requirements/production.txt .

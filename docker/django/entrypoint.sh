@@ -35,5 +35,13 @@ if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ 
         --email $DJANGO_SUPERUSER_EMAIL || true
 fi
 
+# add cron jobs
+echo "Adding cron jobs..."
+python manage.py crontab add
+
+# show current cron jobs
+echo "Current cron jobs:"
+python manage.py crontab show
+
 # Execute command
 exec "$@"
