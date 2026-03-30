@@ -15,7 +15,7 @@ from funds.models import FundRecord, FundSnapshot
 from django.db.models import Sum
 from accounts.models import UserProfile
 
-
+@login_required
 def record_list(request):
     """资金记录列表"""
     records = FundRecord.objects.filter(savings_status='ACTIVE').select_related('user').order_by('due_date')
