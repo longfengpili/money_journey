@@ -27,45 +27,68 @@
 ## 🏗️ 项目结构
 
 ```
-money_journey/                          # Django项目根目录
-├── manage.py                           # Django管理脚本
-├── requirements.txt                    # Python依赖包列表
-├── README.md                           # 项目说明文档
-├── CLAUDE.md                           # Claude项目指南（本文档）
-├── money_journey/                      # 主项目配置目录
+money_journey/
+├── manage.py                          # Django管理脚本
+├── requirements.txt                    # Python依赖包
+├── .env.example                       # 环境变量示例文件
+├── .env                               # 环境变量文件（本地配置，不提交）
+├── Dockerfile                         # Docker镜像构建文件
+├── docker-compose.yml                 # Docker Compose开发环境配置
+├── docker-compose.prod.yml            # Docker Compose生产环境配置
+├── CLAUDE.md                          # Claude AI助手项目指南
+├── DEPLOYMENT.md                      # 部署文档
+├── docker/                            # Docker相关配置目录
+├── money_journey/                     # 主项目配置
 │   ├── __init__.py
-│   ├── settings.py                     # 项目设置（关键文件）
-│   ├── urls.py                         # 主URL路由配置
+│   ├── settings.py                    # 项目配置（已配置MySQL，支持环境变量）
+│   ├── urls.py                        # URL路由配置
 │   ├── wsgi.py
 │   └── asgi.py
-├── records/                            # 主要应用：资金记录管理
+├── funds/                             # 资金记录管理应用（原records）
 │   ├── __init__.py
-│   ├── admin.py                        # 后台管理配置
+│   ├── admin.py                       # 后台管理配置
 │   ├── apps.py
-│   ├── models.py                       # 数据模型定义（关键文件）
-│   ├── tests.py
-│   ├── views.py                        # 视图函数（关键文件）
-│   ├── urls.py                         # 应用URL路由
-│   └── templates/records/              # 应用模板目录
-│       ├── index.html                  # 首页模板
-│       ├── dashboard.html              # 仪表板模板（关键文件）
-│       ├── record_list.html            # 记录列表模板（含活期/定期分离展示）
-│       ├── charts.html                 # 图表分析模板（关键文件）
-│       ├── add_record.html             # 添加记录表单模板
-│       ├── edit_record.html            # 编辑记录表单模板
-│       └── upload_csv.html             # CSV上传模板
-├── templates/                          # 全局模板目录
-│   ├── base.html                       # 基础模板（关键文件，含导航栏权限控制）
-│   └── registration/
-│       ├── login.html                  # 登录页面模板
-│       ├── register.html               # 用户注册页面模板
-│       └── user_approval_list.html     # 管理员批准用户页面模板
-└── static/                             # 静态文件目录
-    ├── css/
-    │   └── style.css                   # 自定义样式
-    ├── js/
-    │   └── main.js                     # JavaScript文件
-    └── images/
+│   ├── models.py                      # FundRecord数据模型定义
+│   ├── views.py                       # 视图函数（仪表板、记录列表、图表、CSV导入等）
+│   ├── urls.py                        # 应用URL路由
+│   └── templates/funds/               # 资金记录相关模板
+│       ├── add_record.html            # 添加记录表单模板
+│       ├── edit_record.html           # 编辑记录表单模板
+│       ├── record_list.html           # 资金记录列表模板（含活期/定期分离展示）
+│       └── upload_csv.html            # CSV上传模板
+├── accounts/                          # 用户账户与认证应用
+│   ├── __init__.py
+│   ├── admin.py                       # 用户管理后台配置
+│   ├── apps.py
+│   ├── models.py                      # UserProfile扩展模型
+│   ├── views.py                       # 用户认证与批准视图
+│   ├── urls.py                        # 认证相关URL路由
+│   └── templates/accounts/            # 用户认证相关模板
+│       ├── login.html                 # 登录页面
+│       ├── register.html              # 用户注册页面
+│       └── user_approval_list.html    # 管理员批准用户页面
+├── analytics/                         # 数据分析应用（预留）
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── views.py
+│   └── urls.py
+├── templates/                         # 全局模板目录
+│   ├── base.html                      # 基础模板（含导航栏、权限控制）
+│   └── registration/                  # 认证相关模板（兼容旧路径）
+│       ├── login.html                 # 登录页面（兼容旧路径）
+│       ├── register.html              # 用户注册页面（兼容旧路径）
+│       └── user_approval_list.html    # 管理员批准用户页面（兼容旧路径）
+├── static/                            # 静态文件目录
+│   ├── css/style.css                  # 自定义样式
+│   └── js/main.js                     # JavaScript文件
+├── staticfiles/                       # 收集的静态文件（生产环境）
+├── requirements/                      # 依赖包分离目录
+│   ├── base.txt                       # 基础依赖
+│   ├── dev.txt                        # 开发环境依赖
+│   └── prod.txt                       # 生产环境依赖
+└── venv/                              # Python虚拟环境（不提交）
 ```
 
 ## 🔧 关键文件说明
