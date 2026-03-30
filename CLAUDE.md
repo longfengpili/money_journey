@@ -17,12 +17,21 @@
 - **后台管理**：Django Admin，支持用户批准状态管理
 - **批量数据导入**：CSV文件上传，智能数据映射和验证
 - **CSV模板下载**：提供标准格式模板文件
+- **定时任务系统**：自动检测到期存款（未来7天内到期），发送PushPlus通知，定期清理旧记录（3年前）
+- **日志系统**：结构化日志记录，支持info、warning、error级别，每日日志文件分割
+- **健康检查端点**：容器健康检查端点 `/health/`，支持Docker健康检查
+- **快照创建判断**：防止重复创建每日快照，确保每天只创建一个快照
+- **安全性增强**：record_list登录要求修复，CSV上传行数限制（最大10,000行）和文件大小限制（10MB）
 
 ### 技术栈
 - **后端**: Django 6.0.3
 - **数据库**: MySQL 8.0
 - **前端**: HTML/CSS, Bootstrap 5, Chart.js
 - **认证**: Django内置认证系统
+- **定时任务**: django-crontab
+- **通知服务**: PushPlus
+- **日志系统**: Python logging + 文件处理
+- **容器化**: Docker + Docker Compose + Gunicorn
 
 ## 🏗️ 项目结构
 
@@ -40,7 +49,11 @@ money_journey/
 ├── docker/                            # Docker相关配置目录
 ├── money_journey/                     # 主项目配置
 │   ├── __init__.py
-│   ├── settings.py                    # 项目配置（已配置MySQL，支持环境变量）
+│   ├── settings/                      # 配置分离目录（base.py, production.py）
+│   │   ├── __init__.py
+│   │   ├── base.py                    # 基础配置（开发环境）
+│   │   └── production.py              # 生产环境配置
+│   ├── notification.py                # PushPlus通知服务
 │   ├── urls.py                        # URL路由配置
 │   ├── wsgi.py
 │   └── asgi.py
@@ -67,13 +80,14 @@ money_journey/
 │       ├── login.html                 # 登录页面
 │       ├── register.html              # 用户注册页面
 │       └── user_approval_list.html    # 管理员批准用户页面
-├── analytics/                         # 数据分析应用（预留）
+├── analytics/                         # 数据分析与定时任务应用
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py
 │   ├── views.py
-│   └── urls.py
+│   ├── urls.py
+│   └── tasks.py                         # 定时任务：到期存款检测、旧记录清理
 ├── templates/                         # 全局模板目录
 │   ├── base.html                      # 基础模板（含导航栏、权限控制）
 │   └── registration/                  # 认证相关模板（兼容旧路径）
@@ -84,6 +98,7 @@ money_journey/
 │   ├── css/style.css                  # 自定义样式
 │   └── js/main.js                     # JavaScript文件
 ├── staticfiles/                       # 收集的静态文件（生产环境）
+├── log/                                # 应用日志目录（info.log, error.log, daily.log）
 ├── requirements/                      # 依赖包分离目录
 │   ├── base.txt                       # 基础依赖
 │   ├── dev.txt                        # 开发环境依赖
@@ -94,23 +109,32 @@ money_journey/
 ## 🔧 关键文件说明
 
 ### 1. 项目配置
-- **money_journey/settings.py** - 包含MySQL数据库配置、语言时区设置、静态文件配置、认证设置等
-- **money_journey/urls.py** - 主URL路由，包含records应用路由和认证路由
+- **money_journey/settings/base.py** - 基础配置，包含MySQL数据库配置、语言时区设置、静态文件配置、认证设置、定时任务配置、日志配置等
+- **money_journey/settings/production.py** - 生产环境配置，继承base.py，覆盖安全设置
+- **money_journey/urls.py** - 主URL路由，包含funds应用路由和认证路由
+- **money_journey/notification.py** - PushPlus通知服务，用于定时任务发送到期提醒
 
 ### 2. 数据层
-- **records/models.py** - `FundRecord`模型定义，包含所有资金记录字段和选择项
-- **records/admin.py** - Django Admin配置，自定义显示和过滤选项
+- **funds/models.py** - `FundRecord`模型定义，包含所有资金记录字段和选择项；`FundSnapshot`快照模型，用于每日资金快照
+- **funds/admin.py** - Django Admin配置，自定义显示和过滤选项
 
 ### 3. 业务逻辑
-- **records/views.py** - 视图函数，包括仪表板、记录列表、图表视图、用户认证与批准、CSV批量导入、记录添加/编辑
-- **records/urls.py** - 应用URL路由配置，包含所有功能端点
+- **funds/views.py** - 视图函数，包括仪表板、记录列表、图表视图、用户认证与批准、CSV批量导入、记录添加/编辑、快照创建
+- **funds/urls.py** - 应用URL路由配置，包含所有功能端点
 
-### 4. 前端展示
+### 4. 定时任务与日志系统
+- **analytics/tasks.py** - 定时任务：`check_outdated_records`检测到期存款（未来7天内到期），`clean_old_records`清理旧记录（3年前）
+- **money_journey/settings/base.py** - 日志配置：结构化日志记录，支持不同级别，日志文件分割
+- **money_journey/settings/base.py** - 定时任务配置：django-crontab配置，每日19-21点执行到期检测
+- **log/** - 日志目录：info.log（信息日志），error.log（错误日志），daily.log（每日日志）
+
+### 5. 前端展示
 - **templates/base.html** - 基础模板，使用Bootstrap 5，包含导航栏
-- **records/templates/records/dashboard.html** - 仪表板模板，展示汇总数据
-- **records/templates/records/charts.html** - 图表模板，集成Chart.js
+- **funds/templates/funds/dashboard.html** - 仪表板模板，展示汇总数据
+- **funds/templates/funds/charts.html** - 图表模板，集成Chart.js
 - **static/css/style.css** - 自定义样式文件
 - **static/js/main.js** - JavaScript文件
+- **static/js/toast-messages.js** - Toast消息提示组件，用于显示操作反馈
 
 ## 📊 数据模型详解
 
@@ -320,13 +344,18 @@ python manage.py test
 
 ### 短期改进（部分已实现✅）
 1. ✅ 数据导入/导出功能（CSV、Excel）- 已实现CSV批量导入和模板下载
-2. 搜索和过滤功能
-3. 分页功能
-4. ✅ 数据验证增强 - 已实现表单验证、CSV数据验证、用户输入验证
+2. ✅ 定时任务系统 - 已实现到期存款检测、旧记录清理、PushPlus通知
+3. ✅ 日志系统 - 已实现结构化日志记录、日志文件分割
+4. ✅ 健康检查端点 - 已实现`/health/`端点，支持容器健康检查
+5. ✅ 快照创建判断 - 已实现防止重复创建每日快照
+6. ✅ 安全性增强 - 已修复record_list登录要求，添加CSV上传限制
+7. 搜索和过滤功能
+8. 分页功能
+9. ✅ 数据验证增强 - 已实现表单验证、CSV数据验证、用户输入验证
 
 ### 中期功能
 1. 报表生成（PDF、Excel）
-2. 邮件提醒（到期提醒）
+2. ✅ 邮件提醒（到期提醒）- 已实现PushPlus通知服务，支持到期存款提醒
 3. 多语言支持
 4. API接口
 
@@ -391,6 +420,6 @@ python manage.py test
 
 ---
 
-**最后更新**：2026-03-27（已更新反映最新功能：用户批准系统、CSV导入、存期单位年化、活期存款分离、金额右对齐等）
+**最后更新**：2026-03-30（已更新反映最新功能：定时任务系统、日志系统、健康检查端点、快照创建判断、PushPlus通知、record_list登录修复、CSV上传限制等）
 **维护者**：Claude AI助手
 **项目状态**：开发完成，可运行

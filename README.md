@@ -40,6 +40,13 @@
 - **CSV模板下载**：提供标准格式的CSV模板文件
 - 自定义列表显示、过滤器和搜索功能
 
+### ⚙️ 系统运维与监控
+- **定时任务系统**：自动检测到期存款（未来7天内到期），发送PushPlus通知，定期清理旧记录（3年前）
+- **日志系统**：结构化日志记录，支持info、warning、error级别，每日日志文件分割
+- **健康检查端点**：容器健康检查端点 `/health/`，支持Docker健康检查
+- **快照创建判断**：防止重复创建每日快照，确保每天只创建一个快照
+- **安全性增强**：record_list登录要求修复，CSV上传行数限制（最大10,000行）和文件大小限制（10MB）
+
 ## 🏗️ 技术栈
 
 - **后端框架**：Django 6.0.3
@@ -49,6 +56,10 @@
 - **容器化**：Docker + Docker Compose
 - **配置管理**：环境变量 + 配置分离（开发/生产）
 - **部署**：支持开发环境、生产环境Docker部署
+- **定时任务**：django-crontab
+- **通知服务**：PushPlus
+- **日志系统**：Python logging + 文件处理
+- **应用服务器**：Gunicorn
 
 ## 🚀 快速开始
 
@@ -159,7 +170,11 @@ money_journey/
 ├── docker/                            # Docker相关配置目录
 ├── money_journey/                     # 主项目配置
 │   ├── __init__.py
-│   ├── settings.py                    # 项目配置（已配置MySQL，支持环境变量）
+│   ├── settings/                      # 配置分离目录（base.py, production.py）
+│   │   ├── __init__.py
+│   │   ├── base.py                    # 基础配置（开发环境）
+│   │   └── production.py              # 生产环境配置
+│   ├── notification.py                # PushPlus通知服务
 │   ├── urls.py                        # URL路由配置
 │   ├── wsgi.py
 │   └── asgi.py
@@ -186,13 +201,14 @@ money_journey/
 │       ├── login.html                 # 登录页面
 │       ├── register.html              # 用户注册页面
 │       └── user_approval_list.html    # 管理员批准用户页面
-├── analytics/                         # 数据分析应用（预留）
+├── analytics/                         # 数据分析与定时任务应用
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py
 │   ├── views.py
-│   └── urls.py
+│   ├── urls.py
+│   └── tasks.py                         # 定时任务：到期存款检测、旧记录清理
 ├── templates/                         # 全局模板目录
 │   ├── base.html                      # 基础模板（含导航栏、权限控制）
 │   └── registration/                  # 认证相关模板（兼容旧路径）
@@ -203,6 +219,7 @@ money_journey/
 │   ├── css/style.css                  # 自定义样式
 │   └── js/main.js                     # JavaScript文件
 ├── staticfiles/                       # 收集的静态文件（生产环境）
+├── log/                                # 应用日志目录（info.log, error.log, daily.log）
 ├── requirements/                      # 依赖包分离目录
 │   ├── base.txt                       # 基础依赖
 │   ├── dev.txt                        # 开发环境依赖
@@ -366,5 +383,5 @@ python manage.py migrate
 
 ---
 
-**最后更新**：2026-03-29
+**最后更新**：2026-03-30（已更新反映最新功能：定时任务系统、日志系统、健康检查端点、快照创建判断、PushPlus通知等）
 **注意**：本应用为开发版本，生产环境部署前请进行充分测试和安全配置。

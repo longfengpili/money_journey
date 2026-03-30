@@ -113,6 +113,31 @@ docker-compose -f docker-compose.prod.yml logs -f
 应用提供健康检查端点：`/health/`
 可用于容器健康检查或监控。
 
+### 5. 定时任务配置
+应用使用`django-crontab`管理定时任务，配置在`money_journey/settings/base.py`中：
+- **到期存款检测**：每天19-21点执行，检测未来7天内到期的存款记录，通过PushPlus发送通知
+- **旧记录清理**：可配置的清理任务（目前未启用）
+
+定时任务在容器启动时自动添加（通过entrypoint.sh）：
+```bash
+# 添加定时任务
+python manage.py crontab add
+
+# 查看当前定时任务
+python manage.py crontab show
+```
+
+如需手动管理定时任务：
+```bash
+# 开发环境
+docker-compose exec web python manage.py crontab add
+docker-compose exec web python manage.py crontab show
+docker-compose exec web python manage.py crontab remove
+
+# 生产环境
+docker-compose -f docker-compose.prod.yml exec web python manage.py crontab add
+```
+
 ## 静态文件处理
 
 生产环境使用Whitenoise中间件服务静态文件：
@@ -245,5 +270,5 @@ docker-compose up -d --build
 
 ---
 
-**最后更新**：2026-03-29
+**最后更新**：2026-03-30（添加定时任务配置说明）
 **版本**：1.0.0
