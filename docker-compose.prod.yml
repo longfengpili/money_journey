@@ -31,7 +31,7 @@ services:
       - money_journey_network
     # Health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:38000/health/ || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
