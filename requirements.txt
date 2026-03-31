@@ -1,6 +1,0 @@
-# Development dependencies for Money Journey
-# For production dependencies, see requirements/production.txt
-
-Django>=5.0,<6.0
-mysqlclient==2.2.8
-python-dotenv==1.2.2
