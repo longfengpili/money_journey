@@ -27,6 +27,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "django-insecure--+vh3!a0gzjnbs
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+if DEBUG and not any(ALLOWED_HOSTS):
+    ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'testserver']
 
 
 # Application definition
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "accounts",
     "funds",
     "analytics",
+
     'django_crontab',  # For scheduled tasks
 ]
 
@@ -161,7 +164,7 @@ SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
 
 # Logging configuration
 # 创建日志目录
-LOG_DIR = '/app/log'
+LOG_DIR = '/app/logs'
 os.makedirs(LOG_DIR, exist_ok=True)
 
 LOGGING = {

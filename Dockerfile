@@ -41,6 +41,9 @@ COPY docker/django/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/django/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Set entrypoint
+ENTRYPOINT [ "/entrypoint.sh" ]
+
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 django && \
     mkdir -p /app/logs /app/run /app/staticfiles /app/media && \
