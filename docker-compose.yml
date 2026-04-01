@@ -50,7 +50,6 @@ services:
       - "8000:8000"
     networks:
       - money_journey_network_dev
-    command: python manage.py runserver 0.0.0.0:8000
 
 volumes:
   mysql_data_dev:
