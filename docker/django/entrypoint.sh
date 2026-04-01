@@ -15,6 +15,12 @@ wait_for_database() {
     fi
 }
 
+# 如果让 supervisor 管理 cron，不要在这里启动 cron
+# 只需确保没有其他 cron 进程在运行
+echo "Checking for existing cron processes..."
+pkill cron 2>/dev/null || true
+rm -f /var/run/crond.pid
+
 # Wait for database if configured
 wait_for_database
 
