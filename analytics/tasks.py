@@ -6,7 +6,6 @@ from money_journey.notification import send_pushplus_notification
 
 logger = logging.getLogger(__name__)
 
-
 def check_outdated_records():
     """检查过期记录任务"""
     logger.info(f"开始检查过期记录 - {datetime.now()}")
@@ -16,12 +15,13 @@ def check_outdated_records():
         outdated_records = FundRecord.objects.filter(due_date__lt=time_selected, savings_status='ACTIVE').select_related('user').order_by('due_date')
         
         if outdated_records.exists():
-            logger.warning(f"发现 {outdated_records.count()} 条过期记录: {outdated_records}")
-            
             records = [f'<br>{record.user.first_name or record.user.username } : {record.get_bank_display()} : {record.due_date} : {record.amount}' for record in outdated_records]
+            content = f"{time_selected} 发现 {outdated_records.count()} 条过期记录: {''.join(records)}"
+            
+            logger.warning(content)
             send_pushplus_notification(
                 title="存款到期记录提醒",
-                content=f"发现 {outdated_records.count()} 条过期记录: {''.join(records)}",
+                content=content,
                 topic='BYD'
             )
         else:

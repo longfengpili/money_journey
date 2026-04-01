@@ -48,12 +48,22 @@ INSTALLED_APPS = [
     'django_crontab',  # For scheduled tasks
 ]
 
+# 定时任务环境变量配置
+CRONTAB_COMMAND_PREFIX = (
+    f"MYSQL_HOST={os.getenv('MYSQL_HOST', '')} "
+    f"MYSQL_PORT={os.getenv('MYSQL_PORT', '')} "
+    f"MYSQL_DATABASE={os.getenv('MYSQL_DATABASE', '')} "
+    f"MYSQL_USER={os.getenv('MYSQL_USER', '')} "
+    f"MYSQL_PASSWORD={os.getenv('MYSQL_PASSWORD', '')} "
+    f"DJANGO_SETTINGS_MODULE=money_journey.settings "
+    f"PUSHPLUS_TOKEN={os.getenv('PUSHPLUS_TOKEN', '')} "
+)
 
 # 定时任务配置
 CRONJOBS = [
     # 格式: ('定时表达式', '应用.模块.函数', '>> 日志文件路径')
     # 查询过期任务
-    ('0 19-21 * * *', 'analytics.tasks.check_outdated_records', '>> /var/log/money_journey/crontab.log'),
+    ('0 19-21 * * *', 'analytics.tasks.check_outdated_records', '>> /app/logs/crontab.log'),
 ]
 
 MIDDLEWARE = [
@@ -93,11 +103,11 @@ WSGI_APPLICATION = "money_journey.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DATABASE', 'money_journey'),
-        'USER': os.environ.get('MYSQL_USER', 'longfengpili'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', '123456abc'),
-        'HOST': os.environ.get('MYSQL_HOST', 'localhost'),
-        'PORT': os.environ.get('MYSQL_PORT', '3306'),
+        'NAME': os.environ.get('MYSQL_DATABASE', ''),
+        'USER': os.environ.get('MYSQL_USER', ''),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+        'HOST': os.environ.get('MYSQL_HOST', ''),
+        'PORT': os.environ.get('MYSQL_PORT', ''),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
