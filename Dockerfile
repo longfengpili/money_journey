@@ -44,9 +44,10 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 django && \
     mkdir -p /app/logs /app/run /app/staticfiles /app/media && \
-    chown -R django:django /app
+    chown -R django:django /app && \
+    chmod 755 /app/logs
 
-# USER django
+USER django
 
 EXPOSE 8000
 
