@@ -141,9 +141,9 @@ class SavingsCalculator:
         logger.info(f"Calculating month {month_idx}: prev_month={prev_month}, monthly_income={monthly_income}, monthly_expense={monthly_expense}")
         is_annual_expense_month = current_date.month == self.basic_params['annual_expense_month']
         if is_annual_expense_month:
-            total_expense = monthly_expense + self.basic_params['extra_budget']  + self.basic_params['annual_expense']
+            total_expense = monthly_expense + self.basic_params['annual_expense']
         else:
-            total_expense = monthly_expense + self.basic_params['extra_budget'] 
+            total_expense = monthly_expense 
 
         # 2. 计算活期(支出前)
         current_deposit_before_expense = prev_month['regular_deposit_standard'] - prev_month['regular_deposit']
@@ -191,7 +191,6 @@ class SavingsCalculator:
             'income': monthly_income,
             'total_expense': total_expense,
             'expense': monthly_expense,
-            'extra_budget': self.basic_params['extra_budget'],
             'is_annual_expense_month': is_annual_expense_month,
         }
 

@@ -82,7 +82,6 @@ class CalculateView(View):
                 'child_birth_year': basic_form.cleaned_data['child_birth_year'],
                 'current_amount': basic_form.cleaned_data['current_amount'],
                 'three_year_rate': basic_form.cleaned_data['three_year_rate'],
-                'extra_budget': basic_form.cleaned_data['extra_budget'],
                 'annual_expense': basic_form.cleaned_data['annual_expense'],
                 'annual_expense_month': basic_form.cleaned_data['annual_expense_month'],
                 'calculation_months': basic_form.cleaned_data['calculation_months'],
@@ -127,7 +126,6 @@ class CalculateView(View):
                     'income': float(r['income']),
                     'total_expense': float(r['total_expense']),
                     'expense': float(r['expense']),
-                    'extra_budget': float(r['extra_budget']),
                     'is_annual_expense_month': r['is_annual_expense_month'],
                 }
                 for r in results

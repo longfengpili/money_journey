@@ -41,15 +41,6 @@ class BasicParametersForm(forms.Form):
         help_text='3年定期存款的年化利率（百分比）'
     )
 
-    extra_budget = forms.DecimalField(
-        label='额外预算（元/月）',
-        max_digits=15,
-        decimal_places=2,
-        min_value=Decimal('0'),
-        initial=Decimal('0.00'),
-        help_text='每月额外的预算金额'
-    )
-
     annual_expense = forms.DecimalField(
         label='年度支出（元/年）',
         max_digits=15,

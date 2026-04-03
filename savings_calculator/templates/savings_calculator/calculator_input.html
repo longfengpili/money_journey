@@ -94,19 +94,6 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label for="{{ basic_form.extra_budget.id_for_label }}" class="form-label">
-                        {{ basic_form.extra_budget.label }}
-                    </label>
-                    {{ basic_form.extra_budget }}
-                    {% if basic_form.extra_budget.help_text %}
-                        <div class="form-text">{{ basic_form.extra_budget.help_text }}</div>
-                    {% endif %}
-                    {% if basic_form.extra_budget.errors %}
-                        <div class="text-danger">{{ basic_form.extra_budget.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="col-md-6 mb-3">
                     <label for="{{ basic_form.annual_expense.id_for_label }}" class="form-label">
                         {{ basic_form.annual_expense.label }}
                     </label>
