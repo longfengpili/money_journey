@@ -31,7 +31,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
     path('analytics/', include('analytics.urls')),
-
+    path('savings-calculator/', include('savings_calculator.urls')),
     # # 旧records路由重定向到新的funds路由
     # path('records/', RedirectView.as_view(pattern_name='record_list', permanent=True)),
     # path('records/add/', RedirectView.as_view(pattern_name='add_record', permanent=True)),

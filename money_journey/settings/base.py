@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "accounts",
     "funds",
     "analytics",
-
+    "savings_calculator",
     'django_crontab',  # For scheduled tasks
 ]
 
@@ -304,6 +304,13 @@ LOGGING = {
 
         # 您自己应用的日志
         'analytics': {  # 替换为您的应用名
+            'handlers': ['console', 'file_info', 'file_error'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        # 您自己应用的日志
+        'savings_calculator': {  # 替换为您的应用名
             'handlers': ['console', 'file_info', 'file_error'],
             'level': 'DEBUG',
             'propagate': False,

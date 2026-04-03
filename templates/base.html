@@ -32,6 +32,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'upload_csv' %}">批量上传</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'savings_calculator:calculator_input' %}">剩余资金计算</a>
+                    </li>
 
                     {% if user.is_staff or user.is_superuser %}
                     <li class="nav-item">
