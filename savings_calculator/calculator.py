@@ -67,7 +67,8 @@ class SavingsCalculator:
 
         for month_idx in range(months):
             result = self._calculate_month(month_idx, start_date)
-            self.results.append(result)
+            if result:
+                self.results.append(result)
 
         return self.results
     
@@ -91,6 +92,9 @@ class SavingsCalculator:
 
         # 计算年龄
         age = self._calculate_age(current_date, self.basic_params['parent_birth_year'])
+        if age >= 80:
+            return None
+        
         child_age = self._calculate_age(current_date, self.basic_params['child_birth_year'])
 
         # 获取当前年龄段的收入和支出
