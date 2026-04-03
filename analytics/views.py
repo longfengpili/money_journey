@@ -92,8 +92,17 @@ def dashboard(request):
         item_dict['savings_status_display'] = savings_status_choices.get(item['savings_status'], item['savings_status'])
         status_summary.append(item_dict)
 
-    # 计算总金额
+    # 计算总金额和记录数
     total_amount = active_records.aggregate(total=Sum('amount'))['total'] or 0
+    total_records = active_records.count()
+    owner_count = len(owner_summary)
+
+    # 准备图表数据
+    category_labels = [item['category_display'] for item in category_summary]
+    category_totals = [float(item['total_amount']) for item in category_summary]
+
+    bank_labels = [item['bank_display'] for item in bank_summary]
+    bank_totals = [float(item['total_amount']) for item in bank_summary]
 
     context = {
         'owner_summary': owner_summary,
@@ -101,6 +110,12 @@ def dashboard(request):
         'category_summary': category_summary,
         'status_summary': status_summary,
         'total_amount': total_amount,
+        'total_records': total_records,
+        'owner_count': owner_count,
+        'category_labels': category_labels,
+        'category_totals': category_totals,
+        'bank_labels': bank_labels,
+        'bank_totals': bank_totals,
     }
 
     return render(request, 'analytics/dashboard.html', context)

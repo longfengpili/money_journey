@@ -38,7 +38,7 @@
                             <td>{{ user_profile.user.email|default:"未填写" }}</td>
                             <td>{{ user_profile.created_at|date:"Y-m-d H:i" }}</td>
                             <td>
-                                <form method="post" action="{% url 'approve_user' user_profile.user.id %}" style="display: inline;">
+                                <form method="post" action="{% url 'accounts:approve_user' user_profile.user.id %}" style="display: inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-success btn-sm">批准</button>
                                 </form>

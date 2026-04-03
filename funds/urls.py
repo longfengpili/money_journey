@@ -1,6 +1,8 @@
 from django.urls import path
 from funds.views import record_list, add_record, edit_record, upload_csv, download_csv_template, create_snapshot
 
+app_name = 'funds'
+
 urlpatterns = [
     path('', record_list, name='record_list'),
     path('add/', add_record, name='add_record'),
