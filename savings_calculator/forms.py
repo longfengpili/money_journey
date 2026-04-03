@@ -18,7 +18,7 @@ class BasicParametersForm(forms.Form):
         label='孩子出生年份',
         min_value=1900,
         max_value=2026,
-        initial=2024,
+        initial=2014,
         help_text='请输入孩子的出生年份（1900-2026）'
     )
 

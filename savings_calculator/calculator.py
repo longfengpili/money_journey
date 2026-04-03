@@ -127,7 +127,7 @@ class SavingsCalculator:
                 return param['monthly_income'], param['monthly_expense']
 
         # 如果没有匹配的年龄段，返回0
-        return Decimal('0'), Decimal('0')
+        return Decimal('0'), self.results[-1]['monthly_expense'] if self.results else Decimal('0')  # 如果没有结果，假设支出为0
 
     def _get_initial_values(self):
         """获取初始值（第0个月之前）"""
@@ -192,9 +192,9 @@ class SavingsCalculator:
             'current_deposit_before_expense': current_deposit_before_expense,
             'regular_deposit_standard': regular_deposit_standard,
             'regular_deposit': regular_deposit,
-            'income': monthly_income,
+            'monthly_income': monthly_income,
             'total_expense': total_expense,
-            'expense': monthly_expense,
+            'monthly_expense': monthly_expense,
             'is_annual_expense_month': is_annual_expense_month,
         }
 
@@ -219,9 +219,9 @@ class SavingsCalculator:
             'final_regular_accumulated': float(last_month['regular_accumulated']),
             'final_current_deposit': float(last_month['current_deposit_before_expense']),
             'total_regular_deposit': float(sum(r['regular_deposit'] for r in self.results[-35:])),  # 只统计前35个月的定期储蓄, 其他的到期了
-            'total_income': float(sum(r['income'] for r in self.results)),
+            'total_income': float(sum(r['monthly_income'] for r in self.results)),
             'total_expense': float(sum(r['total_expense'] for r in self.results)),
-            'total_balance': float(sum(r['income'] - r['total_expense'] for r in self.results)),
-            'average_monthly_income': float(sum(r['income'] for r in self.results) / len(self.results)),
-            'average_monthly_expense': float(sum(r['expense'] for r in self.results) / len(self.results)),
+            'total_balance': float(sum(r['monthly_income'] - r['total_expense'] for r in self.results)),
+            'average_monthly_income': float(sum(r['monthly_income'] for r in self.results) / len(self.results)),
+            'average_monthly_expense': float(sum(r['monthly_expense'] for r in self.results) / len(self.results)),
         }

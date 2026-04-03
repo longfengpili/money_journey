@@ -123,9 +123,9 @@ class CalculateView(View):
                     'current_deposit_before_expense': float(r['current_deposit_before_expense']),
                     'regular_deposit_standard': float(r['regular_deposit_standard']),
                     'regular_deposit': float(r['regular_deposit']),
-                    'income': float(r['income']),
+                    'monthly_income': float(r['monthly_income']),
                     'total_expense': float(r['total_expense']),
-                    'expense': float(r['expense']),
+                    'monthly_expense': float(r['monthly_expense']),
                     'is_annual_expense_month': r['is_annual_expense_month'],
                 }
                 for r in results

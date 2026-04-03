@@ -194,9 +194,9 @@
                         <td class="text-end">¥{{ result.regular_accumulated|floatformat:2|intcomma }}</td>
                         <td class="text-end text-success">¥{{ result.regular_transfer|floatformat:2|intcomma }}</td>
                         <td class="text-end text-success fw-bold">¥{{ result.regular_deposit|floatformat:2|intcomma }}</td>
-                        <td class="text-end text-warning">¥{{ result.income|floatformat:2|intcomma }}</td>
+                        <td class="text-end text-warning">¥{{ result.monthly_income|floatformat:2|intcomma }}</td>
                         <td class="text-end text-danger">¥{{ result.total_expense|floatformat:2|intcomma }}</td>
-                        <td class="text-end text-warning">¥{{ result.expense|floatformat:2|intcomma }}</td>
+                        <td class="text-end text-warning">¥{{ result.monthly_expense|floatformat:2|intcomma }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -263,7 +263,7 @@
             </div>
             <div class="col-md-6">
                 <div class="p-3 rounded-3 bg-light">
-                    <h6 class="fw-bold mb-2 text-warning">月收入 (income)</h6>
+                    <h6 class="fw-bold mb-2 text-warning">月收入 (monthly_income)</h6>
                     <p class="mb-1 small text-muted">根据当前家长年龄所在的年龄段确定</p>
                     <code class="small">月收入 = 当前年龄段配置的 monthly_income（无匹配年龄段时为0）</code>
                 </div>
@@ -277,7 +277,7 @@
             </div>
             <div class="col-md-6">
                 <div class="p-3 rounded-3 bg-light">
-                    <h6 class="fw-bold mb-2 text-warning">月支出 (expense)</h6>
+                    <h6 class="fw-bold mb-2 text-warning">月支出 (monthly_expense)</h6>
                     <p class="mb-1 small text-muted">根据当前家长年龄所在的年龄段确定的月支出</p>
                     <code class="small">月支出 = 当前年龄段配置的 monthly_expense（无匹配年龄段时为0）</code>
                 </div>
