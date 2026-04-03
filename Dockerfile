@@ -47,7 +47,7 @@ RUN useradd -m -u 1000 django && \
     chown -R django:django /app && \
     chmod 755 /app/logs
 
-USER django
+USER root
 
 EXPOSE 8000
 
