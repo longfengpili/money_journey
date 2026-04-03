@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}计算结果 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">剩余资金计算结果</h1>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="{% url 'savings_calculator:calculator_input' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> 返回重新计算
+                </a>
+                <button type="button" class="btn btn-success" id="export-csv">
+                    <i class="bi bi-download"></i> 导出为CSV
+                </button>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-primary fs-6">计算月份: {{ summary.total_months|default:0 }} 个月</span>
+            </div>
+        </div>
+
+        <!-- 摘要卡片 -->
+        {% if summary %}
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">最终总资金</h5>
+                        <h2 class="card-text">¥{{ summary.final_total|floatformat:2|intcomma }}</h2>
+                        <p class="card-text">经过{{ summary.total_months }}个月后的总资金</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">累计定期存款</h5>
+                        <h2 class="card-text">¥{{ summary.total_regular_deposit|floatformat:2|intcomma }}</h2>
+                        <p class="card-text">所有定期存款总额</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">净收入</h5>
+                        <h2 class="card-text">¥{{ summary.total_balance|floatformat:2|intcomma }}</h2>
+                        <p class="card-text">总收入减总支出</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 计算参数 -->
+        {% if params %}
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">计算参数</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>基本参数</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>家长出生年份</span>
+                                <span class="fw-bold">{{ params.basic.parent_birth_year }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>孩子出生年份</span>
+                                <span class="fw-bold">{{ params.basic.child_birth_year }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>活期金额</span>
+                                <span class="fw-bold">¥{{ params.basic.current_amount|floatformat:2|intcomma }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>3年定期存款利率</span>
+                                <span class="fw-bold">{{ params.basic.three_year_rate }}%</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>额外预算</span>
+                                <span class="fw-bold">¥{{ params.basic.extra_budget|floatformat:2|intcomma }}/月</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>年龄段参数</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>起始年龄</th>
+                                        <th>结束年龄</th>
+                                        <th>月收入</th>
+                                        <th>月支出</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for age_range in params.age_ranges %}
+                                    <tr>
+                                        <td>{{ age_range.start_age }}</td>
+                                        <td>{{ age_range.end_age }}</td>
+                                        <td>¥{{ age_range.monthly_income|floatformat:2|intcomma }}</td>
+                                        <td>¥{{ age_range.monthly_expense|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">按月计算结果</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="results-table" class="table table-striped table-hover" style="width:100%">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>月份</th>
+                                <th>年龄</th>
+                                <th>孩子年龄</th>
+                                <th>总计</th>
+                                <th>定期累计</th>
+                                <th>定期到期</th>
+                                <th>活期</th>
+                                <th>定期前金额</th>
+                                <th>当月定期储蓄</th>
+                                <th>收入</th>
+                                <th>总支出</th>
+                                <th>支出</th>
+                                <th>额外预算</th>
+                                <th>年度支出月</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>{{ result.month }}</td>
+                                <td>{{ result.age }}</td>
+                                <td>{{ result.child_age }}</td>
+                                <td class="fw-bold">¥{{ result.total|floatformat:2|intcomma }}</td>
+                                <td>¥{{ result.regular_accumulated|floatformat:2|intcomma }}</td>
+                                <td>¥{{ result.regular_transfer|floatformat:2|intcomma }}</td>
+                                <td>¥{{ result.current_deposit_before_expense|floatformat:2|intcomma }}</td>
+                                <td>¥{{ result.regular_deposit_standard|floatformat:2|intcomma }}</td>
+                                <td class="text-success fw-bold">¥{{ result.regular_deposit|floatformat:2|intcomma }}</td>
+                                <td class="text-success">¥{{ result.income|floatformat:2|intcomma }}</td>
+                                <td class="text-danger">¥{{ result.total_expense|floatformat:2|intcomma }}</td>
+                                <td class="text-danger">¥{{ result.expense|floatformat:2|intcomma }}</td>
+                                <td class="text-info">¥{{ result.extra_budget|floatformat:2|intcomma }}</td>
+                                <td>
+                                    {% if result.is_annual_expense_month %}
+                                        <span class="badge bg-danger">是</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">否</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">总计：</th>
+                                <th>¥{{ summary.final_total|floatformat:2|intcomma }}</th>
+                                <th>¥{{ summary.final_regular_accumulated|floatformat:2|intcomma }}</th>
+                                <th>-</th>
+                                <th>¥{{ summary.final_current_deposit|floatformat:2|intcomma }}</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>¥{{ summary.total_income|floatformat:2|intcomma }}</th>
+                                <th>¥{{ summary.total_expense|floatformat:2|intcomma }}</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+
+<!-- DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化DataTable
+    const table = $('#results-table').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print',
+            {
+                text: '返回',
+                action: function (e, dt, node, config) {
+                    window.location.href = "{% url 'savings_calculator:calculator_input' %}";
+                }
+            }
+        ],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, '全部']],
+        order: [[0, 'asc']], // 按月份排序
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/zh-CN.json'
+        },
+        columnDefs: [
+            {
+                targets: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // 金额列
+                render: function(data, type, row) {
+                    if (type === 'display' || type === 'filter') {
+                        if (data.startsWith('¥')) {
+                            const num = parseFloat(data.replace('¥', '').replace(/,/g, ''));
+                            if (!isNaN(num)) {
+                                return '¥' + num.toLocaleString('zh-CN', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                            }
+                        }
+                    }
+                    return data;
+                }
+            }
+        ]
+    });
+
+    // 导出为CSV按钮
+    document.getElementById('export-csv').addEventListener('click', function() {
+        table.button('.buttons-csv').trigger();
+    });
+
+    // 添加搜索框
+    $('<div class="mb-3"><input type="text" id="search-box" class="form-control" placeholder="搜索表格内容..."></div>')
+        .insertBefore('#results-table_wrapper');
+
+    $('#search-box').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+});
+</script>
+{% endblock %}

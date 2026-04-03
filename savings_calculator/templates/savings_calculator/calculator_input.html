@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}剩余资金计算 - Money Journey{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">剩余资金计算器</h1>
+        <p class="text-muted mb-4">根据您的收入和支出情况，计算未来每月的资金剩余情况，支持3年定期存款周期。</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'savings_calculator:calculate' %}" id="calculator-form">
+            {% csrf_token %}
+
+            <!-- 基本参数卡片 -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">基本参数</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.parent_birth_year.id_for_label }}" class="form-label">
+                                {{ basic_form.parent_birth_year.label }}
+                            </label>
+                            {{ basic_form.parent_birth_year }}
+                            {% if basic_form.parent_birth_year.help_text %}
+                                <div class="form-text">{{ basic_form.parent_birth_year.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.parent_birth_year.errors %}
+                                <div class="text-danger">{{ basic_form.parent_birth_year.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.child_birth_year.id_for_label }}" class="form-label">
+                                {{ basic_form.child_birth_year.label }}
+                            </label>
+                            {{ basic_form.child_birth_year }}
+                            {% if basic_form.child_birth_year.help_text %}
+                                <div class="form-text">{{ basic_form.child_birth_year.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.child_birth_year.errors %}
+                                <div class="text-danger">{{ basic_form.child_birth_year.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.current_amount.id_for_label }}" class="form-label">
+                                {{ basic_form.current_amount.label }}
+                            </label>
+                            {{ basic_form.current_amount }}
+                            {% if basic_form.current_amount.help_text %}
+                                <div class="form-text">{{ basic_form.current_amount.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.current_amount.errors %}
+                                <div class="text-danger">{{ basic_form.current_amount.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.three_year_rate.id_for_label }}" class="form-label">
+                                {{ basic_form.three_year_rate.label }}
+                            </label>
+                            {{ basic_form.three_year_rate }}
+                            {% if basic_form.three_year_rate.help_text %}
+                                <div class="form-text">{{ basic_form.three_year_rate.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.three_year_rate.errors %}
+                                <div class="text-danger">{{ basic_form.three_year_rate.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.extra_budget.id_for_label }}" class="form-label">
+                                {{ basic_form.extra_budget.label }}
+                            </label>
+                            {{ basic_form.extra_budget }}
+                            {% if basic_form.extra_budget.help_text %}
+                                <div class="form-text">{{ basic_form.extra_budget.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.extra_budget.errors %}
+                                <div class="text-danger">{{ basic_form.extra_budget.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.annual_expense.id_for_label }}" class="form-label">
+                                {{ basic_form.annual_expense.label }}
+                            </label>
+                            {{ basic_form.annual_expense }}
+                            {% if basic_form.annual_expense.help_text %}
+                                <div class="form-text">{{ basic_form.annual_expense.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.annual_expense.errors %}
+                                <div class="text-danger">{{ basic_form.annual_expense.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.annual_expense_month.id_for_label }}" class="form-label">
+                                {{ basic_form.annual_expense_month.label }}
+                            </label>
+                            {{ basic_form.annual_expense_month }}
+                            {% if basic_form.annual_expense_month.help_text %}
+                                <div class="form-text">{{ basic_form.annual_expense_month.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.annual_expense_month.errors %}
+                                <div class="text-danger">{{ basic_form.annual_expense_month.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ basic_form.calculation_months.id_for_label }}" class="form-label">
+                                {{ basic_form.calculation_months.label }}
+                            </label>
+                            {{ basic_form.calculation_months }}
+                            {% if basic_form.calculation_months.help_text %}
+                                <div class="form-text">{{ basic_form.calculation_months.help_text }}</div>
+                            {% endif %}
+                            {% if basic_form.calculation_months.errors %}
+                                <div class="text-danger">{{ basic_form.calculation_months.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 年龄段参数卡片 -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">年龄段参数</h5>
+                    <button type="button" class="btn btn-light btn-sm" id="add-age-range">
+                        <i class="bi bi-plus"></i> 添加年龄段
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">请按年龄顺序添加年龄段，系统会根据用户年龄自动匹配对应的收入和支出。</p>
+
+                    <div id="age-range-forms">
+                        {{ age_range_formset.management_form }}
+
+                        {% for form in age_range_formset %}
+                            <div class="age-range-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">年龄段 {{ forloop.counter }}</span>
+                                    {% if not forloop.first %}
+                                        <button type="button" class="btn btn-danger btn-sm remove-age-range">
+                                            <i class="bi bi-trash"></i> 删除
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="{{ form.start_age.id_for_label }}" class="form-label">
+                                                {{ form.start_age.label }}
+                                            </label>
+                                            {{ form.start_age }}
+                                            {% if form.start_age.help_text %}
+                                                <div class="form-text">{{ form.start_age.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.start_age.errors %}
+                                                <div class="text-danger">{{ form.start_age.errors }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="{{ form.end_age.id_for_label }}" class="form-label">
+                                                {{ form.end_age.label }}
+                                            </label>
+                                            {{ form.end_age }}
+                                            {% if form.end_age.help_text %}
+                                                <div class="form-text">{{ form.end_age.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.end_age.errors %}
+                                                <div class="text-danger">{{ form.end_age.errors }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="{{ form.monthly_income.id_for_label }}" class="form-label">
+                                                {{ form.monthly_income.label }}
+                                            </label>
+                                            {{ form.monthly_income }}
+                                            {% if form.monthly_income.help_text %}
+                                                <div class="form-text">{{ form.monthly_income.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.monthly_income.errors %}
+                                                <div class="text-danger">{{ form.monthly_income.errors }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="{{ form.monthly_expense.id_for_label }}" class="form-label">
+                                                {{ form.monthly_expense.label }}
+                                            </label>
+                                            {{ form.monthly_expense }}
+                                            {% if form.monthly_expense.help_text %}
+                                                <div class="form-text">{{ form.monthly_expense.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.monthly_expense.errors %}
+                                                <div class="text-danger">{{ form.monthly_expense.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-calculator"></i> 开始计算
+                </button>
+                <button type="reset" class="btn btn-outline-secondary btn-lg">重置表单</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加年龄段表单
+    const addButton = document.getElementById('add-age-range');
+    const formsContainer = document.getElementById('age-range-forms');
+    const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+    const maxForms = parseInt('{{ age_range_formset.max_num }}') || 20;
+    let formCount = parseInt(totalFormsInput.value);
+
+    addButton.addEventListener('click', function() {
+        if (formCount >= maxForms) {
+            alert(`最多只能添加${maxForms}个年龄段`);
+            return;
+        }
+
+        // 克隆最后一个表单
+        const lastForm = formsContainer.querySelector('.age-range-form:last-child');
+        const newForm = lastForm.cloneNode(true);
+
+        // 更新表单索引
+        const newIndex = formCount;
+        newForm.dataset.formIndex = newIndex;
+
+        // 更新表单字段名称
+        const inputs = newForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.name) {
+                input.name = input.name.replace(/form-\d+/, `form-${newIndex}`);
+                input.id = input.id.replace(/id_form-\d+/, `id_form-${newIndex}`);
+            }
+        });
+
+        // 更新标签
+        const labels = newForm.querySelectorAll('label');
+        labels.forEach(label => {
+            if (label.htmlFor) {
+                label.htmlFor = label.htmlFor.replace(/id_form-\d+/, `id_form-${newIndex}`);
+            }
+        });
+
+        // 更新标题
+        const header = newForm.querySelector('.card-header span');
+        header.textContent = `年龄段 ${newIndex + 1}`;
+
+        // 确保删除按钮可见
+        const deleteBtn = newForm.querySelector('.remove-age-range');
+        if (deleteBtn) {
+            deleteBtn.style.display = 'inline-block';
+        }
+
+        // 清空输入值
+        inputs.forEach(input => {
+            if (input.type !== 'hidden') {
+                input.value = '';
+            }
+        });
+
+        // 添加到容器
+        formsContainer.appendChild(newForm);
+
+        // 更新表单计数
+        formCount++;
+        totalFormsInput.value = formCount;
+    });
+
+    // 删除年龄段表单
+    formsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-age-range') ||
+            e.target.closest('.remove-age-range')) {
+            const form = e.target.closest('.age-range-form');
+            if (formsContainer.querySelectorAll('.age-range-form').length > 1) {
+                form.remove();
+
+                // 重新编号所有表单
+                const forms = formsContainer.querySelectorAll('.age-range-form');
+                forms.forEach((formElement, index) => {
+                    formElement.dataset.formIndex = index;
+
+                    // 更新表单字段名称
+                    const inputs = formElement.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.name) {
+                            input.name = input.name.replace(/form-\d+/, `form-${index}`);
+                            input.id = input.id.replace(/id_form-\d+/, `id_form-${index}`);
+                        }
+                    });
+
+                    // 更新标签
+                    const labels = formElement.querySelectorAll('label');
+                    labels.forEach(label => {
+                        if (label.htmlFor) {
+                            label.htmlFor = label.htmlFor.replace(/id_form-\d+/, `id_form-${index}`);
+                        }
+                    });
+
+                    // 更新标题
+                    const header = formElement.querySelector('.card-header span');
+                    header.textContent = `年龄段 ${index + 1}`;
+                });
+
+                // 更新表单计数
+                formCount--;
+                totalFormsInput.value = formCount;
+            } else {
+                alert('至少需要保留一个年龄段');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
