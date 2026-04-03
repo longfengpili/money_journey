@@ -56,6 +56,36 @@
         </div>
     </div>
 
+    <!-- Snapshot Trend Chart -->
+    {% if has_snapshots %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                            <polyline points="16 7 22 7 22 13"></polyline>
+                        </svg>
+                        资金快照历史趋势
+                    </h5>
+                    <select id="ownerSelect" class="form-select form-select-sm" style="width: auto;">
+                        <option value="total">总金额趋势</option>
+                        {% for owner, display_name in owner_choices %}
+                        <option value="{{ owner }}">{{ display_name }} 的趋势</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="snapshotChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Charts Row -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -104,39 +134,43 @@
                 <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        按所有者汇总
+                        按类别汇总
                     </h5>
-                    <a href="{% url 'funds:record_list' %}?filter=owner" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    <a href="{% url 'funds:record_list' %}?filter=category" class="btn btn-sm btn-outline-primary">查看全部</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>所有者</th>
+                                    <th>类别</th>
                                     <th class="text-end">总金额</th>
                                     <th class="text-center">记录数</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for item in owner_summary %}
+                                {% for item in category_summary %}
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
-                                                {{ item.first_name|first }}
+                                            <div class="avatar-sm bg-info bg-opacity-10 text-info rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                                </svg>
                                             </div>
-                                            {{ item.first_name }}
+                                            {{ item.category_display }}
                                         </div>
                                     </td>
                                     <td class="text-end amount-positive">¥{{ item.total_amount|intcomma }}</td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ item.record_count }}</span>
+                                        <span class="badge bg-info bg-opacity-10 text-info">{{ item.record_count }}</span>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -232,43 +266,39 @@
                 <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        按类别汇总
+                        按所有者汇总
                     </h5>
-                    <a href="{% url 'funds:record_list' %}?filter=category" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    <a href="{% url 'funds:record_list' %}?filter=owner" class="btn btn-sm btn-outline-primary">查看全部</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>类别</th>
+                                    <th>所有者</th>
                                     <th class="text-end">总金额</th>
                                     <th class="text-center">记录数</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for item in category_summary %}
+                                {% for item in owner_summary %}
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-info bg-opacity-10 text-info rounded-circle me-2 d-flex align-items-center justify-content-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                                                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                                                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                                                </svg>
+                                            <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                {{ item.first_name|first }}
                                             </div>
-                                            {{ item.category_display }}
+                                            {{ item.first_name }}
                                         </div>
                                     </td>
                                     <td class="text-end amount-positive">¥{{ item.total_amount|intcomma }}</td>
                                     <td class="text-center">
-                                        <span class="badge bg-info bg-opacity-10 text-info">{{ item.record_count }}</span>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ item.record_count }}</span>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -291,6 +321,7 @@
                 </div>
             </div>
         </div>
+        
 
         <div class="col-md-6">
             <div class="card border-0 shadow-sm mb-4">
@@ -488,6 +519,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Snapshot Trend Line Chart
+    {% if has_snapshots %}
+    const snapshotCtx = document.getElementById('snapshotChart').getContext('2d');
+    const snapshotChart = new Chart(snapshotCtx, {
+        type: 'line',
+        data: {
+            labels: {{ snapshot_dates|safe }},
+            datasets: [{
+                label: '总金额',
+                data: {{ snapshot_totals|safe }},
+                borderColor: '#4F46E5',
+                backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointBackgroundColor: '#4F46E5'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '\u00a5' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        callback: function(value) { return '\u00a5' + value.toLocaleString(); }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 45, minRotation: 45 }
+                }
+            }
+        }
+    });
+
+    document.getElementById('ownerSelect').addEventListener('change', function() {
+        const selectedOwner = this.value;
+        if (selectedOwner === 'total') {
+            snapshotChart.data.datasets[0].label = '总金额';
+            snapshotChart.data.datasets[0].data = {{ snapshot_totals|safe }};
+            snapshotChart.data.datasets[0].borderColor = '#4F46E5';
+            snapshotChart.data.datasets[0].backgroundColor = 'rgba(79, 70, 229, 0.08)';
+        } else {
+            alert('所有者细分趋势功能待实现');
+            return;
+        }
+        snapshotChart.update();
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}

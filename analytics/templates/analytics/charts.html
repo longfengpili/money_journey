@@ -119,69 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    // 快照历史趋势图
-    {% if has_snapshots %}
-    const snapshotCtx = document.getElementById('snapshotChart').getContext('2d');
-    const snapshotChart = new Chart(snapshotCtx, {
-        type: 'line',
-        data: {
-            labels: {{ snapshot_dates|safe }},
-            datasets: [{
-                label: '总金额',
-                data: {{ snapshot_totals|safe }},
-                borderColor: '#4F46E5',
-                backgroundColor: 'rgba(79, 70, 229, 0.08)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 3,
-                pointBackgroundColor: '#4F46E5'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return '\u00a5' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: {
-                        callback: function(value) { return '\u00a5' + value.toLocaleString(); }
-                    }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { maxRotation: 45, minRotation: 45 }
-                }
-            }
-        }
-    });
-
-    document.getElementById('ownerSelect').addEventListener('change', function() {
-        const selectedOwner = this.value;
-        if (selectedOwner === 'total') {
-            snapshotChart.data.datasets[0].label = '总金额';
-            snapshotChart.data.datasets[0].data = {{ snapshot_totals|safe }};
-            snapshotChart.data.datasets[0].borderColor = '#4F46E5';
-            snapshotChart.data.datasets[0].backgroundColor = 'rgba(79, 70, 229, 0.08)';
-        } else {
-            alert('所有者细分趋势功能待实现');
-            return;
-        }
-        snapshotChart.update();
-    });
-    {% endif %}
 });
 </script>
 {% endblock %}
@@ -195,34 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <p class="text-muted mb-4">通过可视化图表了解您的资金分布情况</p>
-
-<!-- 快照历史趋势图 -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <h5 class="mb-0">资金快照历史趋势</h5>
-        </div>
-        <select id="ownerSelect" class="form-select form-select-sm" style="width: auto;">
-            <option value="total">总金额趋势</option>
-            {% for owner, display_name in owner_choices %}
-            <option value="{{ owner }}">{{ display_name }} 的趋势</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="card-body">
-        {% if has_snapshots %}
-        <div class="chart-container">
-            <canvas id="snapshotChart"></canvas>
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-3"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-            <p>暂无快照数据，请管理员在资金记录页面创建快照</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
 
 <div class="row">
     <div class="col-md-6 mb-4">
