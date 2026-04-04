@@ -199,9 +199,9 @@ class SavingsCalculator:
         }
 
     def _calculate_regular_accumulated(self, month_idx, new_regular_deposit):
-        """计算定期累计（前35个月当月定期储蓄总和）"""
+        """计算定期累计（前34个月, 包含当月, 共计35定期储蓄总和）"""
         total = Decimal('0')
-        for result in self.results[-35:]:  # 只考虑前35个月的当月定期储蓄
+        for result in self.results[-34:]:  # 只考虑前35个月的当月定期储蓄
             total += result['regular_deposit']
         return total + new_regular_deposit
 
