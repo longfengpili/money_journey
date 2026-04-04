@@ -148,9 +148,15 @@
 
 <!-- 数据表格 -->
 <div class="card">
-    <div class="card-header d-flex align-items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-table"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
-        <h5 class="mb-0">月计算结果</h5>
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-table"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+            <h5 class="mb-0">月计算结果</h5>
+        </div>
+        <button type="button" id="annual-only-btn" class="btn btn-outline-primary btn-sm" title="只显示每年12月的数据">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar me-1"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            只看每年12月
+        </button>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -366,13 +372,22 @@ document.addEventListener('DOMContentLoaded', function() {
         table.button('.buttons-csv').trigger();
     });
 
-    // 添加自定义搜索框到filter区域
-    $('#results-table_wrapper .dt-filter').html('');
-    var searchInput = $('<input type="text" id="search-box" class="form-control form-control-sm" style="width:200px;" placeholder="搜索表格内容...">');
-    searchInput.on('keyup', function() {
-        table.search(this.value).draw();
+    // "只看每年12月"按钮功能
+    var isAnnualOnly = false;
+    $('#annual-only-btn').on('click', function() {
+        isAnnualOnly = !isAnnualOnly;
+        if (isAnnualOnly) {
+            $(this).addClass('active btn-primary').removeClass('btn-outline-primary');
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var month = data[0].trim();
+                return month.endsWith('-12');
+            });
+        } else {
+            $(this).removeClass('active btn-primary').addClass('btn-outline-primary');
+            $.fn.dataTable.ext.search.pop();
+        }
+        table.draw();
     });
-    $('#results-table_wrapper .dt-filter').append(searchInput);
 });
 </script>
 {% endblock %}
