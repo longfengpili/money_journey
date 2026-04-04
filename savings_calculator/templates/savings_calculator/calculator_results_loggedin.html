@@ -120,7 +120,7 @@
                     年龄段参数
                 </h6>
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm calculator-age-params-table">
                         <thead>
                             <tr>
                                 <th>起始年龄</th>
@@ -132,10 +132,10 @@
                         <tbody>
                             {% for age_range in params.age_ranges %}
                             <tr>
-                                <td>{{ age_range.start_age }}</td>
-                                <td>{{ age_range.end_age }}</td>
-                                <td>¥{{ age_range.monthly_income|floatformat:2|intcomma }}</td>
-                                <td>¥{{ age_range.monthly_expense|floatformat:2|intcomma }}</td>
+                                <td class="age-cell">{{ age_range.start_age }}</td>
+                                <td class="age-cell">{{ age_range.end_age }}</td>
+                                <td class="amount-cell">¥{{ age_range.monthly_income|floatformat:2|intcomma }}</td>
+                                <td class="amount-cell">¥{{ age_range.monthly_expense|floatformat:2|intcomma }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
