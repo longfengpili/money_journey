@@ -38,14 +38,17 @@ COPY docker/django/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/django/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Copy Gunicorn start script
+COPY docker/django/start_gunicorn.sh /start_gunicorn.sh
+RUN chmod +x /start_gunicorn.sh
+
 # Set entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 django && \
     mkdir -p /app/logs /app/run /app/staticfiles /app/media && \
-    chown -R django:django /app && \
-    chmod 755 /app/logs
+    chown -R django:django /app
 
 USER root
 
