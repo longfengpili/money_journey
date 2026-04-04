@@ -223,7 +223,7 @@ def edit_record(request, record_id):
             record.save()
 
             messages.success(request, '资金记录更新成功！')
-            return redirect('record_list')
+            return redirect('funds:record_list')
         except Exception as e:
             messages.error(request, f'更新记录失败: {str(e)}')
             return redirect('funds:edit_record', record_id=record_id)
