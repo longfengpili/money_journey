@@ -28,7 +28,7 @@ def health_check(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='index.html'), name='home'), # 首页路由
+    path('', TemplateView.as_view(template_name='index.html'), name='index'), # 首页路由
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
     path('analytics/', include('analytics.urls')),

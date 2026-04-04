@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 from funds.models import FundRecord, FundSnapshot
 from .demorecord import DEMO_DATA
 
-def index(request):
-    """首页视图"""
-    return render(request, 'analytics/index.html')
+# def index(request):
+#     """首页视图"""
+#     return render(request, 'analytics/index.html')
 
 
 def dashboard(request):

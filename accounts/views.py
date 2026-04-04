@@ -87,7 +87,7 @@ def user_approval_list(request):
     """管理员查看待批准用户列表"""
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以访问此页面')
-        return redirect('accounts:index')
+        return redirect('index')
 
     pending_users = UserProfile.objects.filter(is_approved=False).select_related('user')
     return render(request, 'accounts/user_approval_list.html', {'pending_users': pending_users})
@@ -100,7 +100,7 @@ def approve_user(request, user_id):
     """管理员批准用户（POST请求）"""
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以执行此操作')
-        return redirect('accounts:index')
+        return redirect('index')
 
     try:
         user_profile = UserProfile.objects.get(user_id=user_id)

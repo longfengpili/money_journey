@@ -158,11 +158,11 @@ def edit_record(request, record_id):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-                return redirect('funds:index')
+                return redirect('index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-            return redirect('funds:index')
+            return redirect('index')
 
     if request.method == 'POST':
         try:
@@ -254,11 +254,11 @@ def upload_csv(request):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-                return redirect('funds:index')
+                return redirect('index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-            return redirect('funds:index')
+            return redirect('index')
 
     # 上传限制常量
     MAX_ROWS = 10000  # 最大行数限制
@@ -516,11 +516,11 @@ def download_csv_template(request):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-                return redirect('funds:index')
+                return redirect('index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-            return redirect('funds:index')
+            return redirect('index')
 
     # 创建CSV模板
     response = HttpResponse(content_type='text/csv')
