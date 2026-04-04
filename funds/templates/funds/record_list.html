@@ -197,13 +197,17 @@
                             <div class="d-flex align-items-center gap-2">
                                 <span class="avatar-circle bg-primary bg-opacity-10 text-primary"
                                     style="width:28px;height:28px;font-size:11px;">
-                                    {% if record.user and record.user.first_name %}{% if record.user.first_name.strip
-                                    %}{{ record.user.first_name.0 }}{% else %}{{ record.owner.0 }}{% endif %}{% else
-                                    %}{{ record.owner.0 }}{% endif %}
+                                    {% if record.user.first_name.strip %}
+                                    {{ record.user.first_name.0 }}
+                                    {% else %}
+                                    {{ record.owner.0 }}
+                                    {% endif %}
                                 </span>
-                                {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{
-                                record.user.first_name }}{% else %}{{ record.owner }}{% endif %}{% else %}{{
-                                record.owner }}{% endif %}
+                                {% if record.user.first_name.strip %}
+                                {{ record.user.first_name }}
+                                {% else %}
+                                {{ record.owner }}
+                                {% endif %}
                             </div>
                         </td>
                         <td>{{ record.get_bank_display }}</td>
