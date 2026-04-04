@@ -322,8 +322,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化定期存款表格的DataTable
     const table = $('#time-deposit-table').DataTable({
         dom: '<"row"<"col-sm-12 col-md-12"f>>rt',
-        // pageLength: 25,
-        // lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, '全部']],
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, '全部']],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/zh-CN.json'
         },
