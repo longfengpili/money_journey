@@ -37,7 +37,7 @@ class BasicParametersForm(forms.Form):
         decimal_places=2,
         min_value=Decimal('0'),
         max_value=Decimal('100'),
-        initial=Decimal('3.00'),
+        initial=Decimal('1.60'),
         help_text='3年定期存款的年化利率（百分比）'
     )
 
