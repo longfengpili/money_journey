@@ -153,8 +153,8 @@ class SavingsCalculator:
         current_deposit_before_expense = prev_month['regular_deposit_standard'] - prev_month['regular_deposit']
 
         # 3. 定期到期（前第36个月到期的钱）
-        regular_transfer = self.results[-35]['regular_deposit'] * (1 + self.basic_params['three_year_rate'] / 100 * 3) \
-                           if len(self.results) >= 35 else Decimal('0')  # 注意：这里使用前35个月的数据，因为第36个月才到期
+        regular_transfer = self.results[-36]['regular_deposit'] * (1 + self.basic_params['three_year_rate'] / 100 * 3) \
+                           if len(self.results) >= 36 else Decimal('0')  # 注意：这里使用前36个月的数据，因为第37个月才到期
 
         # 4. 计算定期前金额
         regular_deposit_standard = (
@@ -199,9 +199,9 @@ class SavingsCalculator:
         }
 
     def _calculate_regular_accumulated(self, month_idx, new_regular_deposit):
-        """计算定期累计（前34个月, 包含当月, 共计35定期储蓄总和）"""
+        """计算定期累计（前35个月, 包含当月, 共计36期定期储蓄总和）"""
         total = Decimal('0')
-        for result in self.results[-34:]:  # 只考虑前35个月的当月定期储蓄
+        for result in self.results[-35:]:  # 只考虑前35个月的当月定期储蓄
             total += result['regular_deposit']
         return total + new_regular_deposit
 

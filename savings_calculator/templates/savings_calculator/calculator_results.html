@@ -259,8 +259,8 @@
             <div class="col-md-6">
                 <div class="p-3 rounded-3 bg-light">
                     <h6 class="fw-bold mb-2 text-primary">定期累计 (regular_accumulated)</h6>
-                    <p class="mb-1 small text-muted">最近36个月存入定期的金额总和（超过36个月的定期已到期转出）</p>
-                    <code class="small">regular_accumulated = Σ(最近36个月的储蓄，包含当月)</code>
+                    <p class="mb-1 small text-muted">最近36个月存入定期的金额总和（前35个月 + 当月，超过36个月的定期已到期转出）</p>
+                    <code class="small">regular_accumulated = Σ(前35个月的储蓄) + 当月储蓄</code>
                 </div>
             </div>
             <div class="col-md-6">
@@ -273,15 +273,22 @@
             <div class="col-md-6">
                 <div class="p-3 rounded-3 bg-light">
                     <h6 class="fw-bold mb-2 text-primary">活期余额 (current_deposit_before_expense)</h6>
-                    <p class="mb-1 small text-muted">扣除当月定期储蓄后剩余的活期金额</p>
+                    <p class="mb-1 small text-muted">上月扣除定期储蓄后剩余的活期金额</p>
                     <code class="small">活期余额 = 上月(定期前金额 - 当月储蓄)</code>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-light">
+                    <h6 class="fw-bold mb-2 text-success">定期前金额 (regular_deposit_standard)</h6>
+                    <p class="mb-1 small text-muted">当月可用于分配的资金总额</p>
+                    <code class="small">定期前金额 = 定期到期 + 活期余额 + 月收入 - 总支出</code>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="p-3 rounded-3 bg-light">
                     <h6 class="fw-bold mb-2 text-success">当月储蓄 (regular_deposit)</h6>
                     <p class="mb-1 small text-muted">超出活期保留金额的部分，按整万元向下取整存入定期</p>
-                    <code class="small">定期前金额 = 定期到期 + 活期余额 + 月收入 - 总支出<br>可用金额 = max(0, 定期前金额 - 活期保留金额)<br>当月储蓄 = floor(可用金额 / 10000) × 10000（≥1万时）</code>
+                    <code class="small">可用金额 = max(0, 定期前金额 - 活期保留金额)<br>当月储蓄 = floor(可用金额 / 10000) × 10000（≥1万时）</code>
                 </div>
             </div>
             <div class="col-md-6">
