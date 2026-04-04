@@ -389,14 +389,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         table.draw();
     });
-
-    // 添加自定义搜索框到filter区域
-    $('#results-table_wrapper .dt-filter').html('');
-    var searchInput = $('<input type="text" id="search-box" class="form-control form-control-sm" style="width:200px;" placeholder="搜索表格内容...">');
-    searchInput.on('keyup', function() {
-        table.search(this.value).draw();
-    });
-    $('#results-table_wrapper .dt-filter').append(searchInput);
 });
 </script>
 {% endblock %}
