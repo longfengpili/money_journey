@@ -22,9 +22,10 @@ def convert_decimals_to_floats(obj):
         return obj
 
 
-@method_decorator(login_required, name='dispatch')
+# ==================== 游客模式视图（无需登录） ====================
+
 class CalculatorInputView(TemplateView):
-    """参数输入页面"""
+    """游客模式 - 参数输入页面"""
     template_name = 'savings_calculator/calculator_input.html'
 
     def get_context_data(self, **kwargs):
@@ -51,9 +52,8 @@ class CalculatorInputView(TemplateView):
         return context
 
 
-@method_decorator(login_required, name='dispatch')
 class CalculateView(View):
-    """处理计算请求"""
+    """游客模式 - 处理计算请求"""
 
     def post(self, request):
         # 处理基本参数表单
@@ -155,9 +155,8 @@ class CalculateView(View):
             })
 
 
-@method_decorator(login_required, name='dispatch')
 class ResultsView(TemplateView):
-    """计算结果展示页面"""
+    """游客模式 - 计算结果展示页面"""
     template_name = 'savings_calculator/calculator_results.html'
 
     def get_context_data(self, **kwargs):
@@ -176,5 +175,127 @@ class ResultsView(TemplateView):
         context['summary'] = summary
         context['params'] = params
         context['results_json'] = json.dumps(results, ensure_ascii=False)
+
+        return context
+
+
+# ==================== 登录模式视图（需登录，后续可扩展） ====================
+
+@method_decorator(login_required, name='dispatch')
+class LoggedInCalculatorInputView(CalculatorInputView):
+    """登录模式 - 参数输入页面"""
+    template_name = 'savings_calculator/calculator_input_loggedin.html'
+
+
+@method_decorator(login_required, name='dispatch')
+class LoggedInCalculateView(CalculateView):
+    """登录模式 - 处理计算请求"""
+
+    def post(self, request):
+        # 复用游客模式的计算逻辑
+        basic_form = BasicParametersForm(request.POST)
+        AgeRangeFormSet = create_age_range_formset()
+        age_range_formset = AgeRangeFormSet(request.POST)
+
+        if not basic_form.is_valid():
+            messages.error(request, '基本参数表单有误，请检查输入')
+            return render(request, 'savings_calculator/calculator_input_loggedin.html', {
+                'basic_form': basic_form,
+                'age_range_formset': age_range_formset,
+            })
+
+        if not age_range_formset.is_valid():
+            messages.error(request, '年龄段参数有误，请检查输入')
+            return render(request, 'savings_calculator/calculator_input_loggedin.html', {
+                'basic_form': basic_form,
+                'age_range_formset': age_range_formset,
+            })
+
+        try:
+            basic_params = {
+                'parent_birth_year': basic_form.cleaned_data['parent_birth_year'],
+                'child_birth_year': basic_form.cleaned_data['child_birth_year'],
+                'current_amount': basic_form.cleaned_data['current_amount'],
+                'three_year_rate': basic_form.cleaned_data['three_year_rate'],
+                'annual_expense': basic_form.cleaned_data['annual_expense'],
+                'annual_expense_month': basic_form.cleaned_data['annual_expense_month'],
+                'calculation_months': basic_form.cleaned_data['calculation_months'],
+            }
+
+            age_range_params = []
+            for form in age_range_formset:
+                if form.cleaned_data:
+                    age_range_params.append({
+                        'start_age': form.cleaned_data['start_age'],
+                        'end_age': form.cleaned_data['end_age'],
+                        'monthly_income': form.cleaned_data['monthly_income'],
+                        'monthly_expense': form.cleaned_data['monthly_expense'],
+                    })
+
+            if not age_range_params:
+                messages.error(request, '至少需要设置一个年龄段')
+                return render(request, 'savings_calculator/calculator_input_loggedin.html', {
+                    'basic_form': basic_form,
+                    'age_range_formset': age_range_formset,
+                })
+
+            calculator = SavingsCalculator(basic_params, age_range_params)
+            results = calculator.calculate()
+            summary = calculator.get_summary()
+
+            request.session['calculation_results'] = [
+                {
+                    'month': r['month'],
+                    'month_index': r['month_index'],
+                    'age': r['age'],
+                    'child_age': r['child_age'],
+                    'total': float(r['total']),
+                    'regular_accumulated': float(r['regular_accumulated']),
+                    'regular_transfer': float(r['regular_transfer']),
+                    'current_deposit_before_expense': float(r['current_deposit_before_expense']),
+                    'regular_deposit_standard': float(r['regular_deposit_standard']),
+                    'regular_deposit': float(r['regular_deposit']),
+                    'monthly_income': float(r['monthly_income']),
+                    'total_expense': float(r['total_expense']),
+                    'monthly_expense': float(r['monthly_expense']),
+                    'is_annual_expense_month': r['is_annual_expense_month'],
+                }
+                for r in results
+            ]
+
+            request.session['calculation_summary'] = convert_decimals_to_floats(summary)
+            request.session['calculation_params'] = convert_decimals_to_floats({
+                'basic': basic_params,
+                'age_ranges': age_range_params,
+            })
+
+            return redirect('savings_calculator:results_loggedin')
+
+        except ValueError as e:
+            messages.error(request, f'计算错误：{str(e)}')
+            return render(request, 'savings_calculator/calculator_input_loggedin.html', {
+                'basic_form': basic_form,
+                'age_range_formset': age_range_formset,
+            })
+        except Exception as e:
+            messages.error(request, f'系统错误：{str(e)}')
+            return render(request, 'savings_calculator/calculator_input_loggedin.html', {
+                'basic_form': basic_form,
+                'age_range_formset': age_range_formset,
+            })
+
+
+@method_decorator(login_required, name='dispatch')
+class LoggedInResultsView(ResultsView):
+    """登录模式 - 计算结果展示页面"""
+    template_name = 'savings_calculator/calculator_results_loggedin.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        results = self.request.session.get('calculation_results')
+        if not results:
+            messages.warning(self.request, '没有找到计算结果，请先进行计算')
+            return redirect('savings_calculator:calculator_input_loggedin')
 
         return context

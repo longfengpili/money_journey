@@ -29,7 +29,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'savings_calculator:calculator_input' %}">
+                        <a class="nav-link" href="{% if user.is_authenticated %}{% url 'savings_calculator:calculator_input_loggedin' %}{% else %}{% url 'savings_calculator:calculator_input' %}{% endif %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" class="lucide lucide-calculator me-1">
