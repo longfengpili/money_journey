@@ -7,7 +7,12 @@
 
 {% if not user.is_authenticated %}
 <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info flex-shrink-0">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" x2="12" y1="16" y2="12" />
+        <line x1="12" x2="12.01" y1="8" y2="8" />
+    </svg>
     <span>当前为<b>演示数据</b>，登录后可查看和管理您的真实资金记录。</span>
     <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-primary ms-auto">登录</a>
 </div>
@@ -15,7 +20,16 @@
 
 <div class="page-header">
     <h1>
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-list">
+            <line x1="8" x2="21" y1="6" y2="6" />
+            <line x1="8" x2="21" y1="12" y2="12" />
+            <line x1="8" x2="21" y1="18" y2="18" />
+            <line x1="3" x2="3.01" y1="6" y2="6" />
+            <line x1="3" x2="3.01" y1="12" y2="12" />
+            <line x1="3" x2="3.01" y1="18" y2="18" />
+        </svg>
         资金记录列表
     </h1>
     <div class="d-flex gap-2">
@@ -23,14 +37,25 @@
         <form action="{% url 'funds:create_snapshot' %}" method="post" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确定要创建当前资金快照吗？')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera me-1"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-camera me-1">
+                    <path
+                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                </svg>
                 创建快照
             </button>
         </form>
         {% endif %}
         {% if user.is_authenticated %}
         <a href="{% url 'funds:add_record' %}" class="btn btn-primary btn-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus me-1"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-plus me-1">
+                <line x1="12" x2="12" y1="5" y2="19" />
+                <line x1="5" x2="19" y1="12" y2="12" />
+            </svg>
             添加新记录
         </a>
         {% endif %}
@@ -40,7 +65,13 @@
 <!-- 活期存款表格 -->
 <div class="card mb-4">
     <div class="card-header d-flex align-items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-wallet">
+            <path
+                d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+            <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+        </svg>
         <h5 class="mb-0">活期存款</h5>
         <span class="badge bg-primary bg-opacity-10 text-primary ms-2">{{ current_records|length }} 条</span>
     </div>
@@ -53,25 +84,35 @@
                         <th>银行</th>
                         <th>类别</th>
                         <th>金额</th>
-                        <th>状态</th>
+                        <th>更新时间</th>
                         {% if user.is_authenticated %}<th>操作</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
+                    {% now "Y-m-d" as today %}
                     {% for record in current_records %}
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="avatar-circle bg-primary bg-opacity-10 text-primary" style="width:28px;height:28px;font-size:11px;">
-                                    {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{ record.user.first_name.0 }}{% else %}{{ record.owner.0 }}{% endif %}{% else %}{{ record.owner.0 }}{% endif %}
+                                <span class="avatar-circle bg-primary bg-opacity-10 text-primary"
+                                    style="width:28px;height:28px;font-size:11px;">
+                                    {% if record.user.first_name.strip %}
+                                    {{ record.user.first_name.0 }}
+                                    {% else %}
+                                    {{ record.owner.0 }}
+                                    {% endif %}
                                 </span>
-                                {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}{% else %}{{ record.owner }}{% endif %}
+                                {% if record.user.first_name.strip %}
+                                {{ record.user.first_name }}
+                                {% else %}
+                                {{ record.owner }}
+                                {% endif %}
                             </div>
                         </td>
                         <td>{{ record.get_bank_display }}</td>
                         <td>{{ record.get_category_display }}</td>
                         <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
-                        <td>
+                        <!-- <td>
                             <span class="badge
                                 {% if record.savings_status == 'ACTIVE' %}bg-success bg-opacity-10 text-success
                                 {% elif record.savings_status == 'MATURED' %}bg-warning bg-opacity-10 text-warning
@@ -80,13 +121,20 @@
                                 {% else %}bg-light text-dark{% endif %}">
                                 {{ record.get_savings_status_display }}
                             </span>
+                        </td> -->
+                        <td>
+                            {{ record.updated_at|date:"Y-m-d H:i" }}
+                            {% if record.updated_at|date:"Y-m-d" == today %}
+                            <span class="badge bg-success bg-opacity-10 text-success ms-1">今日更新</span>
+                            {% endif %}
                         </td>
                         {% if user.is_authenticated %}
                         <td>
                             {% if user.is_superuser or record.user.id == request.user.id %}
-                                <a href="{% url 'funds:edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                            <a href="{% url 'funds:edit_record' record.id %}"
+                                class="btn btn-sm btn-outline-primary">编辑</a>
                             {% else %}
-                                <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
                             {% endif %}
                         </td>
                         {% endif %}
@@ -95,7 +143,13 @@
                     <tr>
                         <td colspan="{% if user.is_authenticated %}6{% else %}5{% endif %}">
                             <div class="empty-state">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-inbox"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-inbox">
+                                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                                    <path
+                                        d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                                </svg>
                                 <p>暂无活期存款记录</p>
                             </div>
                         </td>
@@ -110,7 +164,13 @@
 <!-- 定期存款表格 -->
 <div class="card">
     <div class="card-header d-flex align-items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-vault"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-vault">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M3 9h18" />
+            <path d="M9 21V9" />
+        </svg>
         <h5 class="mb-0">定期存款</h5>
         <span class="badge bg-primary bg-opacity-10 text-primary ms-2">{{ other_records|length }} 条</span>
     </div>
@@ -135,33 +195,38 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="avatar-circle bg-primary bg-opacity-10 text-primary" style="width:28px;height:28px;font-size:11px;">
-                                    {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{ record.user.first_name.0 }}{% else %}{{ record.owner.0 }}{% endif %}{% else %}{{ record.owner.0 }}{% endif %}
+                                <span class="avatar-circle bg-primary bg-opacity-10 text-primary"
+                                    style="width:28px;height:28px;font-size:11px;">
+                                    {% if record.user and record.user.first_name %}{% if record.user.first_name.strip
+                                    %}{{ record.user.first_name.0 }}{% else %}{{ record.owner.0 }}{% endif %}{% else
+                                    %}{{ record.owner.0 }}{% endif %}
                                 </span>
-                                {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{ record.user.first_name }}{% else %}{{ record.owner }}{% endif %}{% else %}{{ record.owner }}{% endif %}
+                                {% if record.user and record.user.first_name %}{% if record.user.first_name.strip %}{{
+                                record.user.first_name }}{% else %}{{ record.owner }}{% endif %}{% else %}{{
+                                record.owner }}{% endif %}
                             </div>
                         </td>
                         <td>{{ record.get_bank_display }}</td>
                         <td class="amount-positive">¥{{ record.amount|intcomma }}</td>
                         <td>
                             {% if record.interest_rate %}
-                                {{ record.interest_rate }}%
+                            {{ record.interest_rate }}%
                             {% else %}
-                                <span class="text-muted">-</span>
+                            <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if record.deposit_period %}
-                                {{ record.deposit_period }}年
+                            {{ record.deposit_period }}年
                             {% else %}
-                                <span class="text-muted">-</span>
+                            <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if record.due_date %}
-                                {{ record.due_date|date:"Y-m-d" }}
+                            {{ record.due_date|date:"Y-m-d" }}
                             {% else %}
-                                <span class="text-muted">-</span>
+                            <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         <td>
@@ -176,17 +241,18 @@
                         </td>
                         <td>
                             {% if record.interest_rate %}
-                                <span class="amount-positive">¥{{ record.interest_amount|floatformat:2|intcomma }}</span>
+                            <span class="amount-positive">¥{{ record.interest_amount|floatformat:2|intcomma }}</span>
                             {% else %}
-                                <span class="text-muted">-</span>
+                            <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         {% if user.is_authenticated %}
                         <td>
                             {% if user.is_superuser or record.user.id == request.user.id %}
-                                <a href="{% url 'funds:edit_record' record.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+                            <a href="{% url 'funds:edit_record' record.id %}"
+                                class="btn btn-sm btn-outline-primary">编辑</a>
                             {% else %}
-                                <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled>编辑</button>
                             {% endif %}
                         </td>
                         {% endif %}
@@ -195,7 +261,13 @@
                     <tr>
                         <td colspan="{% if user.is_authenticated %}9{% else %}8{% endif %}">
                             <div class="empty-state">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-inbox"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-inbox">
+                                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                                    <path
+                                        d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                                </svg>
                                 <p>暂无定期存款记录</p>
                             </div>
                         </td>

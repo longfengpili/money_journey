@@ -1,5 +1,6 @@
 
 from datetime import datetime
+from django.utils import timezone
 from decimal import Decimal
 
 from funds.models import FundRecord
@@ -9,7 +10,7 @@ from funds.models import FundRecord
 class DemoRecord:
     """游客模式演示记录的模拟对象"""
     def __init__(self, id, owner, bank, category, amount, savings_status='ACTIVE',
-                 interest_rate=None, deposit_period=None, due_date=None, user=None):
+                 interest_rate=None, deposit_period=None, due_date=None, user=None, updated_at=None):
         self.id = id
         self.owner = owner
         self.bank = bank
@@ -20,6 +21,7 @@ class DemoRecord:
         self.deposit_period = deposit_period
         self.due_date = due_date
         self.user = user
+        self.updated_at = updated_at or timezone.now()
 
     def get_bank_display(self):
         return dict(FundRecord.BANK_CHOICES).get(self.bank, self.bank)
@@ -39,18 +41,18 @@ class DemoRecord:
 
 # 游客模式演示数据
 DEMO_CURRENT_RECORDS = [
-    DemoRecord(1, '张三', 'ICBC', 'CURRENT', 150000, 'ACTIVE'),
-    DemoRecord(3, '王五', 'ABC', 'WEALTH_MANAGEMENT', 120000, 'ACTIVE'),
-    DemoRecord(2, '李四', 'CCB', 'CURRENT', 80000, 'ACTIVE'),
-    DemoRecord(4, '张三', 'BOC', 'FUND', 60000, 'ACTIVE'),
+    DemoRecord(1, '张三', 'ICBC', 'CURRENT', 150000, 'ACTIVE', updated_at=datetime.now()),
+    DemoRecord(3, '王五', 'ABC', 'WEALTH_MANAGEMENT', 120000, 'ACTIVE', updated_at=datetime.now()),
+    DemoRecord(2, '李四', 'CCB', 'CURRENT', 80000, 'ACTIVE', updated_at=datetime.now()),
+    DemoRecord(4, '张三', 'BOC', 'FUND', 60000, 'ACTIVE', updated_at=datetime.now()),
 ]
 
 DEMO_OTHER_RECORDS = [
-    DemoRecord(5, '张三', 'ICBC', 'SAVINGS', 200000, 'ACTIVE', 2.75, 3, datetime(2027, 6, 15)),
-    DemoRecord(6, '李四', 'CCB', 'SAVINGS', 150000, 'ACTIVE', 2.50, 1, datetime(2027, 8, 20)),
-    DemoRecord(7, '王五', 'ABC', 'SAVINGS', 100000, 'ACTIVE', 3.00, 5, datetime(2028, 3, 10)),
-    DemoRecord(8, '张三', 'BOC', 'SAVINGS', 180000, 'ACTIVE', 2.80, 2, datetime(2029, 1, 5)),
-    DemoRecord(9, '李四', 'CMB', 'SAVINGS', 120000, 'ACTIVE', 2.60, 3, datetime(2029, 11, 30)),
-    DemoRecord(10, '王五', 'ICBC', 'SAVINGS', 80000, 'ACTIVE', 2.40, 1, datetime(2029, 12, 25)),
+    DemoRecord(5, '张三', 'ICBC', 'SAVINGS', 200000, 'ACTIVE', 2.75, 3, datetime(2027, 6, 15), updated_at=datetime.now()),
+    DemoRecord(6, '李四', 'CCB', 'SAVINGS', 150000, 'ACTIVE', 2.50, 1, datetime(2027, 8, 20), updated_at=datetime.now()),
+    DemoRecord(7, '王五', 'ABC', 'SAVINGS', 100000, 'ACTIVE', 3.00, 5, datetime(2028, 3, 10), updated_at=datetime.now()),
+    DemoRecord(8, '张三', 'BOC', 'SAVINGS', 180000, 'ACTIVE', 2.80, 2, datetime(2029, 1, 5), updated_at=datetime.now()),
+    DemoRecord(9, '李四', 'CMB', 'SAVINGS', 120000, 'ACTIVE', 2.60, 3, datetime(2029, 11, 30), updated_at=datetime.now()),
+    DemoRecord(10, '王五', 'ICBC', 'SAVINGS', 80000, 'ACTIVE', 2.40, 1, datetime(2029, 12, 25), updated_at=datetime.now()),
 ]
 
