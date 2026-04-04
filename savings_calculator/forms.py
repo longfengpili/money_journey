@@ -46,7 +46,7 @@ class BasicParametersForm(forms.Form):
         max_digits=15,
         decimal_places=2,
         min_value=Decimal('0'),
-        initial=Decimal('0.00'),
+        initial=Decimal('10000.00'),
         help_text='每年一次性的大额支出'
     )
 
