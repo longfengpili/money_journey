@@ -173,10 +173,11 @@
         </svg>
         <h5 class="mb-0">定期存款</h5>
         <span class="badge bg-primary bg-opacity-10 text-primary ms-2">{{ other_records|length }} 条</span>
+        <div class="ms-auto" id="search-container"></div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table id="time-deposit-table" class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>所有者</th>
@@ -282,4 +283,71 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+
+<style>
+/* 自定义DataTables搜索框样式 */
+#search-container .dataTables_filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    white-space: nowrap;
+}
+
+#search-container .dataTables_filter label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+}
+
+#search-container .dataTables_filter input {
+    margin: 0;
+    min-width: 200px;
+}
+</style>
+
+<!-- DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化定期存款表格的DataTable
+    const table = $('#time-deposit-table').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-12"f>>rt',
+        // pageLength: 25,
+        // lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, '全部']],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/zh-CN.json'
+        },
+        // 启用Bootstrap样式
+        responsive: true,
+        initComplete: function() {
+            // 将DataTables搜索框移动到card-header的搜索容器中
+            const searchContainer = $('#search-container');
+            const dataTablesFilter = $('.dataTables_filter');
+            if (dataTablesFilter.length) {
+                // 获取原始搜索框的父容器（在移动前）
+                const originalContainer = dataTablesFilter.parent();
+
+                // 移动搜索框到card-header
+                searchContainer.html(dataTablesFilter);
+
+                // 调整搜索框样式
+                dataTablesFilter.find('input').addClass('form-control-sm');
+
+                // 隐藏原始容器（避免出现空白区域）
+                originalContainer.hide();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

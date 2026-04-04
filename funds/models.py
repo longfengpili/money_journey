@@ -29,7 +29,7 @@ class FundRecord(models.Model):
     CATEGORY_CHOICES = [
         ('CURRENT', '活期存款'),
         ('SAVINGS', '储蓄存款'),
-        ('TIME_DEPOSIT', '定期存款'),
+        # ('TIME_DEPOSIT', '定期存款'),
         ('WEALTH_MANAGEMENT', '理财产品'),
         ('FUND', '基金'),
         ('STOCK', '股票'),
@@ -41,7 +41,7 @@ class FundRecord(models.Model):
     # 储蓄状态选择
     SAVINGS_STATUS_CHOICES = [
         ('ACTIVE', '存续中'),
-        ('MATURED', '已到期'),
+        # ('MATURED', '已到期'),
         ('WITHDRAWN', '已取出'),
         ('ROLLED_OVER', '已续存'),
     ]
