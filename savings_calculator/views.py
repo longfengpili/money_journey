@@ -298,4 +298,6 @@ class LoggedInResultsView(ResultsView):
             messages.warning(self.request, '没有找到计算结果，请先进行计算')
             return redirect('savings_calculator:calculator_input_loggedin')
 
+        context['results_json'] = json.dumps(results, ensure_ascii=False)
+
         return context
