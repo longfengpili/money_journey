@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.contrib.auth.models import User
 
 from funds.models import FundRecord, FundSnapshot
@@ -15,19 +15,66 @@ def dashboard(request):
     """仪表板视图 - 显示汇总数据"""
     if not request.user.is_authenticated:
         # 游客模式：返回演示数据
-        return render(request, 'analytics/dashboard.html', DEMO_DATA)
+        # 游客模式下也传递筛选参数上下文，但不对演示数据进行筛选
+        context = DEMO_DATA.copy()
+        context['filter_form'] = {
+            'owner': '',
+            'bank': '',
+            'category': '',
+            'savings_status': 'ACTIVE',
+        }
+        # 提供选择项用于表单渲染
+        context['bank_choices'] = FundRecord.BANK_CHOICES
+        context['category_choices'] = FundRecord.CATEGORY_CHOICES
+        context['savings_status_choices'] = FundRecord.SAVINGS_STATUS_CHOICES
+        context['owner_filter_choices'] = []
+        return render(request, 'analytics/dashboard.html', context)
 
     # 登录用户：查询真实数据
+    # 获取筛选参数
+    owner_filter = request.GET.get('owner', '').strip()
+    bank_filter = request.GET.get('bank', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+    savings_status_filter = request.GET.get('savings_status', '').strip()
+    # 检查用户是否明确选择了储蓄状态（包括空字符串，表示全部状态）
+    savings_status_explicit = 'savings_status' in request.GET
+
+    # 构建筛选条件
+    filters = Q()
+
+    # 所有者筛选：支持部分匹配
+    if owner_filter:
+        filters &= Q(owner__icontains=owner_filter)
+
+    # 银行筛选：精确匹配银行代码
+    if bank_filter:
+        filters &= Q(bank=bank_filter)
+
+    # 类别筛选：精确匹配类别代码
+    if category_filter:
+        filters &= Q(category=category_filter)
+
+    # 储蓄状态筛选
+    if savings_status_explicit:
+        # 用户明确选择了储蓄状态筛选
+        if savings_status_filter:
+            # 非空值：应用精确匹配
+            filters &= Q(savings_status=savings_status_filter)
+        # 如果为空字符串，表示用户选择“全部状态”，不添加筛选条件
+    else:
+        # 用户未提供储蓄状态参数，默认只显示ACTIVE状态
+        filters &= Q(savings_status='ACTIVE')
+
+    # 应用筛选
+    filtered_records = FundRecord.objects.filter(filters).order_by('-due_date')
+
     # 创建选择项映射字典
     bank_choices = dict(FundRecord.BANK_CHOICES)
     category_choices = dict(FundRecord.CATEGORY_CHOICES)
     savings_status_choices = dict(FundRecord.SAVINGS_STATUS_CHOICES)
 
-    active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
-    all_records = FundRecord.objects.all()
-
-    # 按所有者汇总（使用ACTIVE记录）
-    owner_summary_raw = active_records.values('owner').annotate(
+    # 按所有者汇总（使用筛选后的记录）
+    owner_summary_raw = filtered_records.values('owner').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
     ).order_by('-total_amount')
@@ -48,8 +95,8 @@ def dashboard(request):
         item_dict['first_name'] = user_map.get(username, username)
         owner_summary.append(item_dict)
 
-    # 按银行汇总（使用ACTIVE记录）
-    bank_summary_raw = active_records.values('bank').annotate(
+    # 按银行汇总（使用筛选后的记录）
+    bank_summary_raw = filtered_records.values('bank').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
     ).order_by('-total_amount')
@@ -60,8 +107,8 @@ def dashboard(request):
         item_dict['bank_display'] = bank_choices.get(item['bank'], item['bank'])
         bank_summary.append(item_dict)
 
-    # 按类别汇总（使用ACTIVE记录）
-    category_summary_raw = active_records.values('category').annotate(
+    # 按类别汇总（使用筛选后的记录）
+    category_summary_raw = filtered_records.values('category').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
     ).order_by('-total_amount')
@@ -72,8 +119,8 @@ def dashboard(request):
         item_dict['category_display'] = category_choices.get(item['category'], item['category'])
         category_summary.append(item_dict)
 
-    # 按储蓄状态汇总（使用所有记录）
-    status_summary_raw = active_records.values('savings_status').annotate(
+    # 按储蓄状态汇总（使用筛选后的记录）
+    status_summary_raw = filtered_records.values('savings_status').annotate(
         total_amount=Sum('amount'),
         record_count=Count('id')
     ).order_by('-total_amount')
@@ -85,8 +132,8 @@ def dashboard(request):
         status_summary.append(item_dict)
 
     # 计算总金额和记录数
-    total_amount = active_records.aggregate(total=Sum('amount'))['total'] or 0
-    total_records = active_records.count()
+    total_amount = filtered_records.aggregate(total=Sum('amount'))['total'] or 0
+    total_records = filtered_records.count()
     owner_count = len(owner_summary)
 
     # 准备图表数据
@@ -96,7 +143,7 @@ def dashboard(request):
     bank_labels = [item['bank_display'] for item in bank_summary]
     bank_totals = [float(item['total_amount']) for item in bank_summary]
 
-    # 获取快照历史数据
+    # 获取快照历史数据（快照不受筛选影响）
     snapshots = FundSnapshot.objects.all().order_by('snapshot_date')
 
     snapshot_dates = [s.snapshot_date.strftime('%Y-%m-%d %H:%M') for s in snapshots]
@@ -106,6 +153,15 @@ def dashboard(request):
     all_owners = list(set([owner for snapshot in snapshots for owner in snapshot.owner_summary.keys()]))
     owner_display_names = [user_map.get(owner, owner) for owner in all_owners]
     owner_choices = list(zip(all_owners, owner_display_names))
+
+    # 获取唯一的所有者、银行、类别列表用于筛选表单
+    all_owners_filter = FundRecord.objects.values_list('owner', flat=True).distinct().order_by('owner')
+    # 将所有者映射到显示名称
+    owner_filter_choices = []
+    for owner in all_owners_filter:
+        user = User.objects.filter(username=owner).first()
+        display_name = user.first_name.strip() if user and user.first_name.strip() else owner
+        owner_filter_choices.append((owner, display_name))
 
     context = {
         'owner_summary': owner_summary,
@@ -125,6 +181,18 @@ def dashboard(request):
         'snapshot_totals': snapshot_totals,
         'owner_choices': owner_choices,
         'has_snapshots': snapshots.exists(),
+
+        # 筛选相关上下文
+        'filter_form': {
+            'owner': owner_filter,
+            'bank': bank_filter,
+            'category': category_filter,
+            'savings_status': savings_status_filter if savings_status_explicit else 'ACTIVE',
+        },
+        'bank_choices': FundRecord.BANK_CHOICES,
+        'category_choices': FundRecord.CATEGORY_CHOICES,
+        'savings_status_choices': FundRecord.SAVINGS_STATUS_CHOICES,
+        'owner_filter_choices': owner_filter_choices,
     }
 
     return render(request, 'analytics/dashboard.html', context)

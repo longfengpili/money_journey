@@ -14,6 +14,105 @@
 </div>
 {% endif %}
 
+<!-- 筛选表单 -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            数据筛选
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+            显示/隐藏筛选
+        </button>
+    </div>
+    <div class="collapse" id="filterCollapse">
+        <div class="card-body">
+            <form method="get" action="{% url 'analytics:dashboard' %}" class="row g-3">
+                <!-- 所有者筛选 -->
+                <div class="col-md-3">
+                    <label for="owner" class="form-label">所有者</label>
+                    <select class="form-select" id="owner" name="owner">
+                        <option value="">全部所有者</option>
+                        {% for owner, display_name in owner_filter_choices %}
+                        <option value="{{ owner }}" {% if filter_form.owner == owner %}selected{% endif %}>
+                            {{ display_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 银行筛选 -->
+                <div class="col-md-3">
+                    <label for="bank" class="form-label">银行</label>
+                    <select class="form-select" id="bank" name="bank">
+                        <option value="">全部银行</option>
+                        {% for bank_code, bank_name in bank_choices %}
+                        <option value="{{ bank_code }}" {% if filter_form.bank == bank_code %}selected{% endif %}>
+                            {{ bank_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 类别筛选 -->
+                <div class="col-md-3">
+                    <label for="category" class="form-label">类别</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">全部类别</option>
+                        {% for category_code, category_name in category_choices %}
+                        <option value="{{ category_code }}" {% if filter_form.category == category_code %}selected{% endif %}>
+                            {{ category_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 储蓄状态筛选 -->
+                <!-- <div class="col-md-3">
+                    <label for="savings_status" class="form-label">储蓄状态</label>
+                    <select class="form-select" id="savings_status" name="savings_status">
+                        <option value="">全部状态</option>
+                        {% for status_code, status_name in savings_status_choices %}
+                        <option value="{{ status_code }}" {% if filter_form.savings_status == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div> -->
+
+                <!-- 按钮组 -->
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                </svg>
+                                应用筛选
+                            </button>
+                            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary ms-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M7 12h10"></path>
+                                    <path d="M10 18h4"></path>
+                                </svg>
+                                重置筛选
+                            </a>
+                        </div>
+                        {% if filter_form.owner or filter_form.bank or filter_form.category or filter_form.savings_status %}
+                        <div class="text-muted small">
+                            当前已应用筛选条件
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-container">
     <!-- Summary Cards Row -->
     <div class="row mb-4">
