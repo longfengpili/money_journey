@@ -22,6 +22,7 @@
 - **健康检查端点**：容器健康检查端点 `/health/`，支持Docker健康检查
 - **快照创建判断**：防止重复创建每日快照，确保每天只创建一个快照
 - **安全性增强**：record_list登录要求修复，CSV上传行数限制（最大10,000行）和文件大小限制（10MB）
+- **储蓄计算器**：家庭财务规划工具，模拟逐月现金流，支持3年定期存款模拟、年龄段收支配置、数据导出（CSV/Excel/PDF），游客/登录双模式
 
 ### 技术栈
 - **后端**: Django 6.0.3
@@ -88,6 +89,18 @@ money_journey/
 │   ├── views.py
 │   ├── urls.py
 │   └── tasks.py                         # 定时任务：到期存款检测、旧记录清理
+├── savings_calculator/                 # 储蓄计算器应用
+│   ├── __init__.py
+│   ├── apps.py
+│   ├── calculator.py                    # 计算引擎：逐月现金流模拟
+│   ├── forms.py                         # 表单：基本参数、年龄段参数
+│   ├── views.py                         # 视图：游客/登录双模式输入与结果展示
+│   ├── urls.py                          # 应用URL路由
+│   └── templates/savings_calculator/    # 储蓄计算器相关模板
+│       ├── calculator_input.html        # 游客模式输入表单
+│       ├── calculator_input_loggedin.html  # 登录模式输入表单
+│       ├── calculator_results.html      # 游客模式计算结果
+│       └── calculator_results_loggedin.html  # 登录模式计算结果
 ├── templates/                         # 全局模板目录
 │   ├── base.html                      # 基础模板（含导航栏、权限控制）
 │   └── registration/                  # 认证相关模板（兼容旧路径）
@@ -420,6 +433,6 @@ python manage.py test
 
 ---
 
-**最后更新**：2026-03-30（已更新反映最新功能：定时任务系统、日志系统、健康检查端点、快照创建判断、PushPlus通知、record_list登录修复、CSV上传限制等）
+**最后更新**：2026-04-04（已更新反映最新功能：储蓄计算器、游客/登录双模式、数据导出、UI优化等）
 **维护者**：Claude AI助手
 **项目状态**：开发完成，可运行

@@ -138,6 +138,19 @@ docker-compose exec web python manage.py crontab remove
 docker-compose -f docker-compose.prod.yml exec web python manage.py crontab add
 ```
 
+### 6. 储蓄计算器
+
+`savings_calculator`应用是一个无数据库模型的计算器应用，无需额外的数据库迁移或部署配置。它通过表单输入、计算引擎和Session存储实现完整的储蓄规划功能。
+
+**功能入口**：
+- 游客模式：`/savings-calculator/`（无需登录）
+- 登录模式：`/savings-calculator/loggedin/`（需登录）
+
+**注意事项**：
+- 计算结果存储在Django Session中，Session过期后结果将丢失
+- 生产环境建议配置合理的Session过期时间（默认2周）
+- 该应用无数据库表，无需执行额外的数据库迁移
+
 ## 静态文件处理
 
 生产环境使用Whitenoise中间件服务静态文件：
@@ -270,5 +283,5 @@ docker-compose up -d --build
 
 ---
 
-**最后更新**：2026-03-30（添加定时任务配置说明）
+**最后更新**：2026-04-04（添加储蓄计算器部署说明）
 **版本**：1.0.0
