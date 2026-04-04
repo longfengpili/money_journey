@@ -70,7 +70,7 @@ def add_record(request):
             # 验证必填字段
             if not bank or not category or not amount:
                 messages.error(request, '银行、类别和金额是必填字段')
-                return redirect('add_record')
+                return redirect('funds:add_record')
 
             # 处理所有者字段
             user_obj = request.user
@@ -85,12 +85,12 @@ def add_record(request):
                         final_owner = owner
                     except User.DoesNotExist:
                         messages.error(request, f'所有者"{owner}"不存在')
-                        return redirect('add_record')
+                        return redirect('funds:add_record')
                 else:
                     # 普通用户只能指定自己
                     if owner != request.user.username:
                         messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                        return redirect('add_record')
+                        return redirect('funds:add_record')
                     else:
                         user_obj = request.user
                         final_owner = owner
@@ -114,10 +114,10 @@ def add_record(request):
             record.save()
 
             messages.success(request, '资金记录添加成功！')
-            return redirect('record_list')
+            return  redirect('funds:record_list')
         except Exception as e:
             messages.error(request, f'添加记录失败: {str(e)}')
-            return redirect('add_record')
+            return redirect('funds:add_record')
 
     # GET请求：显示表单
     context = {
@@ -145,12 +145,12 @@ def edit_record(request, record_id):
         record = FundRecord.objects.get(id=record_id)
     except FundRecord.DoesNotExist:
         messages.error(request, '资金记录不存在')
-        return redirect('record_list')
+        return redirect('funds:record_list')
 
     # 检查用户权限
     if not request.user.is_superuser and record.user != request.user:
         messages.error(request, '您没有权限编辑此记录')
-        return redirect('record_list')
+        return redirect('funds:record_list')
 
     # 超级管理员无需批准检查，普通用户需要检查是否已批准
     if not request.user.is_superuser:
@@ -158,11 +158,11 @@ def edit_record(request, record_id):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-                return redirect('index')
+                return redirect('funds:index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-            return redirect('index')
+            return redirect('funds:index')
 
     if request.method == 'POST':
         try:
@@ -179,7 +179,7 @@ def edit_record(request, record_id):
             # 验证必填字段
             if not bank or not category or not amount:
                 messages.error(request, '银行、类别和金额是必填字段')
-                return redirect('edit_record', record_id=record_id)
+                return redirect('funds:edit_record', record_id=record_id)
 
             # 处理所有者字段
             user_obj = request.user
@@ -194,12 +194,12 @@ def edit_record(request, record_id):
                         final_owner = owner
                     except User.DoesNotExist:
                         messages.error(request, f'所有者"{owner}"不存在')
-                        return redirect('edit_record', record_id=record_id)
+                        return redirect('funds:edit_record', record_id=record_id)
                 else:
                     # 普通用户只能指定自己
                     if owner != request.user.username:
                         messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                        return redirect('edit_record', record_id=record_id)
+                        return redirect('funds:edit_record', record_id=record_id)
                     else:
                         user_obj = request.user
                         final_owner = owner
@@ -226,7 +226,7 @@ def edit_record(request, record_id):
             return redirect('record_list')
         except Exception as e:
             messages.error(request, f'更新记录失败: {str(e)}')
-            return redirect('edit_record', record_id=record_id)
+            return redirect('funds:edit_record', record_id=record_id)
 
     # GET请求：显示编辑表单
     context = {
@@ -254,11 +254,11 @@ def upload_csv(request):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-                return redirect('index')
+                return redirect('funds:index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-            return redirect('index')
+            return redirect('funds:index')
 
     # 上传限制常量
     MAX_ROWS = 10000  # 最大行数限制
@@ -270,14 +270,14 @@ def upload_csv(request):
         # 检查文件格式
         if not csv_file.name.endswith('.csv'):
             messages.error(request, '请上传CSV格式的文件')
-            return redirect('upload_csv')
+            return redirect('funds:upload_csv')
 
         try:
             # 检查文件大小（限制为10MB）
             max_file_size = 10 * 1024 * 1024  # 10MB
             if csv_file.size > max_file_size:
                 messages.error(request, f'文件过大（{csv_file.size // (1024*1024)}MB），请压缩文件或减少数据量，最大支持10MB')
-                return redirect('upload_csv')
+                return redirect('funds:upload_csv')
 
             # 迭代读取CSV文件，避免内存溢出
             success_count = 0
@@ -293,7 +293,7 @@ def upload_csv(request):
                 reader = csv.DictReader(io_string)
             except UnicodeDecodeError:
                 messages.error(request, '文件编码错误，请使用UTF-8编码的CSV文件')
-                return redirect('upload_csv')
+                return redirect('funds:upload_csv')
 
             # 检查CSV列名
             required_fields = ['bank', 'category', 'amount']
@@ -302,7 +302,7 @@ def upload_csv(request):
 
             if missing_fields:
                 messages.error(request, f'CSV文件缺少必要列：{", ".join(missing_fields)}')
-                return redirect('upload_csv')
+                return redirect('funds:upload_csv')
 
             # 导入Django事务模块
             from django.db import transaction
@@ -497,11 +497,11 @@ def upload_csv(request):
                 if len(errors) > 5:
                     messages.error(request, f'... 还有 {len(errors) - 5} 个错误未显示')
 
-            return redirect('record_list')
+            return redirect('funds:record_list')
 
         except Exception as e:
             messages.error(request, f'处理CSV文件时出错: {str(e)}')
-            return redirect('upload_csv')
+            return redirect('funds:upload_csv')
 
     # GET请求：显示上传表单
     return render(request, 'funds/upload_csv.html')
@@ -516,11 +516,11 @@ def download_csv_template(request):
             profile = UserProfile.objects.get(user=request.user)
             if not profile.is_approved:
                 messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-                return redirect('index')
+                return redirect('funds:index')
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=request.user, is_approved=False)
             messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-            return redirect('index')
+            return redirect('funds:index')
 
     # 创建CSV模板
     response = HttpResponse(content_type='text/csv')
@@ -568,13 +568,13 @@ def create_snapshot(request):
     """创建资金快照（仅限管理员）"""
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以创建快照')
-        return redirect('record_list')
+        return redirect('funds:record_list')
     
     today = timezone.now().date()
     new_snapshot = FundSnapshot.objects.order_by('-created_at').first()  # 获取最新的快照记录
     if FundSnapshot.objects.filter(snapshot_date=today).exists():
         messages.warning(request, '今日已经创建了快照，无需重复创建')
-        return redirect('record_list')
+        return redirect('funds:record_list')
 
 
     try:
@@ -622,4 +622,4 @@ def create_snapshot(request):
     except Exception as e:
         messages.error(request, f'创建快照失败：{str(e)}')
 
-    return redirect('record_list')
+    return redirect('funds:record_list')

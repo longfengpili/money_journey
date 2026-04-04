@@ -30,13 +30,13 @@ class CustomLoginView(LoginView):
                 # 用户未批准，注销并显示消息
                 logout(self.request)
                 messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
-                return redirect('login')
+                return redirect('accounts:login')
         except UserProfile.DoesNotExist:
             # 如果没有用户资料，创建并标记为未批准
             UserProfile.objects.create(user=user, is_approved=False)
             messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
             logout(self.request)
-            return redirect('login')
+            return redirect('accounts:login')
 
         return response
 
@@ -53,16 +53,16 @@ def register(request):
         # 验证输入
         if not username or not password:
             messages.error(request, '用户名和密码不能为空')
-            return redirect('register')
+            return redirect('accounts:register')
 
         if password != password2:
             messages.error(request, '两次输入的密码不一致')
-            return redirect('register')
+            return redirect('accounts:register')
 
         # 检查用户名是否已存在
         if User.objects.filter(username=username).exists():
             messages.error(request, '用户名已存在')
-            return redirect('register')
+            return redirect('accounts:register')
 
         # 创建用户
         try:
@@ -74,10 +74,10 @@ def register(request):
             UserProfile.objects.create(user=user, is_approved=False)
 
             messages.success(request, '注册成功！请等待管理员批准您的账户。')
-            return redirect('login')
+            return redirect('accounts:login')
         except Exception as e:
             messages.error(request, f'注册失败: {str(e)}')
-            return redirect('register')
+            return redirect('accounts:register')
 
     return render(request, 'accounts/register.html')
 
@@ -87,7 +87,7 @@ def user_approval_list(request):
     """管理员查看待批准用户列表"""
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以访问此页面')
-        return redirect('index')
+        return redirect('accounts:index')
 
     pending_users = UserProfile.objects.filter(is_approved=False).select_related('user')
     return render(request, 'accounts/user_approval_list.html', {'pending_users': pending_users})
@@ -100,7 +100,7 @@ def approve_user(request, user_id):
     """管理员批准用户（POST请求）"""
     if not request.user.is_superuser:
         messages.error(request, '只有管理员可以执行此操作')
-        return redirect('index')
+        return redirect('accounts:index')
 
     try:
         user_profile = UserProfile.objects.get(user_id=user_id)
@@ -110,4 +110,4 @@ def approve_user(request, user_id):
     except UserProfile.DoesNotExist:
         messages.error(request, '用户不存在')
 
-    return redirect('user_approval_list')
+    return redirect('accounts:user_approval_list')
