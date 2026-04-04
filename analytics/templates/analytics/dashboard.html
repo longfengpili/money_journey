@@ -5,6 +5,15 @@
 {% block title %}仪表板 - Money Journey{% endblock %}
 
 {% block content %}
+
+{% if not user.is_authenticated %}
+<div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+    <span>当前为<b>演示数据</b>，登录后可查看您的真实资金概况。</span>
+    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-primary ms-auto">登录</a>
+</div>
+{% endif %}
+
 <div class="dashboard-container">
     <!-- Summary Cards Row -->
     <div class="row mb-4">

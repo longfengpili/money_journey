@@ -81,6 +81,7 @@
                             图表分析
                         </a>
                     </li> -->
+                    {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -115,6 +116,7 @@
                                 </a></li>
                         </ul>
                     </li>
+                    {% endif %}
                     {% if user.is_staff or user.is_superuser %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">

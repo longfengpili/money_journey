@@ -14,19 +14,23 @@ from decimal import Decimal
 from funds.models import FundRecord, FundSnapshot
 from django.db.models import Sum
 from accounts.models import UserProfile
+from .demorecord import DEMO_CURRENT_RECORDS, DEMO_OTHER_RECORDS
 
-@login_required
+
 def record_list(request):
     """资金记录列表"""
+    if not request.user.is_authenticated:
+        # 游客模式：返回演示数据
+        return render(request, 'funds/record_list.html', {
+            'records': list(DEMO_CURRENT_RECORDS) + list(DEMO_OTHER_RECORDS),
+            'current_records': DEMO_CURRENT_RECORDS,
+            'other_records': DEMO_OTHER_RECORDS,
+        })
+
+    # 登录用户：查询真实数据
     records = FundRecord.objects.filter(savings_status='ACTIVE').select_related('user').order_by('due_date')
-    # 非定期存款记录
     current_records = records.exclude(category='SAVINGS').order_by('-amount')
-    # 定期存款
     other_records = records.filter(category='SAVINGS')
-    # if request.user.is_superuser:
-    #     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
-    # else:
-    #     records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('due_date')
     return render(request, 'funds/record_list.html', {
         'records': records,
         'current_records': current_records,

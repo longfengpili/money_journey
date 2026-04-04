@@ -4,28 +4,24 @@ from django.db.models import Sum, Count
 from django.contrib.auth.models import User
 
 from funds.models import FundRecord, FundSnapshot
-
+from .demorecord import DEMO_DATA
 
 def index(request):
     """首页视图"""
     return render(request, 'analytics/index.html')
 
 
-@login_required
 def dashboard(request):
     """仪表板视图 - 显示汇总数据"""
+    if not request.user.is_authenticated:
+        # 游客模式：返回演示数据
+        return render(request, 'analytics/dashboard.html', DEMO_DATA)
+
+    # 登录用户：查询真实数据
     # 创建选择项映射字典
     bank_choices = dict(FundRecord.BANK_CHOICES)
     category_choices = dict(FundRecord.CATEGORY_CHOICES)
     savings_status_choices = dict(FundRecord.SAVINGS_STATUS_CHOICES)
-
-    # 根据用户权限确定查询集
-    # if request.user.is_superuser:
-    #     active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
-    #     all_records = FundRecord.objects.all()
-    # else:
-    #     active_records = FundRecord.objects.filter(user=request.user, savings_status='ACTIVE').order_by('-due_date')
-    #     all_records = FundRecord.objects.filter(user=request.user)
 
     active_records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('-due_date')
     all_records = FundRecord.objects.all()
@@ -41,7 +37,6 @@ def dashboard(request):
     users = User.objects.filter(username__in=usernames).only('username', 'first_name')
     user_map = {}
     for user in users:
-        # 如果first_name为空或只包含空格，使用username
         first_name = user.first_name.strip()
         user_map[user.username] = first_name if first_name else user.username
 
@@ -50,7 +45,7 @@ def dashboard(request):
     for item in owner_summary_raw:
         item_dict = dict(item)
         username = item['owner']
-        item_dict['first_name'] = user_map.get(username, username)  # 如果没有first_name，显示用户名
+        item_dict['first_name'] = user_map.get(username, username)
         owner_summary.append(item_dict)
 
     # 按银行汇总（使用ACTIVE记录）
@@ -59,7 +54,6 @@ def dashboard(request):
         record_count=Count('id')
     ).order_by('-total_amount')
 
-    # 转换银行汇总数据，添加显示标签
     bank_summary = []
     for item in bank_summary_raw:
         item_dict = dict(item)
@@ -72,7 +66,6 @@ def dashboard(request):
         record_count=Count('id')
     ).order_by('-total_amount')
 
-    # 转换类别汇总数据，添加显示标签
     category_summary = []
     for item in category_summary_raw:
         item_dict = dict(item)
@@ -85,7 +78,6 @@ def dashboard(request):
         record_count=Count('id')
     ).order_by('-total_amount')
 
-    # 转换储蓄状态汇总数据，添加显示标签
     status_summary = []
     for item in status_summary_raw:
         item_dict = dict(item)
@@ -104,7 +96,7 @@ def dashboard(request):
     bank_labels = [item['bank_display'] for item in bank_summary]
     bank_totals = [float(item['total_amount']) for item in bank_summary]
 
-    # 新增：获取快照历史数据
+    # 获取快照历史数据
     snapshots = FundSnapshot.objects.all().order_by('snapshot_date')
 
     snapshot_dates = [s.snapshot_date.strftime('%Y-%m-%d %H:%M') for s in snapshots]
