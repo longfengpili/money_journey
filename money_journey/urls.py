@@ -20,6 +20,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.http import JsonResponse
 from django.views.generic import RedirectView
+from django.views.generic import TemplateView
 
 def health_check(request):
     """Health check endpoint for Docker and monitoring"""
@@ -27,7 +28,7 @@ def health_check(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('analytics.urls')),  # 首页
+    path('', TemplateView.as_view(template_name='index.html'), name='home'), # 首页路由
     path('accounts/', include('accounts.urls')),
     path('funds/', include('funds.urls')),
     path('analytics/', include('analytics.urls')),
