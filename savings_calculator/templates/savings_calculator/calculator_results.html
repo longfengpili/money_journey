@@ -113,6 +113,10 @@
                         <span class="fw-bold">¥{{ params.basic.current_amount|floatformat:2|intcomma }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
+                        <span>活期持有金额</span>
+                        <span class="fw-bold">¥{{ params.basic.keep_amount|floatformat:2|intcomma }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
                         <span>3年定期存款利率</span>
                         <span class="fw-bold">{{ params.basic.three_year_rate }}%</span>
                     </li>
