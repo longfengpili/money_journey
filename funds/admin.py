@@ -31,13 +31,13 @@ class FundSnapshotAdmin(admin.ModelAdmin):
     list_display = ('snapshot_date', 'created_by', 'total_amount', 'record_count', 'created_at')
     list_filter = ('created_by', 'snapshot_date')
     search_fields = ('created_by__username',)
-    readonly_fields = ('created_at', 'updated_at', 'owner_summary', 'bank_summary', 'category_summary')
+    readonly_fields = ('created_at', 'updated_at', 'bank_summary', 'category_summary')
     fieldsets = (
         ('基本信息', {
             'fields': ('created_by', 'snapshot_date', 'total_amount', 'record_count')
         }),
         ('汇总数据', {
-            'fields': ('owner_summary', 'bank_summary', 'category_summary')
+            'fields': ('bank_summary', 'category_summary')
         }),
         ('时间信息', {
             'fields': ('created_at', 'updated_at')

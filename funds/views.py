@@ -569,59 +569,52 @@ def download_csv_template(request):
 @login_required
 @require_POST
 def create_snapshot(request):
-    """创建资金快照（仅限管理员）"""
+    """创建资金快照（仅限登陆用户）"""
     if not request.user.is_authenticated:
         messages.error(request, '只有登陆才可以创建快照')
         return redirect('funds:record_list')
     
     today = timezone.now().date()
-    new_snapshot = FundSnapshot.objects.order_by('-created_at').first()  # 获取最新的快照记录
     if FundSnapshot.objects.filter(snapshot_date=today).exists():
         messages.warning(request, '今日已经创建了快照，无需重复创建')
         return redirect('funds:record_list')
 
-
+    users = User.objects.all()
     try:
-        # 获取当前所有ACTIVE状态的记录
-        active_records = FundRecord.objects.filter(savings_status='ACTIVE')
+        for user in users:
+            # 获取当前所有ACTIVE状态的记录
+            active_records = FundRecord.objects.filter(savings_status='ACTIVE', user=user)
 
-        # 计算总金额和记录数量
-        total_amount_result = active_records.aggregate(total=Sum('amount'))['total']
-        total_amount = total_amount_result if total_amount_result is not None else Decimal('0')
-        record_count = active_records.count()
+            # 计算总金额和记录数量
+            total_amount_result = active_records.aggregate(total=Sum('amount'))['total']
+            total_amount = total_amount_result if total_amount_result is not None else Decimal('0')
+            record_count = active_records.count()
 
-        # 按所有者汇总（将Decimal转换为float以便JSON序列化）
-        owner_summary = {}
-        for owner, total in active_records.values('owner').annotate(
-            total=Sum('amount')
-        ).values_list('owner', 'total'):
-            owner_summary[owner] = float(total) if total else 0.0
+            # 按银行汇总（将Decimal转换为float以便JSON序列化）
+            bank_summary = {}
+            for bank, total in active_records.values('bank').annotate(
+                total=Sum('amount')
+            ).values_list('bank', 'total'):
+                bank_summary[bank] = float(total) if total else 0.0
 
-        # 按银行汇总（将Decimal转换为float以便JSON序列化）
-        bank_summary = {}
-        for bank, total in active_records.values('bank').annotate(
-            total=Sum('amount')
-        ).values_list('bank', 'total'):
-            bank_summary[bank] = float(total) if total else 0.0
+            # 按类别汇总（将Decimal转换为float以便JSON序列化）
+            category_summary = {}
+            for category, total in active_records.values('category').annotate(
+                total=Sum('amount')
+            ).values_list('category', 'total'):
+                category_summary[category] = float(total) if total else 0.0
 
-        # 按类别汇总（将Decimal转换为float以便JSON序列化）
-        category_summary = {}
-        for category, total in active_records.values('category').annotate(
-            total=Sum('amount')
-        ).values_list('category', 'total'):
-            category_summary[category] = float(total) if total else 0.0
+            # 创建快照
+            snapshot = FundSnapshot.objects.create(
+                created_by=request.user,
+                user=user,
+                total_amount=total_amount,
+                record_count=record_count,
+                bank_summary=bank_summary,
+                category_summary=category_summary
+            )
 
-        # 创建快照
-        snapshot = FundSnapshot.objects.create(
-            created_by=request.user,
-            total_amount=total_amount,
-            record_count=record_count,
-            owner_summary=owner_summary,
-            bank_summary=bank_summary,
-            category_summary=category_summary
-        )
-
-        messages.success(request, f'快照创建成功！总金额：¥{total_amount:,.2f}，记录数：{record_count}')
+            messages.success(request, f'{user.username}的快照创建成功！总金额：¥{total_amount:,.2f}，记录数：{record_count}')
 
     except Exception as e:
         messages.error(request, f'创建快照失败：{str(e)}')

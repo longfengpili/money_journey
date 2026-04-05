@@ -98,13 +98,16 @@ class FundRecord(models.Model):
 class FundSnapshot(models.Model):
     """资金快照模型，保存特定时间点的资金状态"""
     id = models.AutoField(primary_key=True)  # 显式定义主键字段
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', 
+                            null=True, blank=True, help_text='快照所属用户',
+                            related_name='fund_snapshots')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者',
+                                  related_name='created_fund_snapshots')
     snapshot_date = models.DateField('快照时间', default=timezone.now)
     total_amount = models.DecimalField('总金额', max_digits=20, decimal_places=2)
     record_count = models.IntegerField('记录数量')
 
     # JSON字段存储聚合数据
-    owner_summary = models.JSONField('所有者汇总', default=dict)  # {"owner1": 10000, "owner2": 20000}
     bank_summary = models.JSONField('银行汇总', default=dict)    # {"ICBC": 15000, "CCB": 5000}
     category_summary = models.JSONField('类别汇总', default=dict) # {"SAVINGS": 10000, "CURRENT": 5000}
 
