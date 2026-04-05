@@ -228,10 +228,10 @@ class SavingsCalculator:
             regular_deposit = Decimal('0')
         
         # 7. 将当月定期储蓄加入队列（假设定期利率和存期不变，简单利息计算）
-        due_date = current_date.replace(year=current_date.year + 3) # 假设定期存3年
+        due_date = current_date.replace(year=current_date.year + 3).date() # 假设定期存3年
         maturity_amount = regular_deposit * (1 + self.basic_params['three_year_rate'] / 100 * 3) # 到期金额（假设定期利率不变，简单利息计算）
-        self.deposit_queue.append((current_date, due_date, regular_deposit, maturity_amount))  # 将当月定期储蓄加入队列
-        self.deposit_queue = [fund for fund in self.deposit_queue if fund[1] > current_date]  # 移除已经到期的定期存款
+        self.deposit_queue.append((current_date.date(), due_date, regular_deposit, maturity_amount))  # 将当月定期储蓄加入队列
+        self.deposit_queue = [fund for fund in self.deposit_queue if fund[1] > current_date.date()]  # 移除已经到期的定期存款
         
 
         # 8. 计算定期累计（未到期）

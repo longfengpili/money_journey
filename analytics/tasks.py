@@ -12,7 +12,7 @@ def check_outdated_records():
     
     try:
         time_selected = timezone.now() + timedelta(days=7)  # 选择未来7天内到期的记录
-        outdated_records = FundRecord.objects.filter(due_date__lt=time_selected, savings_status='ACTIVE').select_related('user').order_by('due_date')
+        outdated_records = FundRecord.objects.filter(due_date__lt=time_selected.date(), savings_status='ACTIVE').select_related('user').order_by('due_date')
         
         if outdated_records.exists():
             records = [f'<br>{record.user.first_name or record.user.username } : {record.get_bank_display()} : {record.due_date} : {record.amount}' for record in outdated_records]

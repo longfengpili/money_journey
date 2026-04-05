@@ -89,8 +89,8 @@ class FundRecord(models.Model):
         if self.due_date:
             self.due_month = self.due_date.strftime('%Y-%m')
 
-        if not self.start_date:
-            self.start_date = self.due_date - timedelta(years=self.deposit_period)
+        if not self.start_date and self.due_date and self.deposit_period:
+            self.start_date = self.due_date - timedelta(days=365 * self.deposit_period)
 
         super().save(*args, **kwargs)
 
