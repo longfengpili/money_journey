@@ -27,7 +27,7 @@ class BasicParametersForm(forms.Form):
         max_digits=15,
         decimal_places=2,
         min_value=Decimal('0'),
-        initial=Decimal('50000.00'),
+        initial=Decimal('20000.00'),
         help_text='初始活期金额，假设当前已经有的资金（元）'
     )
 
