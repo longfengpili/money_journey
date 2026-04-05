@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from funds.models import FundRecord, FundSnapshot
 from .demorecord import DEMO_DATA
 
+import logging
+logger = logging.getLogger(__name__)
+
 # def index(request):
 #     """首页视图"""
 #     return render(request, 'analytics/index.html')
@@ -143,16 +146,15 @@ def dashboard(request):
     bank_labels = [item['bank_display'] for item in bank_summary]
     bank_totals = [float(item['total_amount']) for item in bank_summary]
 
-    # 获取快照历史数据（快照不受筛选影响）
-    snapshots = FundSnapshot.objects.all().order_by('snapshot_date')
+    # 获取资金快照数据（使用筛选后的记录的所有者进行过滤）
+    filters_for_snapshots = Q()
+    if owner_filter:
+        filters_for_snapshots &= Q(owner__icontains=owner_filter)
+    snapshots = FundSnapshot.objects.filter(filters_for_snapshots).values('snapshot_date').annotate(total_amount=Sum('total_amount')).order_by('snapshot_date')
+    # logger.info(f"查询资金快照，筛选条件：{filters_for_snapshots}, 快照数量：{snapshots}")
 
-    snapshot_dates = [s.snapshot_date.strftime('%Y-%m-%d %H:%M') for s in snapshots]
-    snapshot_totals = [float(s.total_amount) for s in snapshots]
-
-    # 获取所有所有者列表（用于下拉菜单）
-    all_owners = list(set([owner for snapshot in snapshots for owner in snapshot.owner_summary.keys()]))
-    owner_display_names = [user_map.get(owner, owner) for owner in all_owners]
-    owner_choices = list(zip(all_owners, owner_display_names))
+    snapshot_dates = [s['snapshot_date'].strftime('%Y-%m-%d %H:%M') for s in snapshots]
+    snapshot_totals = [float(s['total_amount']) for s in snapshots]
 
     # 获取唯一的所有者、银行、类别列表用于筛选表单
     all_owners_filter = FundRecord.objects.values_list('owner', flat=True).distinct().order_by('owner')
@@ -179,7 +181,6 @@ def dashboard(request):
         # 快照数据
         'snapshot_dates': snapshot_dates,
         'snapshot_totals': snapshot_totals,
-        'owner_choices': owner_choices,
         'has_snapshots': snapshots.exists(),
 
         # 筛选相关上下文

@@ -101,6 +101,7 @@ class FundSnapshot(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', 
                             null=True, blank=True, help_text='快照所属用户',
                             related_name='fund_snapshots')
+    owner = models.CharField('所有者', max_length=100, null=True, blank=True, help_text='快照所属用户')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者',
                                   related_name='created_fund_snapshots')
     snapshot_date = models.DateField('快照时间', default=timezone.now)

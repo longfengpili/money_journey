@@ -607,6 +607,7 @@ def create_snapshot(request):
             # 创建快照
             snapshot = FundSnapshot.objects.create(
                 created_by=request.user,
+                owner=user.username,
                 user=user,
                 total_amount=total_amount,
                 record_count=record_count,
