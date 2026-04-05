@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from funds.models import FundRecord, FundSnapshot
@@ -447,6 +447,9 @@ def upload_csv(request):
                         due_month = None
                         if due_date:
                             due_month = due_date.strftime('%Y-%m')
+                        
+                        if due_date and deposit_period and not row.get('start_date'):
+                            start_date = due_date - timedelta(days=365 * deposit_period)
 
                         # 创建记录对象
                         record = FundRecord(
@@ -458,6 +461,7 @@ def upload_csv(request):
                             amount=amount,
                             interest_rate=interest_rate,
                             deposit_period=deposit_period,
+                            start_date=start_date,
                             due_date=due_date,
                             due_month=due_month,
                         )

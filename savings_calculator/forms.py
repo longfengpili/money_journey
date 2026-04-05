@@ -28,6 +28,16 @@ class BasicParametersForm(forms.Form):
         decimal_places=2,
         min_value=Decimal('0'),
         initial=Decimal('50000.00'),
+        help_text='初始活期金额，假设当前已经有的资金（元）'
+    )
+
+
+    keep_amount = forms.DecimalField(
+        label='活期持有金额（元）',
+        max_digits=15,
+        decimal_places=2,
+        min_value=Decimal('0'),
+        initial=Decimal('50000.00'),
         help_text='每月保留的活期金额，其余部分用于定期存款'
     )
 

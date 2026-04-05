@@ -160,7 +160,7 @@ WHITENOISE_MAX_AGE = 31536000  # 1 year cache
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_MANIFEST_STRICT = False
 
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # CSRF settings - development defaults, override in production
@@ -245,6 +245,16 @@ LOGGING = {
             'backupCount': 30,  # 保留30天
             'formatter': 'detailed',
         },
+
+        # 计算器日志文件
+        'file_calculator': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'calculator.log'),
+            'when': 'midnight',  # 每天午夜分割
+            'backupCount': 30,  # 保留30天
+            'formatter': 'detailed',
+        },
         
         # 按日分割的文件
         'file_daily': {
@@ -311,7 +321,7 @@ LOGGING = {
 
         # 您自己应用的日志
         'savings_calculator': {  # 替换为您的应用名
-            'handlers': ['console', 'file_info', 'file_error'],
+            'handlers': ['console', 'file_calculator', 'file_error'],
             'level': 'DEBUG',
             'propagate': False,
         },

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
@@ -55,6 +57,7 @@ class FundRecord(models.Model):
     amount = models.DecimalField('金额', max_digits=15, decimal_places=2, validators=[MinValueValidator(0)])
     interest_rate = models.DecimalField('利率(%)', max_digits=5, decimal_places=2, null=True, blank=True)
     deposit_period = models.IntegerField('存期(年)', null=True, blank=True, help_text='单位为年')
+    start_date = models.DateField('开始日期', null=True, blank=True, editable=False)
     due_date = models.DateField('到期日', null=True, blank=True)
     due_month = models.CharField('到期月', max_length=7, null=True, blank=True, help_text='格式: YYYY-MM')
     created_at = models.DateTimeField('创建时间', default=timezone.now)
@@ -85,6 +88,9 @@ class FundRecord(models.Model):
         # 如果提供了到期日，自动计算到期月（强制计算，不允许手动修改）
         if self.due_date:
             self.due_month = self.due_date.strftime('%Y-%m')
+
+        if not self.start_date:
+            self.start_date = self.due_date - timedelta(years=self.deposit_period)
 
         super().save(*args, **kwargs)
 

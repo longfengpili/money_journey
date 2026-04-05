@@ -8,6 +8,11 @@
     <h1>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-line-chart"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
         资金计算结果
+        {% if not request.user.is_authenticated %}
+            <span class="badge bg-success ms-2" style="font-size: 0.5em; vertical-align: middle;">游客版</span>
+        {% else %}
+            <span class="badge bg-success ms-2" style="font-size: 0.5em; vertical-align: middle;">登录版</span>
+        {% endif %}
     </h1>
 </div>
 
@@ -170,9 +175,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-table"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
             <h5 class="mb-0">每月数据详情</h5>
         </div>
-        <button type="button" id="annual-only-btn" class="btn btn-outline-primary btn-sm" title="只显示每年12月的数据">
+        <button type="button" id="annual-only-btn" class="btn btn-outline-primary btn-sm" title="半年数据">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar me-1"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            只看每年12月
+            半年数据
         </button>
     </div>
     <div class="card-body p-0">
@@ -506,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         ],
-        pageLength: 25,
+        pageLength: 60,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, '全部']],
         order: [[0, 'asc']], // 按月份排序
         language: {
@@ -538,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
         table.button('.buttons-csv').trigger();
     });
 
-    // "只看每年12月"按钮功能
+    // "半年数据"按钮功能
     var isAnnualOnly = false;
     $('#annual-only-btn').on('click', function() {
         isAnnualOnly = !isAnnualOnly;
@@ -546,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $(this).addClass('active btn-primary').removeClass('btn-outline-primary');
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                 var month = data[0].trim();
-                return month.endsWith('-12');
+                return month.endsWith('-12') || month.endsWith('-06');
             });
         } else {
             $(this).removeClass('active btn-primary').addClass('btn-outline-primary');
