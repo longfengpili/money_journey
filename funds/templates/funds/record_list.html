@@ -33,7 +33,7 @@
         资金记录列表
     </h1>
     <div class="d-flex gap-2">
-        {% if user.is_superuser %}
+        {% if user.is_authenticated %}
         <form action="{% url 'funds:create_snapshot' %}" method="post" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确定要创建当前资金快照吗？')">
