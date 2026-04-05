@@ -175,14 +175,16 @@
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 7 22 7 22 13"></polyline>
                         </svg>
-                        资金快照历史趋势
-                    </h5>
-                    <select id="ownerSelect" class="form-select form-select-sm" style="width: auto;">
-                        <option value="total">总金额趋势</option>
-                        {% for owner, display_name in owner_choices %}
-                        <option value="{{ owner }}">{{ display_name }} 的趋势</option>
+                        {% for owner, display_name in owner_filter_choices %}
+                            {% if filter_form.owner == owner %}
+                                {{ display_name }} 的资金快照历史趋势
+                            {% endif %}
                         {% endfor %}
-                    </select>
+
+                        {% if not filter_form.owner %}
+                            所有人的资金快照历史趋势
+                        {% endif %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="chart-container" style="height: 300px;">
