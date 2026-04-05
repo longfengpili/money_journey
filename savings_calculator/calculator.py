@@ -145,14 +145,30 @@ class SavingsCalculator:
         return max(age, 0)
 
     def _get_income_expense_by_age(self, age):
-        """根据年龄获取月收入和月支出"""
+        """根据年龄获取对应的月收入和月支出，优先精确匹配，如果没有匹配则取最近的数据
+            当年龄在多个范围重叠时，按照列表顺序返回第一个匹配的
+            """
+        # 首先检查是否有精确匹配
         for param in self.age_range_params:
             if param['start_age'] <= age <= param['end_age']:
-                self.last_monthly_expense = param['monthly_expense']  # 更新上个月的支出金额
                 return param['monthly_income'], param['monthly_expense']
-
-        # 如果没有匹配的年龄段，返回0
-        return Decimal('0'), self.results[-1]['monthly_expense'] if self.results else self.last_monthly_expense # 如果没有匹配的年龄段，返回上个月的支出金额（如果有计算结果的话），否则返回None
+        
+        # 如果没有精确匹配，找到最近的数据
+        closest_item = None
+        min_distance = float('inf')
+        
+        for param in self.age_range_params:
+            # 计算与年龄段的距离
+            if age > param['end_age']:  
+                distance = age - param['end_age']
+            else:
+                distance = float('inf')
+            
+            if distance < min_distance:
+                min_distance = distance
+                closest_item = param
+        
+        return Decimal('0'), closest_item['monthly_expense'] # 如果没有匹配的年龄段，返回0收入和最近的支出金额
 
     def _get_initial_values(self, current_date):
         """获取初始值（第0个月之前）"""
