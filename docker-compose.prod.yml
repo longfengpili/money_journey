@@ -6,7 +6,7 @@ services:
     container_name: money_journey_web
     restart: unless-stopped
     env_file:
-      - .env.prod
+      - .env.production
     environment:
       DJANGO_SETTINGS_MODULE: money_journey.settings.production
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
