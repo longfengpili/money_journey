@@ -159,10 +159,12 @@ class SavingsCalculator:
         
         for param in self.age_range_params:
             # 计算与年龄段的距离
-            if age > param['end_age']:  
+            if age < param['start_age']:
+                distance = param['start_age'] - age
+            elif age > param['end_age']:
                 distance = age - param['end_age']
             else:
-                distance = float('inf')
+                distance = 0
             
             if distance < min_distance:
                 min_distance = distance
