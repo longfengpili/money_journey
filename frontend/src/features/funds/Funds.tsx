@@ -14,6 +14,20 @@ type Page = {
   results: Asset[];
 };
 
+const updatedAtFormatter = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+function formatUpdatedAt(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : updatedAtFormatter.format(date);
+}
+
 function AssetGroup({
   title,
   assets,
@@ -40,6 +54,7 @@ function AssetGroup({
               {savings && <th>年利率</th>}
               {savings && <th>存期</th>}
               <th>到期日</th>
+              {!savings && <th>更新时间</th>}
               <th className="money">金额</th>
               <th>操作</th>
             </tr>
@@ -76,6 +91,13 @@ function AssetGroup({
                   </td>
                 )}
                 <td>{asset.due_date || "—"}</td>
+                {!savings && (
+                  <td>
+                    <time dateTime={asset.updated_at}>
+                      {formatUpdatedAt(asset.updated_at)}
+                    </time>
+                  </td>
+                )}
                 <td className="money">¥{money(asset.amount)}</td>
                 <td>{edit(asset)}</td>
               </tr>
@@ -108,6 +130,11 @@ function AssetGroup({
                 </span>
               )}
               <span className="label">{asset.due_date || "无到期日"}</span>
+              {!savings && (
+                <span className="label">
+                  更新于 {formatUpdatedAt(asset.updated_at)}
+                </span>
+              )}
               {edit(asset)}
             </div>
           </article>
@@ -200,18 +227,18 @@ export default function Funds() {
               </select>
             </div>
             <AssetGroup
-              title="储蓄存款"
-              savings
-              assets={page.results.filter(
-                (asset) => asset.category === "SAVINGS",
-              )}
-              edit={edit}
-            />
-            <AssetGroup
               title="非储蓄类资产"
               savings={false}
               assets={page.results.filter(
                 (asset) => asset.category !== "SAVINGS",
+              )}
+              edit={edit}
+            />
+            <AssetGroup
+              title="储蓄存款"
+              savings
+              assets={page.results.filter(
+                (asset) => asset.category === "SAVINGS",
               )}
               edit={edit}
             />

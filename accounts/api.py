@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -154,7 +155,9 @@ class MemberDetailApi(FamilyAPIView):
         records = FundRecord.objects.filter(
             Q(user=user) | Q(user__isnull=True, owner=user.username)
         )
-        transferred = records.update(user=recipient, owner=recipient.username)
+        transferred = records.update(
+            user=recipient, owner=recipient.username, updated_at=timezone.now()
+        )
         user.is_active = False
         user.save(update_fields=["is_active"])
         profile.is_approved = False

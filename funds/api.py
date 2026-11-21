@@ -32,6 +32,7 @@ def record_data(record, actor, family_admin):
         "deposit_period": record.deposit_period,
         "due_date": record.due_date,
         "start_date": record.start_date,
+        "updated_at": record.updated_at,
         "can_edit": family_admin or record.user_id == actor.pk,
     }
 

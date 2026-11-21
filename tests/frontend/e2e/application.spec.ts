@@ -165,12 +165,12 @@ test("管理员导入 CSV、刷新快照并创建不登录的成员", async ({ p
 });
 
 test("管理员可查看成员编辑与删除确认，资产按类别分区", async ({ page }) => {
-  test.skip(!fixtures.manager || !fixtures.other, "需要隔离测试账号");
+  test.skip(!fixtures.manager || !fixtures.member, "需要隔离测试账号");
   await signIn(page, fixtures.manager);
   await page.goto("/app/members");
   const row = page
     .getByRole("row")
-    .filter({ hasText: fixtures.other.username });
+    .filter({ hasText: fixtures.member.username });
   await row.getByRole("button", { name: "编辑" }).click();
   const dialog = page.getByRole("dialog", { name: "编辑家庭成员" });
   const isCentered = () =>
@@ -201,6 +201,11 @@ test("管理员可查看成员编辑与删除确认，资产按类别分区", as
   await expect(page.getByRole("region", { name: "储蓄存款" })).toBeVisible();
   await expect(
     page.getByRole("region", { name: "非储蓄类资产" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "非储蓄类资产" })
+      .getByRole("columnheader", { name: "更新时间" }),
   ).toBeVisible();
   await expect(
     page

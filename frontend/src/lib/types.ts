@@ -49,6 +49,7 @@ export type Asset = {
   deposit_period: number | null;
   due_date: string | null;
   start_date: string | null;
+  updated_at: string;
   can_edit: boolean;
 };
 export type FundOptions = {
