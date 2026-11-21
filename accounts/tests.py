@@ -97,6 +97,30 @@ class FamilyPermissionTests(TestCase):
         )
         self.assertContains(self.client.get('/'), '创建家庭成员')
 
+    def test_approval_admin_links_resolve_to_accessible_pages(self):
+        admin = User.objects.create_superuser(
+            'admin', password='test-password',
+        )
+        self.client.force_login(admin)
+        response = self.client.get(reverse('accounts:user_approval_list'))
+        for route in (
+            'admin:auth_user_changelist',
+            'admin:accounts_userprofile_changelist',
+        ):
+            url = reverse(route)
+            self.assertContains(response, f'href="{url}"')
+            self.assertEqual(self.client.get(url).status_code, 200)
+        self.assertNotContains(response, '/admin/records/')
+
+    def test_family_manager_sees_only_accessible_actions(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse('accounts:user_approval_list'))
+        self.assertContains(
+            response, f'href="{reverse("accounts:create_member")}"',
+        )
+        self.assertNotContains(response, '管理所有用户')
+        self.assertNotContains(response, '管理用户资料')
+
     def test_member_creation_rolls_back_if_profile_fails(self):
         self.client.force_login(self.manager)
         with patch(

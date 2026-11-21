@@ -54,8 +54,11 @@
                 {% endif %}
             </div>
             <div class="card-footer">
-                <a href="/admin/auth/user/" class="btn btn-outline-primary btn-sm">管理所有用户</a>
-                <a href="/admin/records/userprofile/" class="btn btn-outline-primary btn-sm">管理用户资料</a>
+                <a href="{% url 'accounts:create_member' %}" class="btn btn-outline-primary btn-sm">创建家庭成员</a>
+                {% if user.is_superuser %}
+                <a href="{% url 'admin:auth_user_changelist' %}" class="btn btn-outline-primary btn-sm">管理所有用户</a>
+                <a href="{% url 'admin:accounts_userprofile_changelist' %}" class="btn btn-outline-primary btn-sm">管理用户资料</a>
+                {% endif %}
             </div>
         </div>
     </div>
