@@ -17,6 +17,8 @@ def resolve_record_owner(actor, username, current_owner=None):
     if not username:
         return current_owner or actor
     try:
-        return User.objects.get(username=username)
+        return User.objects.exclude(
+            userprofile__is_archived=True
+        ).get(username=username)
     except User.DoesNotExist as exc:
         raise ValueError(f'所有者“{username}”不存在') from exc

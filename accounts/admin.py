@@ -11,7 +11,7 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name = '用户资料'
     verbose_name_plural = '用户资料'
-    fields = ('is_approved', 'is_family_admin', 'created_at')
+    fields = ('is_approved', 'is_family_admin', 'is_archived', 'created_at')
     readonly_fields = ('created_at',)
 
 
@@ -61,12 +61,14 @@ class CustomUserAdmin(UserAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     """用户资料独立管理界面"""
 
-    list_display = ('user', 'is_approved', 'is_family_admin', 'created_at')
-    list_filter = ('is_approved', 'created_at')
+    list_display = (
+        'user', 'is_approved', 'is_family_admin', 'is_archived', 'created_at',
+    )
+    list_filter = ('is_approved', 'is_archived', 'created_at')
     search_fields = ('user__username', 'user__email')
     list_editable = ('is_approved',)
     readonly_fields = ('user', 'created_at')
-    fields = ('user', 'is_approved', 'is_family_admin', 'created_at')
+    fields = ('user', 'is_approved', 'is_family_admin', 'is_archived', 'created_at')
 
     def has_add_permission(self, request):
         return request.user.is_superuser

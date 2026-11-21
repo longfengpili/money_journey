@@ -11,6 +11,7 @@ def can_write_assets(user):
         or UserProfile.objects.filter(
             user=user,
             is_approved=True,
+            is_archived=False,
         ).exists()
     )
 
@@ -21,6 +22,7 @@ def is_family_admin(user):
         or UserProfile.objects.filter(
             user=user,
             is_family_admin=True,
+            is_archived=False,
         ).exists()
     )
 

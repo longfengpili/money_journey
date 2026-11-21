@@ -9,11 +9,12 @@ from funds.operation_api import (
     SnapshotRefreshApi,
 )
 from savings_calculator.api import CalculatorApi
-from accounts.api import ApprovalApi, MembersApi, RegisterApi
+from accounts.api import ApprovalApi, MemberDetailApi, MembersApi, RegisterApi
 
 urlpatterns = [
     path("auth/register/", RegisterApi.as_view()),
     path("members/", MembersApi.as_view()),
+    path("members/<int:pk>/", MemberDetailApi.as_view()),
     path("approvals/<int:pk>/", ApprovalApi.as_view()),
     path("calculator/calculate/", CalculatorApi.as_view()),
     path("calculator/result/", CalculatorApi.as_view()),

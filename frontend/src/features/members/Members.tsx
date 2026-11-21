@@ -9,27 +9,19 @@ import {
   Loading,
   PageTitle,
 } from "../../components/ui";
-
-type Member = {
-  id: number;
-  username: string;
-  first_name: string;
-  is_approved: boolean;
-  is_active: boolean;
-  is_family_admin: boolean;
-  has_login: boolean;
-};
+import MemberEditor, { type MemberDetails } from "./MemberEditor";
 export default function Members() {
   const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error>();
   const [notice, setNotice] = useState("");
-  const state = useResource<{ results: Member[] }>("/members/", version);
+  const [editing, setEditing] = useState<MemberDetails | null>(null);
+  const state = useResource<{ results: MemberDetails[] }>("/members/", version);
   return (
     <>
       <PageTitle
         title="家庭成员"
-        detail="批准注册账号，或为不登录的家人建立资产归属。"
+        detail="管理成员姓名、账号状态和角色，或为不登录的家人建立资产归属。"
       />
       <ErrorNotice error={error || state.error} />
       {notice && (
@@ -76,32 +68,40 @@ export default function Members() {
                                 : "不登录的成员"}
                         </td>
                         <td>
-                          {!member.is_approved ? (
-                            <Button
-                              disabled={busy}
-                              onClick={async () => {
-                                setBusy(true);
-                                setError(undefined);
-                                setNotice("");
-                                try {
-                                  await api(
-                                    `/approvals/${member.id}/`,
-                                    jsonBody({}),
-                                  );
-                                  setNotice("账号已批准");
-                                  setVersion(version + 1);
-                                } catch (e) {
-                                  setError(e as Error);
-                                } finally {
-                                  setBusy(false);
-                                }
-                              }}
-                            >
-                              批准加入
-                            </Button>
-                          ) : (
-                            <span className="muted">已批准</span>
-                          )}
+                          <div className="actions">
+                            {!member.is_approved ? (
+                              <Button
+                                disabled={busy}
+                                onClick={async () => {
+                                  setBusy(true);
+                                  setError(undefined);
+                                  setNotice("");
+                                  try {
+                                    await api(
+                                      `/approvals/${member.id}/`,
+                                      jsonBody({}),
+                                    );
+                                    setNotice("账号已批准");
+                                    setVersion(version + 1);
+                                  } catch (e) {
+                                    setError(e as Error);
+                                  } finally {
+                                    setBusy(false);
+                                  }
+                                }}
+                              >
+                                批准加入
+                              </Button>
+                            ) : null}
+                            {!member.is_superuser && (
+                              <Button
+                                disabled={busy}
+                                onClick={() => setEditing(member)}
+                              >
+                                编辑
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -153,6 +153,18 @@ export default function Members() {
             </section>
           </div>
         )
+      )}
+      {editing && (
+        <MemberEditor
+          member={editing}
+          members={state.data?.results ?? []}
+          onClose={() => setEditing(null)}
+          onSaved={(message) => {
+            setEditing(null);
+            setNotice(message);
+            setVersion((current) => current + 1);
+          }}
+        />
       )}
     </>
   );

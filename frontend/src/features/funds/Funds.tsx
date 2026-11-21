@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useResource } from "../../lib/resource";
 import { money } from "../../lib/money";
@@ -13,6 +13,111 @@ type Page = {
   page_size: number;
   results: Asset[];
 };
+
+function AssetGroup({
+  title,
+  assets,
+  edit,
+  savings,
+}: {
+  title: string;
+  assets: Asset[];
+  edit: (asset: Asset) => ReactNode;
+  savings: boolean;
+}) {
+  return (
+    <section className="asset-group" aria-label={title}>
+      <h3>
+        {title} <span className="label">本页 {assets.length} 条</span>
+      </h3>
+      <div className="table-wrap desktop-assets">
+        <table>
+          <thead>
+            <tr>
+              <th>所有者</th>
+              <th>银行 / 类别</th>
+              <th>状态</th>
+              {savings && <th>年利率</th>}
+              {savings && <th>存期</th>}
+              <th>到期日</th>
+              <th className="money">金额</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.map((asset) => (
+              <tr key={asset.id}>
+                <td className="break">{asset.owner_display}</td>
+                <td>
+                  {asset.bank_display}
+                  <div className="muted">{asset.category_display}</div>
+                </td>
+                <td>
+                  <span
+                    className={
+                      asset.savings_status === "ACTIVE"
+                        ? "badge"
+                        : "badge muted"
+                    }
+                  >
+                    {asset.status_display}
+                  </span>
+                </td>
+                {savings && (
+                  <td>
+                    {asset.interest_rate === null
+                      ? "—"
+                      : `${asset.interest_rate}%`}
+                  </td>
+                )}
+                {savings && (
+                  <td>
+                    {asset.deposit_period ? `${asset.deposit_period} 年` : "—"}
+                  </td>
+                )}
+                <td>{asset.due_date || "—"}</td>
+                <td className="money">¥{money(asset.amount)}</td>
+                <td>{edit(asset)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="card-list">
+        {assets.map((asset) => (
+          <article className="asset-mobile" key={asset.id}>
+            <header>
+              <div>
+                <strong>{asset.owner_display}</strong>
+                <div className="label">
+                  {asset.bank_display} · {asset.category_display}
+                </div>
+              </div>
+              <strong>¥{money(asset.amount)}</strong>
+            </header>
+            <div className="actions">
+              <span className="badge">{asset.status_display}</span>
+              {savings && (
+                <span className="label">
+                  利率{" "}
+                  {asset.interest_rate === null
+                    ? "—"
+                    : `${asset.interest_rate}%`}{" "}
+                  · 存期{" "}
+                  {asset.deposit_period ? `${asset.deposit_period} 年` : "—"}
+                </span>
+              )}
+              <span className="label">{asset.due_date || "无到期日"}</span>
+              {edit(asset)}
+            </div>
+          </article>
+        ))}
+      </div>
+      {!assets.length && <div className="empty">本页暂无{title}记录</div>}
+    </section>
+  );
+}
+
 export default function Funds() {
   const [params, setParams] = useSearchParams();
   const [version, setVersion] = useState(0);
@@ -94,70 +199,22 @@ export default function Funds() {
                 <option value="due_date">到期日从早到晚</option>
               </select>
             </div>
-            <div className="table-wrap desktop-assets">
-              <table>
-                <thead>
-                  <tr>
-                    <th>所有者</th>
-                    <th>银行 / 类别</th>
-                    <th>状态</th>
-                    <th>到期日</th>
-                    <th className="money">金额</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {page.results.map((asset) => (
-                    <tr key={asset.id}>
-                      <td className="break">{asset.owner_display}</td>
-                      <td>
-                        {asset.bank_display}
-                        <div className="muted">{asset.category_display}</div>
-                      </td>
-                      <td>
-                        <span
-                          className={
-                            asset.savings_status === "ACTIVE"
-                              ? "badge"
-                              : "badge muted"
-                          }
-                        >
-                          {asset.status_display}
-                        </span>
-                      </td>
-                      <td>{asset.due_date || "—"}</td>
-                      <td className="money">¥{money(asset.amount)}</td>
-                      <td>{edit(asset)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="card-list">
-              {page.results.map((asset) => (
-                <article className="asset-mobile" key={asset.id}>
-                  <header>
-                    <div>
-                      <strong>{asset.owner_display}</strong>
-                      <div className="label">
-                        {asset.bank_display} · {asset.category_display}
-                      </div>
-                    </div>
-                    <strong>¥{money(asset.amount)}</strong>
-                  </header>
-                  <div className="actions">
-                    <span className="badge">{asset.status_display}</span>
-                    <span className="label">
-                      {asset.due_date || "无到期日"}
-                    </span>
-                    {edit(asset)}
-                  </div>
-                </article>
-              ))}
-            </div>
-            {!page.results.length && (
-              <div className="empty">暂无符合筛选的资产</div>
-            )}
+            <AssetGroup
+              title="储蓄存款"
+              savings
+              assets={page.results.filter(
+                (asset) => asset.category === "SAVINGS",
+              )}
+              edit={edit}
+            />
+            <AssetGroup
+              title="非储蓄类资产"
+              savings={false}
+              assets={page.results.filter(
+                (asset) => asset.category !== "SAVINGS",
+              )}
+              edit={edit}
+            />
             <footer className="pagination">
               <span className="label">
                 第 {page.page} 页 · 每页 {page.page_size} 条

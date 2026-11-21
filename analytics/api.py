@@ -36,7 +36,9 @@ def selected_owner(params):
 
 def member_choices():
     return list(
-        User.objects.order_by("username").values(
+        User.objects.exclude(userprofile__is_archived=True).order_by(
+            "username"
+        ).values(
             "id", "username", "first_name"
         )
     )

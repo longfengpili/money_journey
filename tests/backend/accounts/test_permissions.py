@@ -50,6 +50,12 @@ class FamilyPermissionTests(TestCase):
         self.member.is_superuser = True
         self.assertTrue(can_edit_record(self.member, self.record))
 
+    def test_archived_account_cannot_access_assets_even_if_reactivated(self):
+        self.manager.userprofile.is_archived = True
+        self.manager.userprofile.save(update_fields=['is_archived'])
+        self.assertFalse(can_write_assets(self.manager))
+        self.assertFalse(is_family_admin(self.manager))
+
     def test_manager_creates_member_without_password_or_privileges(self):
         self.client.force_login(self.manager)
         response = self.client.post(

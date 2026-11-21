@@ -53,6 +53,32 @@ class DailySnapshotTests(TestCase):
             snapshot_date=self.day,
         )
 
+    def test_archived_member_history_remains_without_future_snapshots(self):
+        day = timezone.localdate()
+        refresh_daily_snapshots(self.manager, snapshot_date=day)
+        old_snapshot = FundSnapshot.objects.get(
+            user=self.member, snapshot_date=day
+        )
+        original_total = old_snapshot.total_amount
+        self.member.userprofile.is_archived = True
+        self.member.userprofile.save(update_fields=["is_archived"])
+        FundRecord.objects.filter(user=self.member).update(
+            user=self.other, owner=self.other.username
+        )
+        refresh_daily_snapshots(self.manager, snapshot_date=day)
+        old_snapshot.refresh_from_db()
+        self.assertEqual(old_snapshot.total_amount, 0)
+        self.assertEqual(
+            FundSnapshot.objects.get(
+                user=self.other, snapshot_date=day
+            ).total_amount, original_total,
+        )
+        next_day = day + timedelta(days=1)
+        refresh_daily_snapshots(self.manager, snapshot_date=next_day)
+        self.assertFalse(FundSnapshot.objects.filter(
+            user=self.member, snapshot_date=next_day
+        ).exists())
+
     def test_refresh_updates_same_rows_and_tracks_latest_asset_state(self):
         result = self.refresh()
         self.assertEqual((result.created_count, result.updated_count), (3, 0))

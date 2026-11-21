@@ -164,6 +164,51 @@ test("管理员导入 CSV、刷新快照并创建不登录的成员", async ({ p
   ).toContainText("不登录的成员");
 });
 
+test("管理员可查看成员编辑与删除确认，资产按类别分区", async ({ page }) => {
+  test.skip(!fixtures.manager || !fixtures.other, "需要隔离测试账号");
+  await signIn(page, fixtures.manager);
+  await page.goto("/app/members");
+  const row = page
+    .getByRole("row")
+    .filter({ hasText: fixtures.other.username });
+  await row.getByRole("button", { name: "编辑" }).click();
+  const dialog = page.getByRole("dialog", { name: "编辑家庭成员" });
+  const isCentered = () =>
+    dialog.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return (
+        Math.abs(box.left - (innerWidth - box.width) / 2) < 2 &&
+        Math.abs(box.top - (innerHeight - box.height) / 2) < 2
+      );
+    });
+  expect(await isCentered()).toBeTruthy();
+  await expect(dialog.getByLabel("启用账号")).toBeVisible();
+  await expect(dialog.getByLabel("已批准")).toBeVisible();
+  await expect(dialog.getByLabel("家庭管理员")).toBeVisible();
+  await dialog.getByRole("button", { name: "删除成员" }).click();
+  await expect(dialog.getByLabel("资产接收成员")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "确认删除" })).toBeDisabled();
+  await dialog
+    .getByLabel("资产接收成员")
+    .selectOption(String(fixtures.manager.id));
+  await expect(dialog.getByRole("button", { name: "确认删除" })).toBeEnabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await isCentered()).toBeTruthy();
+  await dialog.getByRole("button", { name: "取消" }).last().click();
+  await dialog.getByRole("button", { name: "关闭" }).click();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/app/funds");
+  await expect(page.getByRole("region", { name: "储蓄存款" })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "非储蓄类资产" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "储蓄存款" })
+      .getByRole("columnheader", { name: "年利率" }),
+  ).toBeVisible();
+});
+
 test("注册账号等待批准，管理员批准后可登录", async ({ page }) => {
   test.skip(!fixtures.manager, "需指定隔离测试库的 MJ_E2E_CREDENTIALS");
   const username = "e2e_register_" + Date.now();

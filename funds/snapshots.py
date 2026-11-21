@@ -28,7 +28,8 @@ def refresh_daily_snapshots(actor, *, snapshot_date=None):
     day = snapshot_date if snapshot_date is not None else timezone.localdate()
     # 即使当天尚无快照，也可利用固定顺序的成员锁串行化并发刷新。
     users = list(
-        User.objects.select_for_update().order_by('pk').only('pk', 'username')
+        User.objects.exclude(userprofile__is_archived=True)
+        .select_for_update().order_by('pk').only('pk', 'username')
     )
     user_ids = {user.pk for user in users}
     if actor.pk not in user_ids:
@@ -43,6 +44,13 @@ def refresh_daily_snapshots(actor, *, snapshot_date=None):
             snapshot_date=day
         )
     }
+    archived_today = []
+    if day == timezone.localdate():
+        archived_today = list(
+            FundSnapshot.objects.select_for_update().filter(
+                snapshot_date=day, user__userprofile__is_archived=True
+            )
+        )
     summaries = {
         user.pk: {
             'total_amount': Decimal('0'),
@@ -116,5 +124,21 @@ def refresh_daily_snapshots(actor, *, snapshot_date=None):
         ),
         batch_size=100,
     )
+    for snapshot in archived_today:
+        snapshot.total_amount = Decimal('0')
+        snapshot.record_count = 0
+        snapshot.bank_summary = {}
+        snapshot.category_summary = {}
+        snapshot.updated_at = now
+    FundSnapshot.objects.bulk_update(
+        archived_today,
+        fields=(
+            'total_amount', 'record_count', 'bank_summary',
+            'category_summary', 'updated_at',
+        ),
+        batch_size=100,
+    )
     FundSnapshot.objects.bulk_create(new_rows, batch_size=100)
-    return SnapshotRefreshResult(day, len(new_rows), len(updated_rows))
+    return SnapshotRefreshResult(
+        day, len(new_rows), len(updated_rows) + len(archived_today)
+    )

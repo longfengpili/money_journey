@@ -95,7 +95,9 @@ def save_asset(data, actor, instance=None):
     )
     if "owner_id" in data:
         try:
-            owner = User.objects.get(pk=int(data["owner_id"]))
+            owner = User.objects.exclude(
+                userprofile__is_archived=True
+            ).get(pk=int(data["owner_id"]))
         except (User.DoesNotExist, TypeError, ValueError, OverflowError):
             raise ValidationError({"owner_id": ["请选择有效成员"]})
         values["owner"] = owner.username

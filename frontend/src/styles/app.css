@@ -374,11 +374,14 @@ th.money {
   gap: 24px;
 }
 dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   border: 0;
   padding: 0;
   border-radius: 18px;
   width: min(620px, calc(100vw - 32px));
-  max-height: 90vh;
+  max-height: calc(100dvh - 32px);
   overflow: auto;
   color: #182230;
 }
@@ -397,6 +400,58 @@ dialog .dialog-head h2 {
 }
 .card-list {
   display: none;
+}
+.asset-group + .asset-group {
+  margin-top: 28px;
+  border-top: 1px solid #e8ebf1;
+  padding-top: 24px;
+}
+.asset-group h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+.asset-group h3 .label {
+  font-size: 12px;
+  font-weight: 400;
+}
+.asset-group .empty {
+  padding: 24px 12px;
+}
+.member-status-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+.member-editor-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.member-status-grid label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.member-status-grid input {
+  width: auto;
+}
+.member-delete {
+  border-top: 1px solid #e8ebf1;
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.member-delete p {
+  color: #667085;
+  font-size: 12px;
+}
+.member-delete button:last-child {
+  color: #b42318;
+  border-color: #f4c7c3;
+}
+.member-delete button:last-child:hover {
+  background: #fff3f1;
 }
 .section-note {
   font-size: 12px;
