@@ -16,7 +16,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from money_journey.frontend import app_index
 from django.contrib.auth import views as auth_views
 from django.http import JsonResponse
 from django.views.generic import RedirectView
@@ -27,6 +28,9 @@ def health_check(request):
     return JsonResponse({"status": "healthy", "service": "money_journey"})
 
 urlpatterns = [
+    path('api/v1/', include('money_journey.api.urls')),
+    path('app/', app_index, name='frontend'),
+    re_path(r'^app/(?P<route>.*)$', app_index),
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html'), name='index'), # 首页路由
     path('accounts/', include('accounts.urls')),

@@ -2,6 +2,7 @@
 # This file is used by Dockerfile for production builds
 
 # Core dependencies
+djangorestframework==3.16.1
 Django>=5.0,<6.0
 mysqlclient==2.2.8
 python-dotenv==1.2.2

@@ -61,6 +61,12 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
+frontend/node_modules/
+frontend/test-results/
+frontend/playwright-report/
+frontend/AGENTS.md
+frontend/.cursor/
+frontend/*.tsbuildinfo
 .claude/
 staticfiles/
 media/

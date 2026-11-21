@@ -34,6 +34,7 @@ if DEBUG and not any(ALLOWED_HOSTS):
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -78,6 +79,16 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "money_journey.urls"
+
+FRONTEND_DIST = BASE_DIR / 'frontend' / 'dist'
+CSRF_FAILURE_VIEW = 'money_journey.api.base.csrf_failure'
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'EXCEPTION_HANDLER': 'money_journey.api.base.api_exception_handler',
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+}
 
 TEMPLATES = [
     {
@@ -153,6 +164,8 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
+if FRONTEND_DIST.is_dir():
+    STATICFILES_DIRS.append(('app', FRONTEND_DIST))
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Whitenoise configuration for static files
