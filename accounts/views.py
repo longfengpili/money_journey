@@ -8,10 +8,11 @@ from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
+from django.db import DatabaseError, transaction
 
 from accounts.models import UserProfile
-from accounts.forms import CreateMemberForm
+from accounts.forms import CreateMemberForm, RegistrationForm
+from accounts.services import save_registration
 from accounts.permissions import is_family_admin
 
 
@@ -46,44 +47,21 @@ class CustomLoginView(LoginView):
 
 
 def register(request):
-    """用户注册视图"""
+    """旧注册入口与新 API 共用表单和原子账号创建。"""
+    data = None
     if request.method == 'POST':
-        username = request.POST.get('username')
-        first_name = request.POST.get('first_name', '')
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-        email = request.POST.get('email', '')
-
-        # 验证输入
-        if not username or not password:
-            messages.error(request, '用户名和密码不能为空')
-            return redirect('accounts:register')
-
-        if password != password2:
-            messages.error(request, '两次输入的密码不一致')
-            return redirect('accounts:register')
-
-        # 检查用户名是否已存在
-        if User.objects.filter(username=username).exists():
-            messages.error(request, '用户名已存在')
-            return redirect('accounts:register')
-
-        # 创建用户
+        data = request.POST.copy()
+        data['password1'] = data.get('password', '')
+    form = RegistrationForm(data)
+    if request.method == 'POST' and form.is_valid():
         try:
-            user = User.objects.create_user(username=username, password=password, first_name=first_name, email=email)
-            user.is_active = True  # 用户可登录，但需要批准
-            user.save()
-
-            # 创建用户资料
-            UserProfile.objects.create(user=user, is_approved=False)
-
+            save_registration(form)
+        except DatabaseError:
+            form.add_error(None, '注册失败，请稍后重试或更换用户名')
+        else:
             messages.success(request, '注册成功！请等待管理员批准您的账户。')
             return redirect('accounts:login')
-        except Exception as e:
-            messages.error(request, f'注册失败: {str(e)}')
-            return redirect('accounts:register')
-
-    return render(request, 'accounts/register.html')
+    return render(request, 'accounts/register.html', {'form': form})
 
 
 @login_required

@@ -19,27 +19,28 @@
                     {% endfor %}
                 {% endif %}
 
+                {% if form.errors %}<div class="alert alert-danger" role="alert">{{ form.errors }}</div>{% endif %}
                 <form method="post" action="{% url 'accounts:register' %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="id_username" class="form-label">用户名</label>
-                        <input type="text" name="username" id="id_username" class="form-control" required autofocus>
+                        <input type="text" name="username" id="id_username" value="{{ form.username.value|default_if_none:'' }}" class="form-control" required autofocus>
                         <div class="form-text">请输入您想要的用户名</div>
                     </div>
                     <div class="mb-3">
                         <label for="id_first_name" class="form-label">姓名</label>
-                        <input type="text" name="first_name" id="id_first_name" class="form-control" required>
+                        <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default_if_none:'' }}" class="form-control" required>
                         <div class="form-text">请输入您的姓名</div>
                     </div>
                     <div class="mb-3">
                         <label for="id_email" class="form-label">邮箱地址（可选）</label>
-                        <input type="email" name="email" id="id_email" class="form-control">
+                        <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control">
                         <div class="form-text">用于接收通知（可选）</div>
                     </div>
                     <div class="mb-3">
                         <label for="id_password" class="form-label">密码</label>
                         <input type="password" name="password" id="id_password" class="form-control" required>
-                        <div class="form-text">请输入至少6位字符的密码</div>
+                        <div class="form-text">请输入至少8位字符，避免常见密码及纯数字</div>
                     </div>
                     <div class="mb-3">
                         <label for="id_password2" class="form-label">确认密码</label>

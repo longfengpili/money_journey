@@ -5,8 +5,12 @@ from analytics.api import SummaryApi, TrendApi
 from funds.api import FundDetailApi, FundOptionsApi, FundsApi
 from funds.operation_api import ImportApi, ImportTemplateApi, SnapshotRefreshApi
 from savings_calculator.api import CalculatorApi
+from accounts.api import ApprovalApi, MembersApi, RegisterApi
 
 urlpatterns = [
+    path('auth/register/', RegisterApi.as_view()),
+    path('members/', MembersApi.as_view()),
+    path('approvals/<int:pk>/', ApprovalApi.as_view()),
     path('calculator/calculate/', CalculatorApi.as_view()),
     path('calculator/result/', CalculatorApi.as_view()),
     path('funds/import/', ImportApi.as_view()),
