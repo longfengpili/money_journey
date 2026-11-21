@@ -304,44 +304,35 @@ class SavingsCalculator:
 
         return total
 
-    def get_summary(self):
-        """获取计算摘要"""
+    def get_summary(self, *, decimal_values=False):
+        """摘要默认保持旧浮点接口，新 API 可请求精确 Decimal。"""
         if not self.results:
             return {}
-
         last_month = self.results[-1]
-
-        # 转换为float以便JSON序列化
-        return {
+        summary = {
             'total_months': len(self.results),
-            'final_total': float(last_month['total']),
-            'final_regular_accumulated': float(
-                last_month['regular_accumulated']
+            'final_total': last_month['total'],
+            'final_regular_accumulated': last_month['regular_accumulated'],
+            'final_current_deposit': last_month['current_deposit_before_expense'],
+            'total_regular_deposit': sum(
+                row['regular_deposit'] for row in self.results[-35:]
             ),
-            'final_current_deposit': float(
-                last_month['current_deposit_before_expense']
+            'total_income': sum(row['monthly_income'] for row in self.results),
+            'total_expense': sum(row['total_expense'] for row in self.results),
+            'total_balance': sum(
+                row['monthly_income'] - row['total_expense']
+                for row in self.results
             ),
-            'total_regular_deposit': float(
-                sum(r['regular_deposit'] for r in self.results[-35:])
-            ),  # 只统计前35个月的定期储蓄, 其他的到期了
-            'total_income': float(
-                sum(r['monthly_income'] for r in self.results)
-            ),
-            'total_expense': float(
-                sum(r['total_expense'] for r in self.results)
-            ),
-            'total_balance': float(
-                sum(
-                    r['monthly_income'] - r['total_expense']
-                    for r in self.results
-                )
-            ),
-            'average_monthly_income': float(
-                sum(r['monthly_income'] for r in self.results)
-                / len(self.results)
-            ),
-            'average_monthly_expense': float(
-                sum(r['monthly_expense'] for r in self.results)
-                / len(self.results)
-            ),
+            'average_monthly_income': sum(
+                row['monthly_income'] for row in self.results
+            ) / len(self.results),
+            'average_monthly_expense': sum(
+                row['monthly_expense'] for row in self.results
+            ) / len(self.results),
+        }
+        if decimal_values:
+            return summary
+        return {
+            key: float(value) if isinstance(value, Decimal) else value
+            for key, value in summary.items()
         }

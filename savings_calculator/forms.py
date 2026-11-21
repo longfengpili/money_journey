@@ -2,14 +2,23 @@
 from django import forms
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
+from django.utils import timezone
 
 
 class BasicParametersForm(forms.Form):
     """基本参数表单"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        year = timezone.localdate().year
+        for name in ('parent_birth_year', 'child_birth_year'):
+            self.fields[name].max_value = year
+            self.fields[name].validators.append(MaxValueValidator(year))
+            self.fields[name].help_text = f'请输入出生年份（1900-{year}）'
+
     parent_birth_year = forms.IntegerField(
         label='家长出生年份',
         min_value=1900,
-        max_value=2026,
+        max_value=None,
         initial=1987,
         help_text='请输入家长的出生年份（1900-2026）'
     )
@@ -17,7 +26,7 @@ class BasicParametersForm(forms.Form):
     child_birth_year = forms.IntegerField(
         label='孩子出生年份',
         min_value=1900,
-        max_value=2026,
+        max_value=None,
         initial=2014,
         help_text='请输入孩子的出生年份（1900-2026）'
     )
@@ -79,6 +88,13 @@ class BasicParametersForm(forms.Form):
 
 class AgeRangeForm(forms.Form):
     """年龄段参数表单"""
+
+    def clean(self):
+        data = super().clean()
+        if ('start_age' in data and 'end_age' in data
+                and data['start_age'] > data['end_age']):
+            self.add_error('end_age', '结束年龄不能早于起始年龄')
+        return data
     start_age = forms.IntegerField(
         label='起始年龄',
         min_value=0,
@@ -119,6 +135,7 @@ def create_age_range_formset(extra=1, max_num=20):
         extra=extra,
         max_num=max_num,
         validate_min=True,
+        validate_max=True,
         min_num=1,
         can_delete=True
     )

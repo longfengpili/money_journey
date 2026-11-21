@@ -4,8 +4,11 @@ from . import auth
 from analytics.api import SummaryApi, TrendApi
 from funds.api import FundDetailApi, FundOptionsApi, FundsApi
 from funds.operation_api import ImportApi, ImportTemplateApi, SnapshotRefreshApi
+from savings_calculator.api import CalculatorApi
 
 urlpatterns = [
+    path('calculator/calculate/', CalculatorApi.as_view()),
+    path('calculator/result/', CalculatorApi.as_view()),
     path('funds/import/', ImportApi.as_view()),
     path('funds/import-template/', ImportTemplateApi.as_view()),
     path('snapshots/refresh/', SnapshotRefreshApi.as_view()),
