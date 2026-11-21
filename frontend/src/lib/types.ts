@@ -1,6 +1,7 @@
 export type Member = { id: number; username: string; first_name: string };
 export type Choices = [string, string][];
 export type SummaryRow = {
+  user_id?: number | null;
   owner?: string;
   first_name?: string;
   bank?: string;
@@ -18,9 +19,15 @@ export type Summary = {
   total_records: number;
   owner_count: number;
   owner_summary: SummaryRow[];
+  owner_category_summary?: SummaryRow[];
   bank_summary: SummaryRow[];
   category_summary: SummaryRow[];
   status_summary: SummaryRow[];
+  maturity_summary?: {
+    month: string;
+    total_amount: string;
+    record_count: number;
+  }[];
   owner_choices: Member[];
   bank_choices: Choices;
   category_choices: Choices;

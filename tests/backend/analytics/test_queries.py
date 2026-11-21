@@ -58,6 +58,16 @@ class AssetSummaryTests(TestCase):
              ('second', '家人', Decimal('10.10')),
              ('first', 'first', Decimal('0.00'))],
         )
+        structure = result['owner_category_summary']
+        self.assertEqual(len(structure), 4)
+        self.assertEqual(
+            [(row['user_id'], row['category'], row['total_amount'])
+             for row in structure],
+            [(self.first.pk, 'CURRENT', Decimal('10.10')),
+             (self.first.pk, 'SAVINGS', Decimal('20.20')),
+             (self.second.pk, 'CURRENT', Decimal('10.10')),
+             (None, 'CURRENT', Decimal('0.00'))],
+        )
 
     def test_combined_filters_keep_partial_owner_and_exact_codes(self):
         filters = {'owner': ' fir ', 'bank': ' ICBC ', 'category': 'CURRENT'}

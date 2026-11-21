@@ -29,15 +29,36 @@ async function signIn(page: import("@playwright/test").Page, actor: Actor) {
 }
 
 test("游客总览、图表与手机导航可用", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(page).toHaveURL(/\/app\/$/);
   await expect(page.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: "银行资金分布" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "成员资产结构" })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "未来半年到期金额" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "未来半年到期明细" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "资金快照历史趋势" }),
+  ).toHaveCount(0);
   await page.screenshot({
     path: test.info().outputPath("dashboard-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    )
+    .toBeTruthy();
+  await page.screenshot({
+    path: test.info().outputPath("dashboard-mobile.png"),
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "切换导航" }).click();
   await page.getByRole("link", { name: "储蓄规划", exact: true }).click();
   await expect(page.getByRole("heading", { name: "基本参数" })).toBeVisible();

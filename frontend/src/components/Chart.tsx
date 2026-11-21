@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import ChartJS from "chart.js/auto";
+import { money } from "../lib/money";
 
 export default function Chart({
   title,
@@ -10,13 +11,13 @@ export default function Chart({
   title: string;
   labels: string[];
   values: (string | number)[];
-  type?: "bar" | "doughnut" | "line";
+  type?: "bar" | "horizontalBar" | "doughnut" | "line";
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!ref.current || !values.length) return;
     const chart = new ChartJS(ref.current, {
-      type,
+      type: type === "horizontalBar" ? "bar" : type,
       data: {
         labels,
         datasets: [
@@ -36,6 +37,9 @@ export default function Chart({
                   ],
             borderColor: type === "line" ? "#3559e0" : "transparent",
             borderWidth: 2,
+            borderRadius: type === "doughnut" ? 0 : 7,
+            borderSkipped: false,
+            maxBarThickness: 32,
             ...(type === "line"
               ? { tension: 0.25, fill: true, pointRadius: 2 }
               : {}),
@@ -45,14 +49,29 @@ export default function Chart({
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        indexAxis: type === "horizontalBar" ? "y" : "x",
         animation: window.matchMedia("(prefers-reduced-motion: reduce)").matches
           ? false
           : { duration: 250 },
         plugins: {
           legend: { display: type === "doughnut", position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: (item) =>
+                `${item.label}: ¥${money(values[item.dataIndex])}`,
+            },
+          },
         },
+        ...(type === "doughnut" ? { cutout: "70%" } : {}),
         ...(type !== "doughnut"
-          ? { scales: { y: { beginAtZero: true } } }
+          ? {
+              scales: {
+                [type === "horizontalBar" ? "x" : "y"]: {
+                  beginAtZero: true,
+                  grid: { color: "#edf0f6" },
+                },
+              },
+            }
           : {}),
       },
     });

@@ -1,7 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from accounts.models import UserProfile
 from funds.models import FundRecord, FundSnapshot
@@ -21,6 +23,13 @@ class AnalyticsApiTests(TestCase):
         response = self.client.get("/api/v1/analytics/summary/")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["demo"])
+        self.assertEqual(
+            sum(
+                Decimal(row["total_amount"])
+                for row in response.json()["owner_category_summary"]
+            ),
+            Decimal(response.json()["total_amount"]),
+        )
         self.client.force_login(self.user)
         data = self.client.get("/api/v1/analytics/summary/").json()
         self.assertEqual(data["total_amount"], "18.01")
@@ -32,6 +41,32 @@ class AnalyticsApiTests(TestCase):
             },
         ).json()
         self.assertEqual(filtered["total_amount"], "12.34")
+
+    def test_maturity_chart_respects_active_assets_and_filters(self):
+        next_month = (timezone.localdate().replace(day=1) + timedelta(days=32))
+        next_month = next_month.replace(day=1)
+        FundRecord.objects.create(
+            user=self.user, bank="ICBC", category="SAVINGS",
+            amount="30.25", due_date=next_month,
+        )
+        FundRecord.objects.create(
+            user=self.other, bank="CCB", category="SAVINGS",
+            amount="99.00", due_date=next_month,
+            savings_status="WITHDRAWN",
+        )
+        self.client.force_login(self.user)
+        rows = self.client.get("/api/v1/analytics/summary/").json()[
+            "maturity_summary"
+        ]
+        self.assertEqual(len(rows), 6)
+        self.assertEqual(rows[1], {
+            "month": next_month.strftime("%Y-%m"),
+            "total_amount": "30.25", "record_count": 1,
+        })
+        filtered = self.client.get(
+            "/api/v1/analytics/summary/", {"bank": "CCB"}
+        ).json()["maturity_summary"]
+        self.assertTrue(all(row["total_amount"] == "0.00" for row in filtered))
 
     def test_owner_id_selects_renamed_history_and_revoked_access_is_denied(
         self,

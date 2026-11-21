@@ -10,8 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import can_write_assets
-from analytics.demo import DEMO_DATA
+from analytics.demo import DEMO_DATA, demo_maturity_summary
 from analytics.queries import (
+    get_maturity_summary,
     get_snapshot_trend,
     normalize_filters,
     summarize_assets,
@@ -53,6 +54,7 @@ class SummaryApi(APIView):
                 key: deepcopy(DEMO_DATA[key])
                 for key in (
                     "owner_summary",
+                    "owner_category_summary",
                     "bank_summary",
                     "category_summary",
                     "status_summary",
@@ -65,6 +67,7 @@ class SummaryApi(APIView):
             data["bank_summary"][-1]["total_amount"] = 0
             for key in (
                 "owner_summary",
+                "owner_category_summary",
                 "bank_summary",
                 "category_summary",
                 "status_summary",
@@ -72,8 +75,12 @@ class SummaryApi(APIView):
                 for row in data[key]:
                     row["total_amount"] = Decimal(str(row["total_amount"]))
             data["total_amount"] = Decimal(str(data["total_amount"]))
+            data["maturity_summary"] = demo_maturity_summary()
         else:
             data = summarize_assets(
+                request.GET, owner_id=selected_owner(request.GET)
+            )
+            data["maturity_summary"] = get_maturity_summary(
                 request.GET, owner_id=selected_owner(request.GET)
             )
         data.update(

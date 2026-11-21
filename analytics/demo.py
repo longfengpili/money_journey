@@ -1,4 +1,27 @@
-# 游客模式演示数据
+"""游客模式演示数据。"""
+
+from datetime import date
+from decimal import Decimal
+
+from django.utils import timezone
+
+
+def demo_maturity_summary():
+    """提供标明为演示的未来六个月到期分布。"""
+    today = timezone.localdate()
+    values = (40000, 200000, 100000, 150000, 0, 250000)
+    counts = (1, 2, 1, 2, 0, 2)
+    rows = []
+    for index, amount in enumerate(values):
+        year, month = divmod(today.year * 12 + today.month - 1 + index, 12)
+        rows.append({
+            'month': date(year, month + 1, 1).strftime('%Y-%m'),
+            'total_amount': Decimal(amount),
+            'record_count': counts[index],
+        })
+    return rows
+
+
 DEMO_DATA = {
     "owner_summary": [
         {
@@ -104,3 +127,20 @@ DEMO_DATA = {
     "owner_choices": [],
     "has_snapshots": False,
 }
+
+_demo_category_amounts = (
+    (300000, 150000, 80000, 50000),
+    (250000, 100000, 70000, 30000),
+    (130000, 70000, 30000, 20000),
+)
+DEMO_DATA['owner_category_summary'] = [
+    {
+        'owner': owner['owner'],
+        'first_name': owner['first_name'],
+        'category': category['category'],
+        'category_display': category['category_display'],
+        'total_amount': amount,
+    }
+    for owner, amounts in zip(DEMO_DATA['owner_summary'], _demo_category_amounts)
+    for category, amount in zip(DEMO_DATA['category_summary'], amounts)
+]

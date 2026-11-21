@@ -1,8 +1,11 @@
 """家庭资产筛选、统一汇总及每日快照趋势查询。"""
 
+from datetime import date
 from decimal import Decimal
 
 from django.db.models import Case, CharField, Count, F, Q, Sum, Value, When
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.utils import timezone
 
 from funds.models import FundRecord, FundSnapshot
 
@@ -32,9 +35,7 @@ def _accumulate(rows, key, initial, amount, count):
     row['record_count'] += count
 
 
-def summarize_assets(filters=None, *, owner_id=None):
-    """一次分组查询生成总计及四个维度，金额始终使用 Decimal。"""
-    filters = normalize_filters(filters if filters is not None else {})
+def _filtered_records(filters, owner_id):
     records = FundRecord.objects.all()
     if owner_id is not None:
         records = records.filter(user_id=owner_id)
@@ -43,6 +44,13 @@ def summarize_assets(filters=None, *, owner_id=None):
     for field in ('bank', 'category', 'savings_status'):
         if filters[field]:
             records = records.filter(**{field: filters[field]})
+    return records
+
+
+def summarize_assets(filters=None, *, owner_id=None):
+    """一次分组查询生成总计及四个维度，金额始终使用 Decimal。"""
+    filters = normalize_filters(filters if filters is not None else {})
+    records = _filtered_records(filters, owner_id)
     groups = records.order_by().values(
         'user_id', 'bank', 'category', 'savings_status',
         account_username=F('user__username'),
@@ -53,6 +61,7 @@ def summarize_assets(filters=None, *, owner_id=None):
         ),
     ).annotate(total_amount=Sum('amount'), record_count=Count('pk'))
     owners = {}
+    owner_categories = {}
     dimensions = {
         field: {} for field in ('bank', 'category', 'savings_status')
     }
@@ -68,9 +77,21 @@ def summarize_assets(filters=None, *, owner_id=None):
         total_records += count
         owner = group['account_username'] or group['legacy_owner']
         name = (group['account_name'] or '').strip() or owner or '待核对所有者'
+        owner_key = (group['user_id'], group['legacy_owner'])
         _accumulate(
-            owners, (group['user_id'], group['legacy_owner']),
+            owners, owner_key,
             {'user_id': group['user_id'], 'owner': owner, 'first_name': name},
+            amount, count,
+        )
+        _accumulate(
+            owner_categories, (owner_key, group['category']),
+            {
+                'user_id': group['user_id'], 'owner': owner,
+                'first_name': name, 'category': group['category'],
+                'category_display': choices['category'].get(
+                    group['category'], group['category']
+                ),
+            },
             amount, count,
         )
         for field, rows in dimensions.items():
@@ -89,11 +110,52 @@ def summarize_assets(filters=None, *, owner_id=None):
             row['user_id'] or 0, row['owner'] or '',
         )),
     }
+    owner_order = {
+        (row['user_id'], row['owner'] if row['user_id'] is None else ''): index
+        for index, row in enumerate(result['owner_summary'])
+    }
+    result['owner_category_summary'] = [
+        row for key, row in sorted(
+            owner_categories.items(),
+            key=lambda item: (owner_order[item[0][0]], item[0][1]),
+        )
+    ]
     for field, rows in dimensions.items():
         name = 'status' if field == 'savings_status' else field
         result[name + '_summary'] = sorted(
             rows.values(), key=lambda row: (-row['total_amount'], row[field]),
         )
+    return result
+
+
+def get_maturity_summary(filters=None, *, owner_id=None, months=6):
+    """按当前筛选统计未来数月到期的存续资产，包含零值月份。"""
+    filters = normalize_filters(filters if filters is not None else {})
+    today = timezone.localdate()
+
+    def month_start(offset):
+        year, month = divmod(today.year * 12 + today.month - 1 + offset, 12)
+        return date(year, month + 1, 1)
+
+    records = _filtered_records(filters, owner_id).filter(
+        savings_status='ACTIVE', due_date__gte=today,
+        due_date__lt=month_start(months),
+    )
+    grouped = records.annotate(
+        year=ExtractYear('due_date'), month=ExtractMonth('due_date'),
+    ).values('year', 'month').annotate(
+        total_amount=Sum('amount'), record_count=Count('pk'),
+    )
+    amounts = {(row['year'], row['month']): row for row in grouped}
+    result = []
+    for index in range(months):
+        start = month_start(index)
+        row = amounts.get((start.year, start.month), {})
+        result.append({
+            'month': start.strftime('%Y-%m'),
+            'total_amount': row.get('total_amount', Decimal('0.00')),
+            'record_count': row.get('record_count', 0),
+        })
     return result
 
 
