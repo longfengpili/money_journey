@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useResource } from "../../lib/resource";
 import type { Summary } from "../../lib/types";
-import { money, sumMoney } from "../../lib/money";
+import { interpolateMoney, money, sumMoney } from "../../lib/money";
 import { Button, ErrorNotice, Loading, PageTitle } from "../../components/ui";
 import Filters from "../../components/Filters";
 import Chart from "../../components/Chart";
@@ -29,6 +29,7 @@ function flyCoin(
   dashboard: HTMLDivElement | null,
   label: string,
   percent: number,
+  onMorphProgress: (progress: number) => void,
   onComplete: () => void,
 ) {
   const charts = dashboard?.querySelector<HTMLElement>(".dashboard-charts");
@@ -36,14 +37,50 @@ function flyCoin(
     onComplete();
     return () => {};
   }
-  const start = source.getBoundingClientRect();
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
+  const spark = dashboard?.querySelector<HTMLElement>(".dashboard-orbit-spark");
+  const point = spark?.querySelector<HTMLElement>(
+    ".dashboard-orbit-spark-point",
+  );
+  spark?.classList.add("is-transmuting");
+  const sourceBounds = source.getBoundingClientRect();
+  const start = (point ?? source).getBoundingClientRect();
+  const core = dashboard?.querySelector<HTMLElement>(".dashboard-orbit-core");
+  const coreBounds = core?.getBoundingClientRect();
+  const coreOffsetX = coreBounds
+    ? coreBounds.left + coreBounds.width / 2 - start.left - start.width / 2
+    : 0;
+  const coreOffsetY = coreBounds
+    ? coreBounds.top + coreBounds.height / 2 - start.top - start.height / 2
+    : 0;
+  const centerX = coreBounds
+    ? coreBounds.left + coreBounds.width / 2
+    : window.innerWidth / 2;
+  const centerY = Math.max(
+    (coreBounds
+      ? coreBounds.top + coreBounds.height / 2
+      : start.top + start.height / 2) + 180,
+    window.innerHeight * 0.72,
+  );
   const offsetX = centerX - start.left - start.width / 2;
   const offsetY = centerY - start.top - start.height / 2;
   const animations = new Set<Animation>();
   const rays: HTMLElement[] = [];
+  let progressFrame: number | null = null;
   let stopped = false;
+  const inboundBeam = document.createElement("span");
+  inboundBeam.className = "dashboard-inbound-beam";
+  inboundBeam.setAttribute("aria-hidden", "true");
+  if (point) {
+    const sourceX = sourceBounds.left + sourceBounds.width / 2;
+    const sourceY = sourceBounds.top + sourceBounds.height / 2;
+    const targetX = start.left + start.width / 2;
+    const targetY = start.top + start.height / 2;
+    inboundBeam.style.left = `${sourceX}px`;
+    inboundBeam.style.top = `${sourceY}px`;
+    inboundBeam.style.width = `${Math.hypot(targetX - sourceX, targetY - sourceY)}px`;
+    inboundBeam.style.transform = `rotate(${(Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI}deg)`;
+    document.body.append(inboundBeam);
+  }
   const coin = document.createElement("span");
   coin.className = "dashboard-filter-coin";
   coin.setAttribute("aria-hidden", "true");
@@ -56,12 +93,30 @@ function flyCoin(
   coin.append(coinLabel, coinPercent);
   coin.style.left = `${start.left + start.width / 2 - 22}px`;
   coin.style.top = `${start.top + start.height / 2 - 22}px`;
-  document.body.append(coin);
+  const getLightTargets = () => {
+    const charts = Array.from(
+      dashboard?.querySelectorAll<HTMLCanvasElement>('canvas[role="img"]') ??
+        [],
+    ).map((canvas) => {
+      const impact = canvas.closest<HTMLElement>(".chart") ?? canvas;
+      return { impact, card: canvas.closest<HTMLElement>(".card") ?? impact };
+    });
+    const maturityTable = dashboard?.querySelector<HTMLElement>(
+      ".dashboard-maturity-table",
+    );
+    if (maturityTable)
+      charts.push({
+        impact: maturityTable,
+        card: maturityTable.closest<HTMLElement>(".card") ?? maturityTable,
+      });
+    return charts;
+  };
   const play = (
     element: HTMLElement,
     frames: Keyframe[],
     duration: number,
     delay = 0,
+    onProgress?: (progress: number) => void,
   ) => {
     const animation = element.animate(frames, {
       duration,
@@ -70,21 +125,74 @@ function flyCoin(
       fill: "forwards",
     });
     animations.add(animation);
+    if (onProgress) {
+      const track = () => {
+        if (stopped) return;
+        const elapsed = Number(animation.currentTime ?? 0) - delay;
+        onProgress(Math.max(0, Math.min(1, elapsed / duration)));
+        if (animation.playState !== "finished")
+          progressFrame = window.requestAnimationFrame(track);
+      };
+      progressFrame = window.requestAnimationFrame(track);
+    }
     return animation.finished;
   };
   const cleanup = () => {
     if (stopped) return;
     stopped = true;
     animations.forEach((animation) => animation.cancel());
+    if (progressFrame !== null) window.cancelAnimationFrame(progressFrame);
+    inboundBeam.remove();
     coin.remove();
     rays.forEach((ray) => ray.remove());
+    point?.classList.remove("is-hit");
+    spark?.classList.remove("is-transmuting");
   };
   void (async () => {
     try {
+      if (point) {
+        await play(
+          inboundBeam,
+          [
+            { clipPath: "inset(0 100% 0 0)", opacity: 0.3 },
+            { clipPath: "inset(0 0 0 0)", opacity: 1, offset: 0.72 },
+            { clipPath: "inset(0 0 0 0)", opacity: 0 },
+          ],
+          520,
+        );
+        inboundBeam.remove();
+        point.classList.add("is-hit");
+      }
+      coin.classList.add("is-morphing");
+      document.body.append(coin);
       await play(
         coin,
         [
-          { transform: "translate(0, 0) scale(.7)", opacity: 0.6 },
+          { transform: "translate(0, 0) scale(.14)", opacity: 0.9 },
+          {
+            transform: `translate(${coreOffsetX * 0.5}px, ${coreOffsetY * 0.5}px) scale(.5)`,
+            opacity: 1,
+            offset: 0.5,
+          },
+          {
+            transform: `translate(${coreOffsetX}px, ${coreOffsetY}px) scale(1)`,
+            opacity: 1,
+          },
+        ],
+        600,
+        0,
+        onMorphProgress,
+      );
+      onMorphProgress(1);
+      coin.classList.remove("is-morphing");
+      coin.classList.add("is-descending");
+      await play(
+        coin,
+        [
+          {
+            transform: `translate(${coreOffsetX}px, ${coreOffsetY}px) scale(1)`,
+            opacity: 1,
+          },
           {
             transform: `translate(${offsetX}px, ${offsetY}px) scale(1)`,
             opacity: 1,
@@ -92,24 +200,63 @@ function flyCoin(
         ],
         430,
       );
-      charts.scrollIntoView({ behavior: "smooth", block: "center" });
-      await play(
-        coin,
-        [
-          {
-            transform: `translate(${offsetX}px, ${offsetY}px) scale(1) rotate(0)`,
-          },
-          {
-            transform: `translate(${offsetX}px, ${offsetY}px) scale(2.5) rotate(720deg)`,
-          },
-        ],
-        520,
+      coin.classList.remove("is-descending");
+      point?.classList.remove("is-hit");
+      spark?.classList.remove("is-transmuting");
+      const chartBounds = getLightTargets().map(({ impact }) =>
+        impact.getBoundingClientRect(),
       );
-      const cards = Array.from(
-        charts.querySelectorAll<HTMLElement>(".dashboard-chart-card"),
-      );
+      let scrollFinished: Promise<void> = Promise.resolve();
+      if (chartBounds.length) {
+        const top =
+          Math.min(...chartBounds.map((bounds) => bounds.top)) + window.scrollY;
+        const bottom =
+          Math.max(...chartBounds.map((bounds) => bounds.bottom)) +
+          window.scrollY;
+        const span = bottom - top;
+        const padding = 64;
+        const targetScroll = Math.max(
+          0,
+          span <= window.innerHeight - padding * 2
+            ? top - (window.innerHeight - span) / 2
+            : top - padding,
+        );
+        if (Math.abs(window.scrollY - targetScroll) > 2) {
+          scrollFinished = new Promise((resolve) => {
+            const finish = () => {
+              window.clearTimeout(timeout);
+              window.removeEventListener("scrollend", finish);
+              resolve();
+            };
+            const timeout = window.setTimeout(finish, 700);
+            window.addEventListener("scrollend", finish, { once: true });
+            window.scrollTo({ top: targetScroll, behavior: "smooth" });
+          });
+        }
+      }
+      await Promise.all([
+        scrollFinished,
+        play(
+          coin,
+          [
+            {
+              transform: `translate(${offsetX}px, ${offsetY}px) scale(1) rotate(0)`,
+            },
+            {
+              transform: `translate(${offsetX}px, ${offsetY}px) scale(2.5) rotate(720deg)`,
+            },
+          ],
+          520,
+        ),
+      ]);
+      const chartTargets = getLightTargets();
       const burst = Array.from(
-        { length: 15 + Math.floor(Math.random() * 8) },
+        {
+          length: Math.max(
+            18 + Math.floor(Math.random() * 7),
+            chartTargets.length * 4,
+          ),
+        },
         (_, index) => {
           const ray = document.createElement("span");
           ray.className = "dashboard-gold-ray";
@@ -121,7 +268,7 @@ function flyCoin(
           document.body.append(ray);
           rays.push(ray);
           const target = (
-            cards[index % cards.length] ?? charts
+            chartTargets[index % chartTargets.length]?.impact ?? charts
           ).getBoundingClientRect();
           const endX =
             target.left + target.width / 2 + (Math.random() - 0.5) * 24;
@@ -174,7 +321,7 @@ function flyCoin(
         ),
         ...burst,
       ]);
-      cards.forEach((card) => {
+      [...new Set(chartTargets.map(({ card }) => card))].forEach((card) => {
         card.classList.add("is-unfolding");
         card.addEventListener(
           "animationend",
@@ -195,6 +342,7 @@ function flyCoin(
 export default function Dashboard() {
   const [params, setParams] = useSearchParams();
   const [version, setVersion] = useState(0);
+  const [animatedTotal, setAnimatedTotal] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [animationDone, setAnimationDone] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -232,6 +380,7 @@ export default function Dashboard() {
     if (!transitioning || !animationDone || state.loading) return;
     setTransitioning(false);
     setAnimationDone(false);
+    setAnimatedTotal(null);
     heldDataRef.current = null;
     if (state.error) return;
     returnTopTimerRef.current = window.setTimeout(() => {
@@ -369,7 +518,7 @@ export default function Dashboard() {
           <div className="dashboard-eyebrow">
             FAMILY PORTFOLIO · {activeScope}
           </div>
-          <h2 className="dashboard-halo-heading">看见资金的流向</h2>
+          <h2 className="dashboard-halo-heading">资金罗盘</h2>
           <div className="dashboard-hero-foot">
             {includesHistoricalRecords
               ? "包含历史状态记录，续存资金可能与当前资产重复"
@@ -397,7 +546,9 @@ export default function Dashboard() {
             <span className="dashboard-orbit-track dashboard-orbit-track-outer" />
             <span className="dashboard-orbit-track dashboard-orbit-track-inner" />
             <span className="dashboard-orbit-flow" />
-            <span className="dashboard-orbit-spark" />
+            <span className="dashboard-orbit-spark">
+              <span className="dashboard-orbit-spark-point" />
+            </span>
             <span className="dashboard-orbit-aura" />
             {Array.from({ length: 16 }, (_, index) => (
               <span
@@ -418,7 +569,7 @@ export default function Dashboard() {
             <span>
               {includesHistoricalRecords ? "资产记录金额合计" : "家庭资产总额"}
             </span>
-            <strong>¥{money(data.total_amount)}</strong>
+            <strong>¥{money(animatedTotal ?? data.total_amount)}</strong>
             <small>
               {focusedCategory
                 ? `已筛选 · ${focusedCategory.category_display}`
@@ -444,6 +595,10 @@ export default function Dashboard() {
                   }
                   onClick={(event) => {
                     const clearingCategory = selectedCategory === row.category;
+                    const startAmount = animatedTotal ?? data.total_amount;
+                    const targetAmount = clearingCategory
+                      ? compassData.total_amount
+                      : row.total_amount;
                     coinCleanupRef.current?.();
                     if (returnTopTimerRef.current !== null)
                       window.clearTimeout(returnTopTimerRef.current);
@@ -454,6 +609,7 @@ export default function Dashboard() {
                       heldDataRef.current = data;
                       setTransitioning(true);
                       setAnimationDone(false);
+                      setAnimatedTotal(startAmount);
                       coinCleanupRef.current = flyCoin(
                         event.currentTarget,
                         dashboardRef.current,
@@ -461,8 +617,18 @@ export default function Dashboard() {
                           ? "全部资产"
                           : row.category_display || row.category || "资产",
                         clearingCategory ? 100 : orbitPercentages[index],
+                        (progress) =>
+                          setAnimatedTotal(
+                            interpolateMoney(
+                              startAmount,
+                              targetAmount,
+                              progress,
+                            ),
+                          ),
                         () => setAnimationDone(true),
                       );
+                    } else {
+                      setAnimatedTotal(null);
                     }
                     const next = new URLSearchParams(filters);
                     if (clearingCategory) next.delete("category");
@@ -531,6 +697,7 @@ export default function Dashboard() {
               window.clearTimeout(returnTopTimerRef.current);
             setTransitioning(false);
             setAnimationDone(false);
+            setAnimatedTotal(null);
             setParams(next);
           }}
           owners={data.owner_choices}

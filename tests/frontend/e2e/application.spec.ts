@@ -32,6 +32,7 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
   await page.goto("/app/");
   await expect(page).toHaveURL(/\/app\/$/);
   await expect(page.locator(".app-layout.glass-shell")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "资金罗盘" })).toBeVisible();
   await expect(page.locator(".dashboard-hero-side")).toContainText(
     "未来半年到期",
   );
@@ -144,6 +145,43 @@ test("资金光环分类可筛选并恢复全量资产", async ({ page }) => {
   await expect(halo.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
 });
 
+test("罗盘中心金额随光点飞行变化", async ({ page }) => {
+  await page.goto("/app/");
+  const total = page.locator(".dashboard-orbit-core strong");
+  const savings = page
+    .getByRole("region", { name: "资金光环" })
+    .getByRole("button", { name: /聚焦储蓄存款/ });
+  await savings.click();
+  await page.waitForFunction(() => {
+    const coin = document.querySelector(".dashboard-filter-coin.is-morphing");
+    const value = Number(
+      document
+        .querySelector(".dashboard-orbit-core strong")
+        ?.textContent?.replace(/[^\d.]/g, ""),
+    );
+    return coin && value > 680000 && value < 1280000;
+  });
+  await expect(
+    page.locator(".dashboard-filter-coin.is-descending"),
+  ).toBeVisible();
+  await expect(total).toHaveText("¥680,000.00");
+  await expect(page.locator(".dashboard-filter-coin")).toHaveCount(0);
+  await savings.click();
+  await page.waitForFunction(() => {
+    const coin = document.querySelector(".dashboard-filter-coin.is-morphing");
+    const value = Number(
+      document
+        .querySelector(".dashboard-orbit-core strong")
+        ?.textContent?.replace(/[^\d.]/g, ""),
+    );
+    return coin && value > 680000 && value < 1280000;
+  });
+  await expect(
+    page.locator(".dashboard-filter-coin.is-descending"),
+  ).toBeVisible();
+  await expect(total).toHaveText("¥1,280,000.00");
+});
+
 test("金币内容随类别筛选与恢复全量切换", async ({ page }) => {
   await page.goto("/app/");
   const savings = page
@@ -151,8 +189,76 @@ test("金币内容随类别筛选与恢复全量切换", async ({ page }) => {
     .getByRole("button", { name: /聚焦储蓄存款/ });
   const coin = page.locator(".dashboard-filter-coin");
   await savings.click();
+  const incomingBeam = page.locator(".dashboard-inbound-beam");
+  await expect(incomingBeam).toBeVisible();
+  await expect(coin).toHaveCount(0);
+  const beamMiss = await page.evaluate(() => {
+    const beam = document.querySelector<HTMLElement>(
+      ".dashboard-inbound-beam",
+    )!;
+    const point = document.querySelector<HTMLElement>(
+      ".dashboard-orbit-spark-point",
+    )!;
+    const angle = Number(
+      /rotate\((-?[\d.]+)deg\)/.exec(beam.style.transform)?.[1],
+    );
+    const length = parseFloat(beam.style.width);
+    const target = point.getBoundingClientRect();
+    return Math.hypot(
+      parseFloat(beam.style.left) +
+        length * Math.cos((angle * Math.PI) / 180) -
+        target.left -
+        target.width / 2,
+      parseFloat(beam.style.top) +
+        length * Math.sin((angle * Math.PI) / 180) -
+        target.top -
+        target.height / 2,
+    );
+  });
+  expect(beamMiss).toBeLessThan(3);
   await expect(coin).toContainText("储蓄存款");
   await expect(coin).toContainText("53%");
+  await expect(coin).toHaveClass(/is-morphing/);
+  const compassMiss = await coin.evaluate((element) => {
+    const core = document.querySelector<HTMLElement>(".dashboard-orbit-core")!;
+    const frames =
+      (
+        element.getAnimations()[0]?.effect as KeyframeEffect | null
+      )?.getKeyframes() ?? [];
+    const transform = String(frames.at(-1)?.transform ?? "");
+    const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(transform);
+    if (!match) return Infinity;
+    const target = core.getBoundingClientRect();
+    return Math.hypot(
+      parseFloat(element.style.left) +
+        22 +
+        Number(match[1]) -
+        target.left -
+        target.width / 2,
+      parseFloat(element.style.top) +
+        22 +
+        Number(match[2]) -
+        target.top -
+        target.height / 2,
+    );
+  });
+  expect(compassMiss).toBeLessThan(3);
+  await expect(coin).toHaveClass(/is-descending/);
+  const descent = await coin.evaluate((element) => {
+    const animations = element.getAnimations();
+    const frames =
+      (animations.at(-1)?.effect as KeyframeEffect | null)?.getKeyframes() ??
+      [];
+    return frames.map((frame) => {
+      const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(
+        String(frame.transform),
+      );
+      return match ? { x: Number(match[1]), y: Number(match[2]) } : null;
+    });
+  });
+  expect(descent).toHaveLength(2);
+  expect(Math.abs(descent[0]!.x - descent[1]!.x)).toBeLessThan(2);
+  expect(descent[1]!.y).toBeGreaterThan(descent[0]!.y);
   const ray = page.locator(".dashboard-gold-ray").first();
   await expect(ray).toBeVisible();
   expect(
@@ -191,7 +297,9 @@ test("金币内容随类别筛选与恢复全量切换", async ({ page }) => {
       })
       .filter((point): point is { x: number; y: number } => point !== null);
     return [
-      ...document.querySelectorAll<HTMLElement>(".dashboard-chart-card"),
+      ...document.querySelectorAll<HTMLElement>(
+        ".dashboard .card .chart:not(.chart-empty), .dashboard-maturity-table",
+      ),
     ].map((card) => {
       const box = card.getBoundingClientRect();
       const x = box.left + box.width / 2;
@@ -203,13 +311,121 @@ test("金币内容随类别筛选与恢复全量切换", async ({ page }) => {
   });
   expect(Math.max(...distances)).toBeLessThan(45);
   await expect(coin).toHaveCount(0);
-  await expect(page.locator(".dashboard-chart-card.is-unfolding")).toHaveCount(
-    3,
-  );
+  await expect(
+    page.locator(
+      ".dashboard-chart-card.is-unfolding, .dashboard-maturity.is-unfolding",
+    ),
+  ).toHaveCount(4);
   await savings.click();
   await expect(coin).toContainText("全部资产");
   await expect(coin).toContainText("100%");
   await expect(page).not.toHaveURL(/category=/);
+});
+
+test("趋势图和后来新增的图表都接收金光并展开", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 2000 });
+  await page.route("**/api/v1/analytics/trend/**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        results: [
+          { snapshot_date: "2026-11-20", total_amount: "1200000.00" },
+          { snapshot_date: "2026-11-21", total_amount: "1280000.00" },
+        ],
+      }),
+    }),
+  );
+  await page.goto("/app/");
+  await expect(
+    page.getByRole("heading", { name: "资金快照历史趋势" }),
+  ).toBeVisible();
+  await page.evaluate(() => {
+    const section = document.createElement("section");
+    section.className = "card dashboard-extra-chart";
+    const chart = document.createElement("div");
+    chart.className = "chart";
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", "新增图表");
+    chart.append(canvas);
+    section.append(chart);
+    document.querySelector(".dashboard-members")?.before(section);
+  });
+  await page
+    .getByRole("region", { name: "资金光环" })
+    .getByRole("button", { name: /聚焦储蓄存款/ })
+    .click();
+  await expect(page.locator(".dashboard-gold-ray").first()).toBeVisible();
+  for (const selector of [
+    ".dashboard-trend .chart",
+    ".dashboard-extra-chart .chart",
+  ]) {
+    const position = await page.locator(selector).evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, height: innerHeight };
+    });
+    expect(position.top).toBeGreaterThanOrEqual(0);
+    expect(position.bottom).toBeLessThanOrEqual(position.height);
+  }
+  const trendMiss = await page.evaluate(() => {
+    const chart = document.querySelector<HTMLElement>(
+      ".dashboard-trend .chart",
+    )!;
+    const target = chart.getBoundingClientRect();
+    const x = target.left + target.width / 2;
+    const y = target.top + target.height / 2;
+    return Math.min(
+      ...[...document.querySelectorAll<HTMLElement>(".dashboard-gold-ray")].map(
+        (ray) => {
+          const frames =
+            (
+              ray.getAnimations()[0]?.effect as KeyframeEffect | null
+            )?.getKeyframes() ?? [];
+          const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(
+            String(frames.at(-1)?.transform ?? ""),
+          );
+          if (!match) return Infinity;
+          return Math.hypot(
+            parseFloat(ray.style.left) + Number(match[1]) - x,
+            parseFloat(ray.style.top) + Number(match[2]) - y,
+          );
+        },
+      ),
+    );
+  });
+  expect(trendMiss).toBeLessThan(45);
+  const extraMiss = await page.evaluate(() => {
+    const chart = document.querySelector<HTMLElement>(
+      ".dashboard-extra-chart .chart",
+    )!;
+    const target = chart.getBoundingClientRect();
+    const x = target.left + target.width / 2;
+    const y = target.top + target.height / 2;
+    return Math.min(
+      ...[...document.querySelectorAll<HTMLElement>(".dashboard-gold-ray")].map(
+        (ray) => {
+          const frames =
+            (
+              ray.getAnimations()[0]?.effect as KeyframeEffect | null
+            )?.getKeyframes() ?? [];
+          const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(
+            String(frames.at(-1)?.transform ?? ""),
+          );
+          if (!match) return Infinity;
+          return Math.hypot(
+            parseFloat(ray.style.left) + Number(match[1]) - x,
+            parseFloat(ray.style.top) + Number(match[2]) - y,
+          );
+        },
+      ),
+    );
+  });
+  expect(extraMiss).toBeLessThan(45);
+  await expect(page.locator(".dashboard-trend.is-unfolding")).toHaveCount(1);
+  await expect(page.locator(".dashboard-extra-chart.is-unfolding")).toHaveCount(
+    1,
+  );
 });
 
 test("游客各页面使用统一极光玻璃主题", async ({ page }) => {
