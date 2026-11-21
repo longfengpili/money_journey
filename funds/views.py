@@ -13,7 +13,9 @@ from decimal import Decimal
 
 from funds.models import FundRecord, FundSnapshot
 from django.db.models import Sum
-from accounts.models import UserProfile
+from accounts.permissions import can_edit_record, can_write_assets, is_family_admin
+from funds.permissions import resolve_record_owner
+from django.core.exceptions import PermissionDenied
 from .demorecord import DEMO_CURRENT_RECORDS, DEMO_OTHER_RECORDS
 
 
@@ -29,8 +31,17 @@ def record_list(request):
 
     # 登录用户：查询真实数据
     records = FundRecord.objects.filter(savings_status='ACTIVE').select_related('user').order_by('due_date')
-    current_records = records.exclude(category='SAVINGS').order_by('-amount')
-    other_records = records.filter(category='SAVINGS')
+    may_write = can_write_assets(request.user)
+    family_admin = is_family_admin(request.user)
+    for record in records:
+        record.can_edit = may_write and (
+            family_admin or record.user_id == request.user.pk
+        )
+    current_records = sorted(
+        (r for r in records if r.category != 'SAVINGS'),
+        key=lambda r: r.amount, reverse=True,
+    )
+    other_records = [r for r in records if r.category == 'SAVINGS']
     return render(request, 'funds/record_list.html', {
         'records': records,
         'current_records': current_records,
@@ -41,19 +52,9 @@ def record_list(request):
 @login_required
 def add_record(request):
     """用户添加资金记录"""
-    # 超级管理员无需批准检查
-    if not request.user.is_superuser:
-        # 检查用户是否被批准
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            if not profile.is_approved:
-                messages.error(request, '您的账户尚未被管理员批准，无法添加记录')
-                return redirect('index')
-        except UserProfile.DoesNotExist:
-            # 如果没有用户资料，创建并标记为未批准
-            UserProfile.objects.create(user=request.user, is_approved=False)
-            messages.error(request, '您的账户尚未被管理员批准，无法添加记录')
-            return redirect('index')
+    if not can_write_assets(request.user):
+        messages.error(request, '您的账户尚未批准或已停用')
+        return redirect('index')
 
     if request.method == 'POST':
         try:
@@ -72,36 +73,13 @@ def add_record(request):
                 messages.error(request, '银行、类别和金额是必填字段')
                 return redirect('funds:add_record')
 
-            # 处理所有者字段
-            user_obj = request.user
-            final_owner = request.user.username
-
-            if owner:
-                # 检查用户权限
-                if request.user.is_superuser:
-                    # 超级管理员可以指定任意用户
-                    try:
-                        user_obj = User.objects.get(username=owner)
-                        final_owner = owner
-                    except User.DoesNotExist:
-                        messages.error(request, f'所有者"{owner}"不存在')
-                        return redirect('funds:add_record')
-                else:
-                    # 普通用户只能指定自己
-                    if owner != request.user.username:
-                        messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                        return redirect('funds:add_record')
-                    else:
-                        user_obj = request.user
-                        final_owner = owner
-            else:
-                # 未指定所有者，使用当前用户
-                user_obj = request.user
-                final_owner = request.user.username
+            user_obj = resolve_record_owner(request.user, owner)
+            final_owner = user_obj.username
 
             # 创建记录
             record = FundRecord(
                 user=user_obj,
+                created_by=request.user,
                 bank=bank,
                 owner=final_owner,
                 category=category,
@@ -124,11 +102,11 @@ def add_record(request):
         'bank_choices': FundRecord.BANK_CHOICES,
         'category_choices': FundRecord.CATEGORY_CHOICES,
         'savings_status_choices': FundRecord.SAVINGS_STATUS_CHOICES,
-        'is_superuser': request.user.is_superuser,
+        'is_family_admin': is_family_admin(request.user),
     }
 
     # 如果是超级管理员，获取用户列表
-    if request.user.is_superuser:
+    if is_family_admin(request.user):
         users = User.objects.all().order_by('username')
         context['users'] = users
     else:
@@ -148,21 +126,13 @@ def edit_record(request, record_id):
         return redirect('funds:record_list')
 
     # 检查用户权限
-    if not request.user.is_superuser and record.user != request.user:
+    if not can_edit_record(request.user, record):
         messages.error(request, '您没有权限编辑此记录')
         return redirect('funds:record_list')
 
-    # 超级管理员无需批准检查，普通用户需要检查是否已批准
-    if not request.user.is_superuser:
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            if not profile.is_approved:
-                messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-                return redirect('index')
-        except UserProfile.DoesNotExist:
-            UserProfile.objects.create(user=request.user, is_approved=False)
-            messages.error(request, '您的账户尚未被管理员批准，无法编辑记录')
-            return redirect('index')
+    if not can_write_assets(request.user):
+        messages.error(request, '您的账户尚未批准或已停用')
+        return redirect('index')
 
     if request.method == 'POST':
         try:
@@ -181,32 +151,12 @@ def edit_record(request, record_id):
                 messages.error(request, '银行、类别和金额是必填字段')
                 return redirect('funds:edit_record', record_id=record_id)
 
-            # 处理所有者字段
-            user_obj = request.user
-            final_owner = request.user.username
-
-            if owner:
-                # 检查用户权限
-                if request.user.is_superuser:
-                    # 超级管理员可以指定任意用户
-                    try:
-                        user_obj = User.objects.get(username=owner)
-                        final_owner = owner
-                    except User.DoesNotExist:
-                        messages.error(request, f'所有者"{owner}"不存在')
-                        return redirect('funds:edit_record', record_id=record_id)
-                else:
-                    # 普通用户只能指定自己
-                    if owner != request.user.username:
-                        messages.error(request, f'您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                        return redirect('funds:edit_record', record_id=record_id)
-                    else:
-                        user_obj = request.user
-                        final_owner = owner
-            else:
-                # 未指定所有者，使用当前用户
-                user_obj = request.user
-                final_owner = request.user.username
+            user_obj = resolve_record_owner(
+                request.user, owner, current_owner=record.user,
+            )
+            if record.user_id is None and not owner:
+                raise ValueError('请先明确该历史资产的所有者')
+            final_owner = user_obj.username
 
             # 更新记录
             record.bank = bank
@@ -234,11 +184,11 @@ def edit_record(request, record_id):
         'bank_choices': FundRecord.BANK_CHOICES,
         'category_choices': FundRecord.CATEGORY_CHOICES,
         'savings_status_choices': FundRecord.SAVINGS_STATUS_CHOICES,
-        'is_superuser': request.user.is_superuser,
+        'is_family_admin': is_family_admin(request.user),
     }
 
     # 如果是超级管理员，获取用户列表
-    if request.user.is_superuser:
+    if is_family_admin(request.user):
         users = User.objects.all().order_by('username')
         context['users'] = users
 
@@ -248,17 +198,9 @@ def edit_record(request, record_id):
 @login_required
 def upload_csv(request):
     """CSV批量上传资金记录"""
-    # 检查用户权限（超级管理员或已批准用户）
-    if not request.user.is_superuser:
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            if not profile.is_approved:
-                messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-                return redirect('index')
-        except UserProfile.DoesNotExist:
-            UserProfile.objects.create(user=request.user, is_approved=False)
-            messages.error(request, '您的账户尚未被管理员批准，无法上传数据')
-            return redirect('index')
+    if not can_write_assets(request.user):
+        messages.error(request, '您的账户尚未批准或已停用')
+        return redirect('index')
 
     # 上传限制常量
     MAX_ROWS = 10000  # 最大行数限制
@@ -415,45 +357,29 @@ def upload_csv(request):
                                 error_count += 1
                                 raise ValueError(f'第{i}行: 到期日格式错误')
 
-                        # 处理所有者字段
-                        owner_username = None
-                        user_obj = request.user
-
-                        if row.get('owner'):
-                            owner_username = row['owner'].strip()
-                            if owner_username:
-                                # 检查用户权限
-                                if request.user.is_superuser:
-                                    # 超级管理员可以指定任意用户
-                                    try:
-                                        user_obj = User.objects.get(username=owner_username)
-                                    except User.DoesNotExist:
-                                        errors.append(f'第{i}行: 所有者"{owner_username}"不存在')
-                                        error_count += 1
-                                        raise ValueError(f'第{i}行: 所有者不存在')
-                                else:
-                                    # 普通用户只能指定自己
-                                    if owner_username != request.user.username:
-                                        errors.append(f'第{i}行: 您只能指定自己作为所有者，当前登录用户为"{request.user.username}"')
-                                        error_count += 1
-                                        raise ValueError(f'第{i}行: 所有者权限错误')
-                                    else:
-                                        user_obj = request.user
-
-                        # 确定最终的所有者用户名
-                        final_owner = owner_username if owner_username else request.user.username
+                        try:
+                            user_obj = resolve_record_owner(request.user, row.get('owner'))
+                        except (PermissionDenied, ValueError) as exc:
+                            errors.append(f'第{i}行: {exc}')
+                            error_count += 1
+                            continue
+                        final_owner = user_obj.username
 
                         # 计算到期月（如果提供了到期日）
                         due_month = None
                         if due_date:
                             due_month = due_date.strftime('%Y-%m')
                         
-                        if due_date and deposit_period and not row.get('start_date'):
+                        start_date = None
+                        if row.get('start_date'):
+                            start_date = datetime.strptime(row['start_date'], '%Y-%m-%d').date()
+                        elif due_date and deposit_period:
                             start_date = due_date - timedelta(days=365 * deposit_period)
 
                         # 创建记录对象
                         record = FundRecord(
                             user=user_obj,
+                            created_by=request.user,
                             bank=bank,
                             owner=final_owner,
                             category=category,
@@ -514,17 +440,9 @@ def upload_csv(request):
 @login_required
 def download_csv_template(request):
     """下载CSV模板文件"""
-    # 检查用户权限（超级管理员或已批准用户）
-    if not request.user.is_superuser:
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            if not profile.is_approved:
-                messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-                return redirect('index')
-        except UserProfile.DoesNotExist:
-            UserProfile.objects.create(user=request.user, is_approved=False)
-            messages.error(request, '您的账户尚未被管理员批准，无法下载模板')
-            return redirect('index')
+    if not can_write_assets(request.user):
+        messages.error(request, '您的账户尚未批准或已停用')
+        return redirect('index')
 
     # 创建CSV模板
     response = HttpResponse(content_type='text/csv')

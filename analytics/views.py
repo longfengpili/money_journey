@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count, Q
-from django.contrib.auth.models import User
+from django.db.models import Case, CharField, Count, F, Q, Sum, Value, When
 
 from funds.models import FundRecord, FundSnapshot
 from .demorecord import DEMO_DATA
@@ -12,6 +11,31 @@ logger = logging.getLogger(__name__)
 # def index(request):
 #     """首页视图"""
 #     return render(request, 'analytics/index.html')
+
+
+def _owner_summary(records):
+    """按账号归属汇总，空关联的历史记录按原文本显示。"""
+    totals = records.order_by().values(
+        'user_id',
+        account_username=F('user__username'),
+        account_name=F('user__first_name'),
+        legacy_owner=Case(
+            When(user__isnull=True, then=F('owner')),
+            default=Value(''), output_field=CharField(),
+        ),
+    ).annotate(
+        total_amount=Sum('amount'), record_count=Count('id'),
+    ).order_by('-total_amount', 'user_id', 'legacy_owner')
+    summary = []
+    for item in totals:
+        owner = item['account_username'] or item['legacy_owner']
+        summary.append({
+            'owner': owner,
+            'first_name': (item['account_name'] or '').strip() or owner or '待核对所有者',
+            'total_amount': item['total_amount'],
+            'record_count': item['record_count'],
+        })
+    return summary
 
 
 def dashboard(request):
@@ -47,7 +71,10 @@ def dashboard(request):
 
     # 所有者筛选：支持部分匹配
     if owner_filter:
-        filters &= Q(owner__icontains=owner_filter)
+        filters &= (
+            Q(user__username__icontains=owner_filter)
+            | Q(user__isnull=True, owner__icontains=owner_filter)
+        )
 
     # 银行筛选：精确匹配银行代码
     if bank_filter:
@@ -76,27 +103,7 @@ def dashboard(request):
     category_choices = dict(FundRecord.CATEGORY_CHOICES)
     savings_status_choices = dict(FundRecord.SAVINGS_STATUS_CHOICES)
 
-    # 按所有者汇总（使用筛选后的记录）
-    owner_summary_raw = filtered_records.values('owner').annotate(
-        total_amount=Sum('amount'),
-        record_count=Count('id')
-    ).order_by('-total_amount')
-
-    # 获取所有用户名的first_name映射
-    usernames = [item['owner'] for item in owner_summary_raw]
-    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
-    user_map = {}
-    for user in users:
-        first_name = user.first_name.strip()
-        user_map[user.username] = first_name if first_name else user.username
-
-    # 转换owner_summary，添加first_name
-    owner_summary = []
-    for item in owner_summary_raw:
-        item_dict = dict(item)
-        username = item['owner']
-        item_dict['first_name'] = user_map.get(username, username)
-        owner_summary.append(item_dict)
+    owner_summary = _owner_summary(filtered_records)
 
     # 按银行汇总（使用筛选后的记录）
     bank_summary_raw = filtered_records.values('bank').annotate(
@@ -156,14 +163,10 @@ def dashboard(request):
     snapshot_dates = [s['snapshot_date'].strftime('%Y-%m-%d %H:%M') for s in snapshots]
     snapshot_totals = [float(s['total_amount']) for s in snapshots]
 
-    # 获取唯一的所有者、银行、类别列表用于筛选表单
-    all_owners_filter = FundRecord.objects.values_list('owner', flat=True).distinct().order_by('owner')
-    # 将所有者映射到显示名称
-    owner_filter_choices = []
-    for owner in all_owners_filter:
-        user = User.objects.filter(username=owner).first()
-        display_name = user.first_name.strip() if user and user.first_name.strip() else owner
-        owner_filter_choices.append((owner, display_name))
+    owner_filter_choices = [
+        (item['owner'], item['first_name'])
+        for item in _owner_summary(FundRecord.objects.all())
+    ]
 
     context = {
         'owner_summary': owner_summary,
@@ -211,7 +214,7 @@ def charts(request):
     records = FundRecord.objects.filter(savings_status='ACTIVE').order_by('due_date')
 
     # 获取图表数据
-    owner_data = records.values('owner').annotate(total=Sum('amount')).order_by('-total')
+    owner_data = _owner_summary(records)
     bank_data = records.values('bank').annotate(total=Sum('amount')).order_by('-total')
     category_data = records.values('category').annotate(total=Sum('amount')).order_by('-total')
 
@@ -219,18 +222,8 @@ def charts(request):
     bank_choices = dict(FundRecord.BANK_CHOICES)
     category_choices = dict(FundRecord.CATEGORY_CHOICES)
 
-    # 获取所有用户名的first_name映射
-    usernames = [item['owner'] for item in owner_data]
-    users = User.objects.filter(username__in=usernames).only('username', 'first_name')
-    user_map = {}
-    for user in users:
-        # 如果first_name为空或只包含空格，使用username
-        first_name = user.first_name.strip()
-        user_map[user.username] = first_name if first_name else user.username
-
-    # 转换数据格式便于Chart.js使用
-    owner_labels = [user_map.get(item['owner'], item['owner']) for item in owner_data]
-    owner_totals = [float(item['total']) for item in owner_data]
+    owner_labels = [item['first_name'] for item in owner_data]
+    owner_totals = [float(item['total_amount']) for item in owner_data]
 
     bank_labels = [bank_choices.get(item['bank'], item['bank']) for item in bank_data]
     bank_totals = [float(item['total']) for item in bank_data]

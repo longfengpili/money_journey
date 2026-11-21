@@ -99,13 +99,16 @@
                                     {% if record.user.first_name.strip %}
                                     {{ record.user.first_name.0 }}
                                     {% else %}
-                                    {{ record.owner.0 }}
+                                    {{ record.owner_display|default:record.owner|slice:":1" }}
                                     {% endif %}
                                 </span>
                                 {% if record.user.first_name.strip %}
                                 {{ record.user.first_name }}
                                 {% else %}
-                                {{ record.owner }}
+                                {{ record.owner_display|default:record.owner }}
+                                {% if user.is_authenticated and not record.user_id %}
+                                <small class="text-warning">待核对所有者</small>
+                                {% endif %}
                                 {% endif %}
                             </div>
                         </td>
@@ -130,7 +133,7 @@
                         </td>
                         {% if user.is_authenticated %}
                         <td>
-                            {% if user.is_superuser or record.user.id == request.user.id %}
+                            {% if record.can_edit %}
                             <a href="{% url 'funds:edit_record' record.id %}"
                                 class="btn btn-sm btn-outline-primary">编辑</a>
                             {% else %}
@@ -201,13 +204,16 @@
                                     {% if record.user.first_name.strip %}
                                     {{ record.user.first_name.0 }}
                                     {% else %}
-                                    {{ record.owner.0 }}
+                                    {{ record.owner_display|default:record.owner|slice:":1" }}
                                     {% endif %}
                                 </span>
                                 {% if record.user.first_name.strip %}
                                 {{ record.user.first_name }}
                                 {% else %}
-                                {{ record.owner }}
+                                {{ record.owner_display|default:record.owner }}
+                                {% if user.is_authenticated and not record.user_id %}
+                                <small class="text-warning">待核对所有者</small>
+                                {% endif %}
                                 {% endif %}
                             </div>
                         </td>
@@ -253,7 +259,7 @@
                         </td>
                         {% if user.is_authenticated %}
                         <td>
-                            {% if user.is_superuser or record.user.id == request.user.id %}
+                            {% if record.can_edit %}
                             <a href="{% url 'funds:edit_record' record.id %}"
                                 class="btn btn-sm btn-outline-primary">编辑</a>
                             {% else %}

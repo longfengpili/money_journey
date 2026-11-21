@@ -51,6 +51,10 @@ class FundRecord(models.Model):
     id = models.AutoField(primary_key=True)  # 显式定义主键字段
     bank = models.CharField('银行', max_length=50, choices=BANK_CHOICES)
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', null=True, blank=True, help_text='记录所属用户')
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='entered_fund_records', verbose_name='录入人',
+    )
     owner = models.CharField('所有者', max_length=100, blank=True, help_text='自动从用户信息填充')
     category = models.CharField('类别', max_length=50, choices=CATEGORY_CHOICES)
     savings_status = models.CharField('储蓄状态', max_length=50, choices=SAVINGS_STATUS_CHOICES, default='ACTIVE')
@@ -70,7 +74,13 @@ class FundRecord(models.Model):
         db_table = 'funds_fundrecord'  # 使用原表名以保持数据兼容
 
     def __str__(self):
-        return f"{self.owner} - {self.get_bank_display()} - {self.amount}"
+        return f"{self.owner_display} - {self.get_bank_display()} - {self.amount}"
+
+    @property
+    def owner_display(self):
+        if self.user_id:
+            return self.user.first_name.strip() or self.user.username
+        return self.owner or '待核对所有者'
 
     @property
     def interest_amount(self):
@@ -82,7 +92,7 @@ class FundRecord(models.Model):
 
     def save(self, *args, **kwargs):
         # 自动填充所有者信息
-        if self.user and not self.owner:
+        if self.user:
             self.owner = self.user.username
 
         # 如果提供了到期日，自动计算到期月（强制计算，不允许手动修改）

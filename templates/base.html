@@ -117,7 +117,7 @@
                         </ul>
                     </li>
                     {% endif %}
-                    {% if user.is_staff or user.is_superuser %}
+                    {% if is_family_admin or user.is_staff %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -130,6 +130,8 @@
                             系统管理
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            {% if is_family_admin %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:create_member' %}">创建家庭成员</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:user_approval_list' %}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -140,6 +142,8 @@
                                     </svg>
                                     用户审批
                                 </a></li>
+                            {% endif %}
+                            {% if user.is_staff %}
                             <li><a class="dropdown-item" href="/admin/" target="_blank">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -150,6 +154,7 @@
                                     </svg>
                                     后台管理
                                 </a></li>
+                            {% endif %}
                         </ul>
                     </li>
                     {% endif %}

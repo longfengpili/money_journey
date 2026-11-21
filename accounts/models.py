@@ -8,6 +8,7 @@ class UserProfile(models.Model):
     id = models.AutoField(primary_key=True)  # 显式定义主键字段
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='用户')
     is_approved = models.BooleanField('已批准', default=False, help_text='用户注册后需要管理员批准才能登录')
+    is_family_admin = models.BooleanField('家庭管理员', default=False)
     created_at = models.DateTimeField('创建时间', default=timezone.now)
 
     class Meta:

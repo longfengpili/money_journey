@@ -24,19 +24,19 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             所有者信息
                         </h6>
-                        {% if is_superuser %}
+                        {% if is_family_admin %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_owner" class="form-label">所有者 *</label>
                                 <select name="owner" id="id_owner" class="form-select" required>
                                     <option value="">请选择所有者</option>
                                     {% for user_obj in users %}
-                                    <option value="{{ user_obj.username }}" {% if user_obj.username == record.owner %}selected{% endif %}>
+                                    <option value="{{ user_obj.username }}" {% if user_obj.pk == record.user_id %}selected{% endif %}>
                                         {% if user_obj.first_name.strip %}{{ user_obj.first_name }} ({{ user_obj.username }}){% else %}{{ user_obj.username }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">作为超级管理员，您可以为任意用户编辑记录</div>
+                                <div class="form-text">作为家庭管理员，您可以为任意用户编辑记录</div>
                             </div>
                         </div>
                         {% else %}
@@ -125,7 +125,7 @@
                 </form>
             </div>
             <div class="card-footer text-muted">
-                <small>带 * 的字段为必填项。到期日将自动计算到期月。{% if is_superuser %}超级管理员可以修改所有者。{% else %}普通用户只能编辑自己的记录。{% endif %}</small>
+                <small>带 * 的字段为必填项。到期日将自动计算到期月。{% if is_family_admin %}家庭管理员可以修改所有者。{% else %}普通用户只能编辑自己的记录。{% endif %}</small>
             </div>
         </div>
     </div>

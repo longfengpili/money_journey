@@ -7,8 +7,12 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 
 from accounts.models import UserProfile
+from accounts.forms import CreateMemberForm
+from accounts.permissions import is_family_admin
 
 
 class CustomLoginView(LoginView):
@@ -85,7 +89,7 @@ def register(request):
 @login_required
 def user_approval_list(request):
     """管理员查看待批准用户列表"""
-    if not request.user.is_superuser:
+    if not is_family_admin(request.user):
         messages.error(request, '只有管理员可以访问此页面')
         return redirect('index')
 
@@ -98,7 +102,7 @@ def user_approval_list(request):
 @csrf_protect
 def approve_user(request, user_id):
     """管理员批准用户（POST请求）"""
-    if not request.user.is_superuser:
+    if not is_family_admin(request.user):
         messages.error(request, '只有管理员可以执行此操作')
         return redirect('index')
 
@@ -111,3 +115,20 @@ def approve_user(request, user_id):
         messages.error(request, '用户不存在')
 
     return redirect('accounts:user_approval_list')
+
+
+@login_required
+def create_member(request):
+    """家庭管理员创建暂不登录的成员。"""
+    if not is_family_admin(request.user):
+        raise PermissionDenied('只有家庭管理员可以创建成员')
+    form = CreateMemberForm(request.POST if request.method == 'POST' else None)
+    if request.method == 'POST' and form.is_valid():
+        with transaction.atomic():
+            user = form.save(commit=False)
+            user.set_unusable_password()
+            user.save()
+            UserProfile.objects.create(user=user, is_approved=True)
+        messages.success(request, '家庭成员已创建，可以为其录入资产')
+        return redirect('funds:add_record')
+    return render(request, 'accounts/create_member.html', {'form': form})

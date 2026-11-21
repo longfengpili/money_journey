@@ -89,6 +89,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "accounts.context_processors.family_permissions",
             ],
         },
     },
@@ -174,7 +175,7 @@ SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
 
 # Logging configuration
 # 创建日志目录
-LOG_DIR = '/app/logs'
+LOG_DIR = os.environ.get('DJANGO_LOG_DIR', str(BASE_DIR / 'logs'))
 os.makedirs(LOG_DIR, exist_ok=True)
 
 LOGGING = {
