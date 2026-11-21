@@ -32,10 +32,12 @@ def _accumulate(rows, key, initial, amount, count):
     row['record_count'] += count
 
 
-def summarize_assets(filters=None):
+def summarize_assets(filters=None, *, owner_id=None):
     """一次分组查询生成总计及四个维度，金额始终使用 Decimal。"""
     filters = normalize_filters(filters if filters is not None else {})
     records = FundRecord.objects.all()
+    if owner_id is not None:
+        records = records.filter(user_id=owner_id)
     if filters['owner']:
         records = records.filter(_owner_filter(filters['owner']))
     for field in ('bank', 'category', 'savings_status'):
@@ -103,9 +105,11 @@ def get_owner_choices():
     ]
 
 
-def get_snapshot_trend(owner=''):
+def get_snapshot_trend(owner='', *, owner_id=None):
     """关联账号按当前用户名筛选，空关联历史只使用原名称。"""
     snapshots = FundSnapshot.objects.all()
+    if owner_id is not None:
+        snapshots = snapshots.filter(user_id=owner_id)
     owner = owner.strip()
     if owner:
         snapshots = snapshots.filter(_owner_filter(owner))
