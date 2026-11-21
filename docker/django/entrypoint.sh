@@ -56,9 +56,8 @@ fi
 echo "Adding cron jobs..."
 python manage.py crontab add
 
-# Show current cron jobs
-echo "Current cron jobs:"
-python manage.py crontab show
+# 定时任务的命令前缀含数据库连接信息，仅展示任务数量。
+python manage.py shell -c "from django.conf import settings; print('已配置定时任务数：', len(settings.CRONJOBS))"
 
 # Execute command (supervisord)
 exec "$@"
