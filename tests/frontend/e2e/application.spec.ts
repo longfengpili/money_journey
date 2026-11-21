@@ -35,6 +35,7 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
   await expect(page.locator(".dashboard-hero-side")).toContainText(
     "未来半年到期",
   );
+  await expect(page.getByLabel("筛选状态")).toHaveValue("ACTIVE");
   const navigation = page.getByRole("navigation", { name: "主要导航" });
   expect(await navigation.getByRole("link").allTextContents()).toEqual([
     "资金计算器",

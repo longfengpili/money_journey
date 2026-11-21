@@ -205,7 +205,7 @@ export default function Dashboard() {
     [],
   );
   const filters = new URLSearchParams(params);
-  if (!filters.has("savings_status")) filters.set("savings_status", "");
+  if (!filters.has("savings_status")) filters.set("savings_status", "ACTIVE");
   const query = "?" + filters.toString();
   const compassParams = new URLSearchParams(filters);
   compassParams.delete("category");
@@ -324,6 +324,8 @@ export default function Dashboard() {
       : data.status_choices.find(
           ([code]) => code === filters.get("savings_status"),
         )?.[1] || "筛选状态";
+  const includesHistoricalRecords =
+    !data.demo && filters.get("savings_status") !== "ACTIVE";
   return (
     <div
       className={`dashboard${state.loading || transitioning ? " dashboard-filtering" : ""}`}
@@ -352,11 +354,17 @@ export default function Dashboard() {
           <div className="dashboard-eyebrow">
             FAMILY PORTFOLIO · {activeScope}
           </div>
-          <div className="dashboard-hero-label">家庭资产总额</div>
+          <div className="dashboard-hero-label">
+            {includesHistoricalRecords ? "资产记录金额合计" : "家庭资产总额"}
+          </div>
           <div className="dashboard-hero-value">
             ¥{money(data.total_amount)}
           </div>
-          <div className="dashboard-hero-foot">根据当前筛选条件精确汇总</div>
+          <div className="dashboard-hero-foot">
+            {includesHistoricalRecords
+              ? "包含历史状态记录，续存资金可能与当前资产重复"
+              : "根据当前筛选条件精确汇总"}
+          </div>
           <div className="dashboard-cockpit-signal">
             <span className="dashboard-cockpit-dot" aria-hidden="true" />
             {focusedCategory
