@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <!-- Snapshot Trend Chart -->
+    <!-- 每日 ACTIVE 快照趋势只跟随所有者筛选 -->
     {% if has_snapshots %}
     <div class="row mb-4">
         <div class="col-12">
@@ -175,19 +175,16 @@
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 7 22 7 22 13"></polyline>
                         </svg>
-                        {% for owner, display_name in owner_filter_choices %}
-                            {% if filter_form.owner == owner %}
-                                {{ display_name }} 的资金快照历史趋势
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if not filter_form.owner %}
+                        {% if filter_form.owner %}
+                            {{ selected_owner_label }} 的资金快照历史趋势
+                        {% else %}
                             所有人的资金快照历史趋势
                         {% endif %}
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="chart-container" style="height: 300px;">
+                        <p class="small text-muted">每日存续资产（ACTIVE）快照，仅跟随所有者筛选；银行、类别和状态筛选用于上方实时统计。</p>
                         <canvas id="snapshotChart"></canvas>
                     </div>
                 </div>
@@ -521,12 +518,14 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ chart_data|json_script:"analytics-chart-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const chartData = JSON.parse(document.getElementById('analytics-chart-data').textContent);
     // Category Pie Chart
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    const categoryLabels = {{ category_labels|safe }};
-    const categoryData = {{ category_totals|safe }};
+    const categoryLabels = chartData.category_labels;
+    const categoryData = chartData.category_totals;
 
     const categoryColors = [
         '#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
@@ -561,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         label: function(context) {
                             const value = context.parsed;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                             return `${context.label}: ¥${value.toLocaleString()} (${percentage}%)`;
                         }
                     }
@@ -573,8 +572,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Bank Bar Chart
     const bankCtx = document.getElementById('bankChart').getContext('2d');
-    const bankLabels = {{ bank_labels|safe }};
-    const bankData = {{ bank_totals|safe }};
+    const bankLabels = chartData.bank_labels;
+    const bankData = chartData.bank_totals;
 
     const bankColors = [
         '#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
@@ -636,10 +635,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const snapshotChart = new Chart(snapshotCtx, {
         type: 'line',
         data: {
-            labels: {{ snapshot_dates|safe }},
+            labels: chartData.snapshot_dates,
             datasets: [{
                 label: '总金额',
-                data: {{ snapshot_totals|safe }},
+                data: chartData.snapshot_totals,
                 borderColor: '#4F46E5',
                 backgroundColor: 'rgba(79, 70, 229, 0.08)',
                 borderWidth: 2,
@@ -678,19 +677,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('ownerSelect').addEventListener('change', function() {
-        const selectedOwner = this.value;
-        if (selectedOwner === 'total') {
-            snapshotChart.data.datasets[0].label = '总金额';
-            snapshotChart.data.datasets[0].data = {{ snapshot_totals|safe }};
-            snapshotChart.data.datasets[0].borderColor = '#4F46E5';
-            snapshotChart.data.datasets[0].backgroundColor = 'rgba(79, 70, 229, 0.08)';
-        } else {
-            alert('所有者细分趋势功能待实现');
-            return;
-        }
-        snapshotChart.update();
-    });
     {% endif %}
 });
 </script>

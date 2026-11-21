@@ -5,8 +5,10 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ chart_data|json_script:"analytics-chart-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const chartData = JSON.parse(document.getElementById('analytics-chart-data').textContent);
     const colorPalette = [
         '#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#06B6D4',
         '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1'
@@ -17,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(ownerCtx, {
         type: 'pie',
         data: {
-            labels: {{ owner_labels|safe }},
+            labels: chartData.owner_labels,
             datasets: [{
-                data: {{ owner_totals|safe }},
+                data: chartData.owner_totals,
                 backgroundColor: colorPalette,
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -49,11 +51,11 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(bankCtx, {
         type: 'bar',
         data: {
-            labels: {{ bank_labels|safe }},
+            labels: chartData.bank_labels,
             datasets: [{
                 label: '金额',
-                data: {{ bank_totals|safe }},
-                backgroundColor: colorPalette.slice(0, {{ bank_labels|safe }}.length),
+                data: chartData.bank_totals,
+                backgroundColor: colorPalette.slice(0, chartData.bank_labels.length),
                 borderRadius: 6,
                 borderSkipped: false
             }]
@@ -91,9 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
-            labels: {{ category_labels|safe }},
+            labels: chartData.category_labels,
             datasets: [{
-                data: {{ category_totals|safe }},
+                data: chartData.category_totals,
                 backgroundColor: colorPalette,
                 borderWidth: 2,
                 borderColor: '#fff',
