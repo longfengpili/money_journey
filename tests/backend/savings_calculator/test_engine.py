@@ -214,7 +214,7 @@ print(json.dumps(result))
         result = subprocess.run(
             [sys.executable, '-c', script],
             env=environment,
-            cwd=Path(__file__).resolve().parent.parent,
+            cwd=Path(__file__).resolve().parents[3],
             capture_output=True,
             text=True,
             timeout=20,

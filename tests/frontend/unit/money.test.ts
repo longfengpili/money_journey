@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { money } from "./money";
+import { money } from "../../../frontend/src/lib/money";
 
 describe("金额显示不经过浮点数", () => {
   it("保留最大汇总金额的分位", () => {

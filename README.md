@@ -15,7 +15,7 @@
 
 生产镜像自动构建前端，静态资源由 Django/WhiteNoise 同域提供，继续使用 Session + CSRF。已确认退役旧页面，旧书签跳转到对应新页面，旧表单提交返回 410；不再支持 `FRONTEND_ENABLED` 首页回退。旧提交仍受 Django CSRF 校验：安全凭证缺失或过期时先返回 403；通过校验后返回 410，均不执行旧业务写入。部署与 HTTPS 要求见 [部署指南](DEPLOYMENT.md)。
 
-各阶段进度见 [执行记录](docs/superpowers/plans/2026-11-21-component-frontend-progress.md)，旧文件清理记录见 [删除清单](docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md)。
+各阶段进度见 [执行记录](tests/docs/2026-11-21-component-frontend-progress.md)，旧文件清理记录见 [删除清单](docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md)。
 
 ## 🎯 功能特性
 
@@ -111,7 +111,7 @@
 银行和类别汇总金额以两位小数字符串精确保存，历史数值格式继续支持读取。
 `clean_old_records()` 现在只读报告最后更新超过 1095 天且状态为已取出或已续存的候选数量，记录保留在原表。
 
-权限回归测试使用独立内存数据库，命令为 `python manage.py test --settings=money_journey.settings.test`。
+测试代码与验收文档统一位于顶层 [tests/](tests/README.md)。后端使用独立内存数据库，命令为 `python manage.py test --settings=tests.settings`；单模块测试使用 `tests.backend.模块名` 标签。
 日志目录可通过 `DJANGO_LOG_DIR` 指定，默认位于项目的 `logs` 目录。
 
 ### 环境要求
@@ -331,7 +331,7 @@ python manage.py check
 
 ### 运行测试
 ```bash
-python manage.py test
+python manage.py test --settings=tests.settings
 ```
 
 ## 🌐 前端页面

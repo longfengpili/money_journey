@@ -28,7 +28,7 @@
 
 ## 任务 1：共享字段校验及衍生字段
 
-文件：新增 funds/forms.py、funds/test_input_validation.py，修改 funds/models.py。
+文件：新增 funds/forms.py、tests/backend/funds/test_input_validation.py，修改 funds/models.py。
 
 接口：FundRecordForm(data=None, *, actor, instance=None, owner_resolver=None)；save(commit=True) -> FundRecord。模型 prepare_derived_fields() 同时供 save 和 bulk_create 前调用。
 
@@ -39,7 +39,7 @@
 
 ## 任务 2：CSV 导入模块
 
-文件：新增 funds/importers.py，扩充 funds/test_input_validation.py。
+文件：新增 funds/importers.py，扩充 tests/backend/funds/test_input_validation.py。
 
 接口：import_fund_csv(upload, *, actor) -> ImportResult，结果包含成功行数、错误行数、最多五条详细错误。文件级校验抛 ValidationError，数据库写入失败向调用方传播。
 

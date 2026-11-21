@@ -29,7 +29,7 @@
 
 ## 任务 1：纯引擎与状态恢复
 
-文件：修改 savings_calculator/calculator.py，新增 savings_calculator/test_engine.py。
+文件：修改 savings_calculator/calculator.py，新增 tests/backend/savings_calculator/test_engine.py。
 
 接口：SavingsCalculator(basic_params, age_range_params, *, start_date, initial_current_amount, initial_deposits=())；calculate(months=None)；get_summary()。
 
@@ -40,7 +40,7 @@
 
 ## 任务 2：Django 输入准备
 
-文件：新增 savings_calculator/inputs.py、savings_calculator/test_inputs.py。
+文件：新增 savings_calculator/inputs.py、tests/backend/savings_calculator/test_inputs.py。
 
 接口：prepare_calculation_inputs(basic_params, age_range_params, *, user, today=None) -> dict，返回引擎三个关键字入参 start_date、initial_current_amount、initial_deposits。
 
@@ -50,7 +50,7 @@
 
 ## 任务 3：真实页面接入
 
-文件：修改 savings_calculator/views.py，新增 savings_calculator/test_views.py，更新 README.md。
+文件：修改 savings_calculator/views.py，新增 tests/backend/savings_calculator/test_views.py，更新 README.md。
 
 - [x] 写游客与登录计算请求、重复提交一致、结果字段兼容、无结果重定向、缺失开始日期提示测试，运行确认失败。
 - [x] 视图准备明确输入后调用引擎，结果序列化保持字段和展示类型，结果缺失判断移至 ResultsView.get。

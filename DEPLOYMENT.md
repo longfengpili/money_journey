@@ -22,7 +22,7 @@ docker build --build-arg NODE_BUILD_IMAGE=node:20.20.2-alpine -t money_journey:f
 
 本地开发在 `frontend/` 运行 `npm ci` 与 `npm run dev`。默认代理 `http://127.0.0.1:8000`，保留浏览器 Host；若连接 38000 测试容器，可在同一终端设 `$env:MJ_BACKEND_URL='http://127.0.0.1:38000'`。构建使用 `npm run build`，不需要全局安装 Node 包。
 
-后端回归使用独立测试设置或独立 MySQL 测试库，浏览器验收使用隔离账号；测试凭据、TLS 私钥、截图和报告不进入 Git。用户确认后的文件清理记录见 `docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md`。业务数据和数据库卷保持原样。
+测试代码、设置与验收文档统一位于顶层 `tests/`，运行方式见 [测试说明](tests/README.md)。后端回归使用 `--settings=tests.settings` 独立内存数据库或独立 MySQL 测试库，浏览器验收使用隔离账号；测试凭据、TLS 私钥、截图和报告不进入 Git。用户确认后的文件清理记录见 `docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md`。业务数据和数据库卷保持原样。
 
 ## 项目结构更改
 

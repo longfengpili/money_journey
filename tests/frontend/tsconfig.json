@@ -1,0 +1,13 @@
+{
+  "extends": "../../frontend/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "types": ["node"],
+    "typeRoots": ["../../frontend/node_modules/@types"],
+    "paths": {
+      "vitest": ["frontend/node_modules/vitest"],
+      "@playwright/test": ["frontend/node_modules/@playwright/test"]
+    }
+  },
+  "include": ["unit/**/*.ts", "e2e/**/*.ts"]
+}

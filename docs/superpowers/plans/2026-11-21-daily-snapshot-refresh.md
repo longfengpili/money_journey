@@ -29,7 +29,7 @@
 
 ## 任务 1：统一刷新服务与回归
 
-文件：新增 funds/snapshots.py、funds/test_snapshots.py，修改 funds/models.py。
+文件：新增 funds/snapshots.py、tests/backend/funds/test_snapshots.py，修改 funds/models.py。
 
 接口：refresh_daily_snapshots(actor, *, snapshot_date=None) -> SnapshotRefreshResult，结果包含业务日期、created_count、updated_count。
 
@@ -48,7 +48,7 @@
 
 ## 任务 3：页面、后台与历史检查
 
-文件：修改 funds/views.py、funds/admin.py、资金列表模板、analytics/tasks.py、README.md，增加 funds/test_snapshot_views.py 和历史检查回归。
+文件：修改 funds/views.py、funds/admin.py、资金列表模板、analytics/tasks.py、README.md，增加 tests/backend/funds/test_snapshot_views.py 和历史检查回归。
 
 - [x] 普通成员的按钮与直接 POST 被限制，管理员可重复刷新并得到汇总提示。
 - [x] 后台通过只读结果展示计算金额，人工新增和修改入口关闭，删除操作限定家庭管理员与 Django 权限。

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.test import SimpleTestCase
 
-from .calculator import SavingsCalculator
+from savings_calculator.calculator import SavingsCalculator
 
 
 class SavingsCalculatorAgeRangeTests(SimpleTestCase):

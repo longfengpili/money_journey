@@ -29,7 +29,7 @@
 
 ## 任务 1：统一查询模块
 
-文件：新增 analytics/queries.py、analytics/test_queries.py。
+文件：新增 analytics/queries.py、tests/backend/analytics/test_queries.py。
 
 接口：normalize_filters(params) -> dict；summarize_assets(filters=None) -> dict（total_amount、total_records、owner_count 及四个维度列表）；get_owner_choices() -> list；get_snapshot_trend(owner='') -> list（snapshot_date、total_amount）。
 
@@ -39,7 +39,7 @@
 
 ## 任务 2：视图与模板接入
 
-文件：修改 analytics/views.py、analytics/templates/analytics/dashboard.html、analytics/templates/analytics/charts.html；新增 analytics/test_chart_data.py。
+文件：修改 analytics/views.py、analytics/templates/analytics/dashboard.html、analytics/templates/analytics/charts.html；新增 tests/backend/analytics/test_chart_data.py。
 
 - [x] 编写两个页面汇总一致、游客展示、改名后趋势、组合筛选下趋势范围、特殊字符 JSON 还原和空数据回归，运行确认预期失败。
 - [x] 视图调用任务 1 的查询接口，保留页面上下文字段，集中生成 chart_data；模板使用 json_script 和 JSON.parse。

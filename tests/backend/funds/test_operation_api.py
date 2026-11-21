@@ -2,7 +2,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from funds.models import FundRecord, FundSnapshot
-from funds import test_api
+from tests.backend.funds import test_api
 
 
 class OperationApiTests(TestCase):

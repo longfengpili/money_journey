@@ -28,7 +28,7 @@
 
 ## 任务 1：角色和集中权限
 
-文件：修改 accounts/models.py、accounts/admin.py、accounts/views.py、accounts/tests.py；新增 accounts/permissions.py、accounts/migrations/0002_userprofile_is_family_admin.py。
+文件：修改 accounts/models.py、accounts/admin.py、accounts/views.py、tests/backend/accounts/test_permissions.py；新增 accounts/permissions.py、accounts/migrations/0002_userprofile_is_family_admin.py。
 
 接口：is_family_admin(user) -> bool；can_write_assets(user) -> bool；can_edit_record(user, record) -> bool。角色判定支持维护账号，写入要求账号有效且已批准，超级管理员沿用维护能力。普通成员必须满足 record.user_id == user.pk。
 
@@ -40,7 +40,7 @@
 
 ## 任务 2：所有者、录入人与历史核对
 
-文件：修改 funds/models.py、funds/tests.py；新增 funds/migrations/0013_fundrecord_created_by.py、funds/management/commands/audit_asset_owners.py 及所需包初始化文件。
+文件：修改 funds/models.py、tests/backend/funds/test_ownership.py；新增 funds/migrations/0013_fundrecord_created_by.py、funds/management/commands/audit_asset_owners.py 及所需包初始化文件。
 
 接口：FundRecord.created_by 为可空账号外键，on_delete=SET_NULL；FundRecord.owner_display 返回关联账号的 first_name 或 username，历史空归属时回退文本；manage.py audit_asset_owners 默认只读输出记录 ID、账号和文本的匹配状态。
 
@@ -51,7 +51,7 @@
 
 ## 任务 3：资金页面、CSV 与后台统一写入规则
 
-文件：修改 funds/views.py、funds/admin.py、funds/tests.py、funds/templates/funds/add_record.html、edit_record.html、record_list.html、upload_csv.html。
+文件：修改 funds/views.py、funds/admin.py、tests/backend/funds/test_ownership.py、funds/templates/funds/add_record.html、edit_record.html、record_list.html、upload_csv.html。
 
 接口：资金页面与后台调用任务 1 权限函数；所有者解析集中为 funds/permissions.py 中 resolve_record_owner(actor, username, current_owner=None) -> User，权限错误抛 PermissionDenied，未知用户名产生可展示的校验错误。
 
@@ -64,7 +64,7 @@
 
 ## 任务 4：管理员创建暂不登录的成员
 
-文件：新增 accounts/forms.py、accounts/templates/accounts/create_member.html；修改 accounts/views.py、accounts/urls.py、accounts/tests.py、templates/base.html。
+文件：新增 accounts/forms.py、accounts/templates/accounts/create_member.html；修改 accounts/views.py、accounts/urls.py、tests/backend/accounts/test_permissions.py、templates/base.html。
 
 接口：CreateMemberForm 接收 username、first_name；create_member(request) 仅允许已批准家庭管理员或维护账号访问，事务内创建 User 与 UserProfile，账号使用不可用密码且已批准。
 
@@ -74,12 +74,12 @@
 
 ## 任务 5：汇总兼容与整体验证
 
-文件：修改 analytics/views.py、analytics/tests.py 及相关展示模板；按需更新 README.md 中的权限说明。
+文件：修改 analytics/views.py、tests/backend/analytics/test_family_totals.py 及相关展示模板；按需更新 README.md 中的权限说明。
 
 - [x] 增加同家庭共享查询测试，以及账号改名后的所有者筛选、汇总和图表测试，覆盖历史空关联记录的回退显示。
 - [x] 将实时归属汇总改为按 user 主键分组，展示账号姓名；兼容现有 owner 筛选参数，避免用户名变更后资产拆成多组。历史快照保留历史展示含义。
 - [x] 在当前 Conda normal 环境核验 Python 与依赖。数据库测试使用隔离测试数据库，记录实际环境和结果。
-- [x] 运行 python manage.py test accounts funds analytics savings_calculator，确认关键业务回归通过。
+- [x] 运行 python manage.py test tests.backend --settings=tests.settings，确认关键业务回归通过。
 - [x] 运行 python manage.py makemigrations --check --dry-run、python manage.py check、git diff --check，处理本次改动产生的问题。
 - [ ] 真实数据库归属核对与部署迁移：已尝试加载本地环境配置执行只读核对，数据库连接返回 OperationalError，尚未获得真实数据核对结果。
 - [x] 更新计划中的完成项、阻碍和验证证据，交付代码差异、管理员配置方式及历史数据待核对项。

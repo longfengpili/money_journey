@@ -3,7 +3,7 @@ from datetime import date
 from unittest.mock import patch
 from django.utils import timezone
 
-from savings_calculator import test_views
+from tests.backend.savings_calculator import test_views
 from savings_calculator.forms import AgeRangeForm, BasicParametersForm
 
 

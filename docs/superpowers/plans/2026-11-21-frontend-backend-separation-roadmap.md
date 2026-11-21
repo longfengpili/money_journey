@@ -1,6 +1,6 @@
 # Money Journey 前后端分离与组件化重构规划
 
-> 状态：用户已授权连续实施阶段 0–7，每阶段提交；进度见 2026-11-21-component-frontend-progress.md。
+> 状态：用户已授权连续实施阶段 0–7，每阶段提交；进度见 [执行记录](../../../tests/docs/2026-11-21-component-frontend-progress.md)。
 > 后续执行：每个阶段分别形成设计与实施计划，使用 superpowers:executing-plans 按阶段执行、验证和独立审查；用户后续消息已明确授权连续实施所有阶段，无需逐项确认。
 
 **目标**：以组件化前端统一视觉、提升家庭资金管理操作体验，复用现有 Django 业务能力，逐步替换模板页面。
@@ -167,7 +167,7 @@ frontend/
   src/features/            # auth、dashboard、funds、calculator、members
   src/lib/                 # 请求、金额与日期格式、错误处理
   src/styles/              # 设计令牌及公共样式
-  tests/                   # 组件与浏览器流程
+tests/                     # 后端/前端测试与验收文档（2026-11-21统一迁入）
 accounts/api/              # 身份和成员接口适配
 funds/api/                 # 资产、CSV 和快照接口适配
 analytics/api/             # 汇总与趋势接口适配
@@ -207,4 +207,4 @@ money_journey/api/         # 通用认证约定、错误及根路由
 - 本次仅新增规划文档，未创建前端工程、安装依赖、修改业务代码、操作数据库、提交或部署。
 - 独立规划审查未发现重要遗漏或阶段依赖冲突，其余细节在对应阶段的设计中确定。
 
-- 最终状态：阶段 0–7 已实现，验证与提交记录见 2026-11-21-component-frontend-progress.md；删除候选清单保留等待用户确认。
+- 最终状态：阶段 0–7 已实现，验证与提交记录见 [执行记录](../../../tests/docs/2026-11-21-component-frontend-progress.md)；删除候选清单保留等待用户确认。

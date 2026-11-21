@@ -1,6 +1,6 @@
 """权限与资产回归测试使用独立的内存数据库。"""
 
-from .base import *  # noqa: F403
+from money_journey.settings.base import *  # noqa: F403
 
 DATABASES = {
     'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'},

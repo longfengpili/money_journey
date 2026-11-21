@@ -1,6 +1,6 @@
 # 组件化前端执行记录
 
-计划：[完整路线](2026-11-21-frontend-backend-separation-roadmap.md)；设计：[实施设计](../specs/2026-11-21-component-frontend.md)。
+计划：[完整路线](../../docs/superpowers/plans/2026-11-21-frontend-backend-separation-roadmap.md)；设计：[实施设计](../../docs/superpowers/specs/2026-11-21-component-frontend.md)。
 
 用户授权：连续执行所有阶段、每阶段 Git 提交、无需再次确认；不执行删除，最终提交删除候选清单。当前分支 codex/component-frontend，不创建 worktree、不自动推送。
 
@@ -90,3 +90,11 @@
 - 正式多阶段镜像重建后部署到独立测试容器；Chrome 10 组流程全部通过，包括原 8 组业务、旧书签/旧提交和特殊名称转义。测试容器 healthy，入口 http://127.0.0.1:38000/app/。
 - 完成独立只读审查，无未解决 Critical/Important/Minor。此次没有重复生产 HTTPS 测试，上一阶段已有 HTTPS 8 组通过记录；本次对新增退役入口在 HTTP 容器和 CSRF 严格客户端中核验。
 - 清理作为独立 Git 提交保存；不合并 main、不推送远程。
+
+
+## 测试目录统一（2026-11-21）
+
+- 用户确认所有测试代码与测试文档集中到顶层tests/。本记录同步迁至tests/docs/，历史设计与业务实施计划保留在docs/。
+- 后端20个模块、独立测试设置及前端单测/浏览器用例完成迁移，更新导入、发现规则、依赖解析、文档链接和单模块运行标签。统一入口见[测试说明](../README.md)。
+- 验证：SQLite 108项（2跳过）、MySQL 108项全部通过；前端3项单测/测试类型检查、生产构建和格式检查通过；Chrome10组全部通过。独立审查无问题，测试镜像已更新。
+- 备份脚本客户端兼容修复位于会话产物，未纳入本次仓库目录整理；没有连接服务器数据库。

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { makeCsv } from "./csv";
+import { makeCsv } from "../../../frontend/src/lib/csv";
 
 it("CSV 保留金额文本并正确转义逗号与引号", () => {
   expect(

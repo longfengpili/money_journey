@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from funds.models import FundRecord
 from savings_calculator.inputs import prepare_calculation_inputs
-from savings_calculator.test_engine import (
+from tests.backend.savings_calculator.test_engine import (
     age_parameters,
     calculation_parameters,
 )

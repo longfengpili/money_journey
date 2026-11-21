@@ -45,7 +45,7 @@
 - savings_calculator/calculator.py 移除 ORM、登录状态和当前时间依赖，保留现有计算方法及结果契约。
 - 新增 savings_calculator/inputs.py 准备资产快照和起始日期。
 - savings_calculator/views.py 接入明确输入，处理结果缺失的重定向。
-- savings_calculator/tests.py 及必要的新测试覆盖纯引擎、输入准备与实际页面。
+- tests/backend/savings_calculator/test_age_ranges.py 及必要的新测试覆盖纯引擎、输入准备与实际页面。
 - README 和本阶段实施记录同步更新。
 
 ## 验收
