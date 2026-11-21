@@ -139,18 +139,28 @@ class FundsApi(FamilyAPIView):
         page = positive_integer(request.GET, "page", 1)
         size = positive_integer(request.GET, "page_size", 50, 100)
         records = asset_query(request.GET)
+        group = request.GET.get("category_group")
+        if group == "non_savings":
+            records = records.exclude(category="SAVINGS")
+        elif group == "savings":
+            records = records.filter(category="SAVINGS")
         count = records.count()
         manager = is_family_admin(request.user)
+        selected_records = (
+            records
+            if group == "non_savings"
+            else records[(page - 1) * size:page * size]
+        )
         rows = [
             record_data(row, request.user, manager)
-            for row in records[(page - 1) * size:page * size]
+            for row in selected_records
         ]
         return Response(
             encode_values(
                 {
                     "count": count,
-                    "page": page,
-                    "page_size": size,
+                    "page": 1 if group == "non_savings" else page,
+                    "page_size": count if group == "non_savings" else size,
                     "results": rows,
                 }
             )

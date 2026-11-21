@@ -42,7 +42,10 @@ function AssetGroup({
   return (
     <section className="asset-group" aria-label={title}>
       <h3>
-        {title} <span className="label">本页 {assets.length} 条</span>
+        {title}{" "}
+        <span className="label">
+          {savings ? "本页" : "共"} {assets.length} 条
+        </span>
       </h3>
       <div className="table-wrap desktop-assets">
         <table>
@@ -143,7 +146,7 @@ function AssetGroup({
           </article>
         ))}
       </div>
-      {!assets.length && <div className="empty">本页暂无{title}记录</div>}
+      {!assets.length && <div className="empty">暂无{title}记录</div>}
     </section>
   );
 }
@@ -154,7 +157,19 @@ export default function Funds() {
   const [editor, setEditor] = useState<Asset | "new" | null>(null);
   const [notice, setNotice] = useState("");
   const options = useResource<FundOptions>("/funds/options/");
-  const state = useResource<Page>("/funds/?" + params.toString(), version);
+  const nonSavingsParams = new URLSearchParams(params);
+  nonSavingsParams.delete("page");
+  nonSavingsParams.set("category_group", "non_savings");
+  const savingsParams = new URLSearchParams(params);
+  savingsParams.set("category_group", "savings");
+  const nonSavingsState = useResource<Page>(
+    "/funds/?" + nonSavingsParams.toString(),
+    version,
+  );
+  const savingsState = useResource<Page>(
+    "/funds/?" + savingsParams.toString(),
+    version,
+  );
   const turnPage = (value: number) => {
     const next = new URLSearchParams(params);
     next.set("page", String(value));
@@ -162,7 +177,9 @@ export default function Funds() {
   };
   if (options.loading) return <Loading />;
   if (!options.data) return <ErrorNotice error={options.error} />;
-  const page = state.data;
+  const nonSavings = nonSavingsState.data;
+  const savingsPage = savingsState.data;
+  const error = nonSavingsState.error || savingsState.error;
   const edit = (asset: Asset) =>
     asset.can_edit ? (
       <Button onClick={() => setEditor(asset)}>编辑</Button>
@@ -199,20 +216,23 @@ export default function Funds() {
         categories={options.data.category_choices}
         statuses={options.data.status_choices}
       />
-      <ErrorNotice error={state.error} />
-      {state.error && (
+      <ErrorNotice error={error} />
+      {error && (
         <Button onClick={() => setVersion(version + 1)}>重新读取</Button>
       )}
-      {state.loading ? (
+      {nonSavingsState.loading || savingsState.loading ? (
         <Loading />
       ) : (
-        page && (
+        nonSavings &&
+        savingsPage && (
           <section className="card">
             <div
               className="actions"
               style={{ justifyContent: "space-between", marginBottom: 20 }}
             >
-              <h2 style={{ margin: 0 }}>共 {page.count} 条记录</h2>
+              <h2 style={{ margin: 0 }}>
+                共 {nonSavings.count + savingsPage.count} 条记录
+              </h2>
               <select
                 aria-label="资产排序"
                 style={{ width: "auto" }}
@@ -232,33 +252,33 @@ export default function Funds() {
             <AssetGroup
               title="非储蓄类资产"
               savings={false}
-              assets={page.results.filter(
-                (asset) => asset.category !== "SAVINGS",
-              )}
+              assets={nonSavings.results}
               edit={edit}
             />
             <AssetGroup
               title="储蓄存款"
               savings
-              assets={page.results.filter(
-                (asset) => asset.category === "SAVINGS",
-              )}
+              assets={savingsPage.results}
               edit={edit}
             />
             <footer className="pagination">
               <span className="label">
-                第 {page.page} 页 · 每页 {page.page_size} 条
+                储蓄存款 · 第 {savingsPage.page} 页 · 每页{" "}
+                {savingsPage.page_size} 条
               </span>
               <div className="actions">
                 <Button
-                  disabled={page.page <= 1}
-                  onClick={() => turnPage(page.page - 1)}
+                  disabled={savingsPage.page <= 1}
+                  onClick={() => turnPage(savingsPage.page - 1)}
                 >
                   上一页
                 </Button>
                 <Button
-                  disabled={page.page * page.page_size >= page.count}
-                  onClick={() => turnPage(page.page + 1)}
+                  disabled={
+                    savingsPage.page * savingsPage.page_size >=
+                    savingsPage.count
+                  }
+                  onClick={() => turnPage(savingsPage.page + 1)}
                 >
                   下一页
                 </Button>

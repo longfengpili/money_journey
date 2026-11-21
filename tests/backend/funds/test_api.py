@@ -99,3 +99,34 @@ class FundApiTests(TestCase):
         result = self.client.get("/api/v1/funds/", {"page_size": 1}).json()
         self.assertEqual(result["count"], 1)
         self.assertEqual(len(result["results"]), 1)
+
+    def test_non_savings_are_unpaged_while_savings_use_pages(self):
+        self.client.force_login(self.manager)
+        FundRecord.objects.bulk_create(
+            FundRecord(
+                user=self.other, bank="CCB", category="FUND", amount="20"
+            )
+            for _ in range(100)
+        )
+        for amount in ("30", "40"):
+            FundRecord.objects.create(
+                user=self.other, bank="ICBC", category="SAVINGS", amount=amount
+            )
+
+        non_savings = self.client.get(
+            "/api/v1/funds/",
+            {"category_group": "non_savings", "page": 2, "page_size": 1},
+        ).json()
+        self.assertEqual(non_savings["count"], 101)
+        self.assertEqual(len(non_savings["results"]), 101)
+        self.assertTrue(
+            all(row["category"] != "SAVINGS" for row in non_savings["results"])
+        )
+
+        savings = self.client.get(
+            "/api/v1/funds/",
+            {"category_group": "savings", "page": 2, "page_size": 1},
+        ).json()
+        self.assertEqual(savings["count"], 2)
+        self.assertEqual(len(savings["results"]), 1)
+        self.assertEqual(savings["results"][0]["category"], "SAVINGS")
