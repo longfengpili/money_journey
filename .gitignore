@@ -67,6 +67,8 @@ frontend/playwright-report/
 frontend/AGENTS.md
 frontend/.cursor/
 frontend/*.tsbuildinfo
+!frontend/src/lib/
+!frontend/src/lib/**
 .claude/
 staticfiles/
 media/
