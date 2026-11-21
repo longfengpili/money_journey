@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useResource } from "../../lib/resource";
 import type { Summary } from "../../lib/types";
 import { money } from "../../lib/money";
@@ -55,6 +55,17 @@ export default function Dashboard() {
           <Button onClick={() => setVersion(version + 1)}>刷新数据</Button>
         }
       />
+      {data.demo && (
+        <section className="dashboard-login-prompt" aria-label="登录提示">
+          <div>
+            <h2>当前展示演示数据</h2>
+            <p>登录后查看真实的家庭资产、成员和资金趋势。</p>
+          </div>
+          <Link to="/login" className="button primary">
+            登录查看真实资产
+          </Link>
+        </section>
+      )}
       <div className="dashboard-hero">
         <div className="dashboard-hero-main">
           <div className="dashboard-eyebrow">

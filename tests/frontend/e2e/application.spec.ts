@@ -31,6 +31,25 @@ async function signIn(page: import("@playwright/test").Page, actor: Actor) {
 test("游客总览、图表与手机导航可用", async ({ page }) => {
   await page.goto("/app/");
   await expect(page).toHaveURL(/\/app\/$/);
+  const navigation = page.getByRole("navigation", { name: "主要导航" });
+  expect(await navigation.getByRole("link").allTextContents()).toEqual([
+    "资金计算器",
+    "资金总览",
+  ]);
+  await expect(page.getByRole("region", { name: "登录提示" })).toContainText(
+    "当前展示演示数据",
+  );
+  await expect(
+    page.getByRole("link", { name: "登录查看真实资产" }),
+  ).toHaveAttribute("href", "/app/login");
+  await page.getByRole("link", { name: "登录查看真实资产" }).click();
+  await expect(
+    page.getByRole("heading", { name: "登录家庭资金空间" }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(
+    page.getByRole("heading", { name: "家庭资金总览" }),
+  ).toBeVisible();
   await expect(page.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: "银行资金分布" })).toBeVisible();
   await expect(page.getByRole("img", { name: "成员资产结构" })).toBeVisible();
@@ -60,7 +79,8 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
     fullPage: true,
   });
   await page.getByRole("button", { name: "切换导航" }).click();
-  await page.getByRole("link", { name: "储蓄规划", exact: true }).click();
+  await page.getByRole("link", { name: "资金计算器", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "资金计算器" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "基本参数" })).toBeVisible();
   expect(
     await page.evaluate(
@@ -105,6 +125,33 @@ test("成员新增编辑本人资产，其他人资产只读，手机没有页�
   await signIn(page, fixtures.member);
   await page.goto(`/app/funds?owner_id=${fixtures.other.id}`);
   await expect(page.getByText("仅查看", { exact: true }).first()).toBeVisible();
+  const otherAssets = page.getByRole("region", { name: "非储蓄类资产" });
+  const savingsAssets = page.getByRole("region", { name: "储蓄存款" });
+  await expect(
+    otherAssets.getByRole("columnheader", { name: "类别" }),
+  ).toHaveCount(1);
+  await expect(
+    otherAssets.getByRole("columnheader", { name: "银行" }),
+  ).toHaveCount(1);
+  await expect(
+    savingsAssets.getByRole("columnheader", { name: "类别" }),
+  ).toHaveCount(0);
+  await expect(
+    savingsAssets.getByRole("columnheader", { name: "银行" }),
+  ).toHaveCount(1);
+  await expect(
+    otherAssets.getByRole("columnheader", { name: "到期日" }),
+  ).toHaveCount(0);
+  await expect(
+    savingsAssets.getByRole("columnheader", { name: "到期日" }),
+  ).toHaveCount(1);
+  const tableWidths = await page
+    .locator(".asset-group .desktop-assets table")
+    .evaluateAll((tables) =>
+      tables.map((table) => table.getBoundingClientRect().width),
+    );
+  expect(tableWidths).toHaveLength(2);
+  expect(tableWidths[0]).toBeCloseTo(tableWidths[1], 0);
   await expect(
     page.getByRole("button", { name: "编辑", exact: true }),
   ).toHaveCount(0);

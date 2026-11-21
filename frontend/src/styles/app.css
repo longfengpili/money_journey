@@ -416,6 +416,17 @@ dialog .dialog-head h2 {
   font-size: 12px;
   font-weight: 400;
 }
+.asset-group .desktop-assets table {
+  min-width: 1040px;
+  table-layout: fixed;
+}
+.asset-group .desktop-assets th,
+.asset-group .desktop-assets td {
+  white-space: normal;
+}
+.asset-group .desktop-assets .money {
+  white-space: nowrap;
+}
 .asset-group .empty {
   padding: 24px 12px;
 }
@@ -631,6 +642,28 @@ select[aria-invalid="true"] {
 }
 .dashboard .notice {
   margin-bottom: 16px;
+}
+.dashboard-login-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border: 1px solid #cbd8fb;
+  border-radius: 18px;
+  background: linear-gradient(110deg, #eef3ff, #f5faff);
+}
+.dashboard-login-prompt h2 {
+  margin: 0 0 3px;
+  font-size: 16px;
+}
+.dashboard-login-prompt p {
+  margin: 0;
+  font-size: 12px;
+}
+.dashboard-login-prompt .button {
+  flex: none;
 }
 .dashboard-hero {
   position: relative;
@@ -865,6 +898,10 @@ select[aria-invalid="true"] {
   }
 }
 @media (max-width: 760px) {
+  .dashboard-login-prompt {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .dashboard-hero {
     flex-direction: column;
     min-height: 0;

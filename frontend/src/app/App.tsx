@@ -54,12 +54,16 @@ function Workspace() {
           </span>
         </Link>
         <nav onClick={() => setMenu(false)} aria-label="主要导航">
+          <NavLink to="/calculator">资金计算器</NavLink>
           <NavLink end to="/">
             资金总览
           </NavLink>
-          <NavLink to="/funds">资产记录</NavLink>
-          <NavLink to="/operations">导入与快照</NavLink>
-          <NavLink to="/calculator">储蓄规划</NavLink>
+          {session.user && (
+            <>
+              <NavLink to="/funds">资产记录</NavLink>
+              <NavLink to="/operations">导入与快照</NavLink>
+            </>
+          )}
           {session.capabilities.manage_family && (
             <NavLink to="/members">家庭成员</NavLink>
           )}

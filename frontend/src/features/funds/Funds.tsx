@@ -49,11 +49,12 @@ function AssetGroup({
           <thead>
             <tr>
               <th>所有者</th>
-              <th>银行 / 类别</th>
+              {!savings && <th>类别</th>}
+              <th>银行</th>
               <th>状态</th>
               {savings && <th>年利率</th>}
               {savings && <th>存期</th>}
-              <th>到期日</th>
+              {savings && <th>到期日</th>}
               {!savings && <th>更新时间</th>}
               <th className="money">金额</th>
               <th>操作</th>
@@ -63,10 +64,8 @@ function AssetGroup({
             {assets.map((asset) => (
               <tr key={asset.id}>
                 <td className="break">{asset.owner_display}</td>
-                <td>
-                  {asset.bank_display}
-                  <div className="muted">{asset.category_display}</div>
-                </td>
+                {!savings && <td>{asset.category_display}</td>}
+                <td>{asset.bank_display}</td>
                 <td>
                   <span
                     className={
@@ -90,7 +89,7 @@ function AssetGroup({
                     {asset.deposit_period ? `${asset.deposit_period} 年` : "—"}
                   </td>
                 )}
-                <td>{asset.due_date || "—"}</td>
+                {savings && <td>{asset.due_date || "—"}</td>}
                 {!savings && (
                   <td>
                     <time dateTime={asset.updated_at}>
@@ -112,7 +111,9 @@ function AssetGroup({
               <div>
                 <strong>{asset.owner_display}</strong>
                 <div className="label">
-                  {asset.bank_display} · {asset.category_display}
+                  {savings
+                    ? asset.bank_display
+                    : `${asset.category_display} · ${asset.bank_display}`}
                 </div>
               </div>
               <strong>¥{money(asset.amount)}</strong>
@@ -129,7 +130,9 @@ function AssetGroup({
                   {asset.deposit_period ? `${asset.deposit_period} 年` : "—"}
                 </span>
               )}
-              <span className="label">{asset.due_date || "无到期日"}</span>
+              {savings && (
+                <span className="label">{asset.due_date || "无到期日"}</span>
+              )}
               {!savings && (
                 <span className="label">
                   更新于 {formatUpdatedAt(asset.updated_at)}

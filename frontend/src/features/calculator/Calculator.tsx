@@ -111,7 +111,7 @@ export default function Calculator() {
   return (
     <>
       <PageTitle
-        title="储蓄规划"
+        title="资金计算器"
         detail={
           session.user
             ? "以全家存续资产为起点，模拟未来的月度现金流。"
@@ -296,7 +296,7 @@ export default function Calculator() {
                 </select>
                 <Button
                   onClick={() =>
-                    downloadCsv("家庭储蓄规划.csv", [
+                    downloadCsv("家庭资金计算器.csv", [
                       columns.map(([, label]) => label),
                       ...rows.map((row) =>
                         columns.map(([key]) =>
