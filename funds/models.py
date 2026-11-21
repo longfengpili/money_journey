@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 
@@ -90,18 +91,29 @@ class FundRecord(models.Model):
             return self.amount * self.interest_rate * years / 100
         return 0
 
-    def save(self, *args, **kwargs):
+    def prepare_derived_fields(self):
         # 自动填充所有者信息
         if self.user:
             self.owner = self.user.username
 
         # 如果提供了到期日，自动计算到期月（强制计算，不允许手动修改）
-        if self.due_date:
-            self.due_month = self.due_date.strftime('%Y-%m')
+        self.due_month = self.due_date.strftime('%Y-%m') if self.due_date else None
 
         if not self.start_date and self.due_date and self.deposit_period:
-            self.start_date = self.due_date - timedelta(days=365 * self.deposit_period)
+            try:
+                self.start_date = self.due_date - timedelta(days=365 * self.deposit_period)
+            except (OverflowError, ValueError) as exc:
+                raise ValidationError({'deposit_period': '存期超出可表示的日期范围'}) from exc
 
+    def save(self, *args, **kwargs):
+        self.prepare_derived_fields()
+        if kwargs.get('update_fields') is not None:
+            fields = set(kwargs['update_fields'])
+            if fields & {'user', 'user_id'}:
+                fields.add('owner')
+            if 'due_date' in fields:
+                fields.add('due_month')
+            kwargs['update_fields'] = fields
         super().save(*args, **kwargs)
 
 

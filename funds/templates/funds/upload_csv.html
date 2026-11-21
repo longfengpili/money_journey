@@ -22,10 +22,13 @@
                             <strong>使用说明</strong>
                             <ul class="mb-0 mt-1">
                                 <li>上传的CSV文件必须包含以下列：<code>bank</code>, <code>category</code>, <code>amount</code></li>
-                                <li>可选列：<code>owner</code>, <code>savings_status</code>, <code>interest_rate</code>, <code>deposit_period</code>, <code>due_date</code></li>
+                                <li>可选列：<code>owner</code>, <code>savings_status</code>, <code>interest_rate</code>, <code>deposit_period</code>, <code>start_date</code>, <code>due_date</code></li>
                                 <li>owner字段：如不填写则使用当前登录用户作为所有者</li>
                                 <li>支持中英文银行名称和类别名称</li>
                                 <li>文件编码应为UTF-8</li>
+                                <li>金额允许为零，金额和利率最多两位小数；利率非负，存期填写时为正整数</li>
+                                <li>日期支持 YYYY-MM-DD、YYYY/MM/DD、YYYYMMDD</li>
+                                <li>合法行会导入，错误行显示行号和字段；文件超限或数据库写入失败时整份回滚</li>
                                 <li><strong>文件大小限制：10MB，最大行数：10,000行</strong></li>
                             </ul>
                         </div>
@@ -102,7 +105,7 @@
                                     </tr>
                                     <tr>
                                         <td><code>deposit_period</code></td>
-                                        <td>存期(月)</td>
+                                        <td>存期(年)</td>
                                         <td><span class="badge bg-success bg-opacity-10 text-success">可选</span></td>
                                         <td>12</td>
                                     </tr>
