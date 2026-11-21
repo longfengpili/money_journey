@@ -1,112 +1,12 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib.auth import logout
-from django.contrib import messages
-from django.contrib.auth.views import LoginView
-from django.http import HttpResponseRedirect
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
-from django.core.exceptions import PermissionDenied
-from django.db import DatabaseError, transaction
+"""旧页面书签兼容入口，所有写入已迁至版本化 API。"""
 
-from accounts.models import UserProfile
-from accounts.forms import CreateMemberForm, RegistrationForm
-from accounts.services import save_registration
-from accounts.permissions import is_family_admin
+from functools import partial
 
+from money_journey.frontend import retired_page
 
-class CustomLoginView(LoginView):
-    """自定义登录视图，检查用户是否被批准"""
-
-    def form_valid(self, form):
-        # 先执行父类的登录逻辑
-        response = super().form_valid(form)
-        user = self.request.user
-
-        # 超级管理员无需批准检查
-        if user.is_superuser:
-            return response
-
-        # 检查用户是否被批准
-        try:
-            profile = UserProfile.objects.get(user=user)
-            if not profile.is_approved:
-                # 用户未批准，注销并显示消息
-                logout(self.request)
-                messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
-                return redirect('accounts:login')
-        except UserProfile.DoesNotExist:
-            # 如果没有用户资料，创建并标记为未批准
-            UserProfile.objects.create(user=user, is_approved=False)
-            messages.error(self.request, '您的账户尚未被管理员批准，请等待批准后再登录。')
-            logout(self.request)
-            return redirect('accounts:login')
-
-        return response
-
-
-def register(request):
-    """旧注册入口与新 API 共用表单和原子账号创建。"""
-    data = None
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['password1'] = data.get('password', '')
-    form = RegistrationForm(data)
-    if request.method == 'POST' and form.is_valid():
-        try:
-            save_registration(form)
-        except DatabaseError:
-            form.add_error(None, '注册失败，请稍后重试或更换用户名')
-        else:
-            messages.success(request, '注册成功！请等待管理员批准您的账户。')
-            return redirect('accounts:login')
-    return render(request, 'accounts/register.html', {'form': form})
-
-
-@login_required
-def user_approval_list(request):
-    """管理员查看待批准用户列表"""
-    if not is_family_admin(request.user):
-        messages.error(request, '只有管理员可以访问此页面')
-        return redirect('index')
-
-    pending_users = UserProfile.objects.filter(is_approved=False).select_related('user')
-    return render(request, 'accounts/user_approval_list.html', {'pending_users': pending_users})
-
-
-@login_required
-@require_POST
-@csrf_protect
-def approve_user(request, user_id):
-    """管理员批准用户（POST请求）"""
-    if not is_family_admin(request.user):
-        messages.error(request, '只有管理员可以执行此操作')
-        return redirect('index')
-
-    try:
-        user_profile = UserProfile.objects.get(user_id=user_id)
-        user_profile.is_approved = True
-        user_profile.save()
-        messages.success(request, f'用户 {user_profile.user.username} 已批准')
-    except UserProfile.DoesNotExist:
-        messages.error(request, '用户不存在')
-
-    return redirect('accounts:user_approval_list')
-
-
-@login_required
-def create_member(request):
-    """家庭管理员创建暂不登录的成员。"""
-    if not is_family_admin(request.user):
-        raise PermissionDenied('只有家庭管理员可以创建成员')
-    form = CreateMemberForm(request.POST if request.method == 'POST' else None)
-    if request.method == 'POST' and form.is_valid():
-        with transaction.atomic():
-            user = form.save(commit=False)
-            user.set_unusable_password()
-            user.save()
-            UserProfile.objects.create(user=user, is_approved=True)
-        messages.success(request, '家庭成员已创建，可以为其录入资产')
-        return redirect('funds:add_record')
-    return render(request, 'accounts/create_member.html', {'form': form})
+login = partial(retired_page, target="/app/login")
+logout = partial(retired_page, target="/app/login")
+register = partial(retired_page, target="/app/register")
+create_member = partial(retired_page, target="/app/members")
+user_approval_list = partial(retired_page, target="/app/members")
+approve_user = partial(retired_page, target="/app/members")

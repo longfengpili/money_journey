@@ -18,32 +18,24 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from money_journey.frontend import app_index, home
-from django.contrib.auth import views as auth_views
 from django.http import JsonResponse
-from django.views.generic import RedirectView
-from django.views.generic import TemplateView
+
 
 def health_check(request):
     """Health check endpoint for Docker and monitoring"""
     return JsonResponse({"status": "healthy", "service": "money_journey"})
 
+
 urlpatterns = [
-    path('api/v1/', include('money_journey.api.urls')),
-    path('app/', app_index, name='frontend'),
-    re_path(r'^app/(?P<route>.*)$', app_index),
-    path('admin/', admin.site.urls),
-    path('', home, name='index'),
-    path('legacy/', TemplateView.as_view(template_name='index.html'), name='legacy'),
-    path('accounts/', include('accounts.urls')),
-    path('funds/', include('funds.urls')),
-    path('analytics/', include('analytics.urls')),
-    path('savings-calculator/', include('savings_calculator.urls')),
-    # # 旧records路由重定向到新的funds路由
-    # path('records/', RedirectView.as_view(pattern_name='record_list', permanent=True)),
-    # path('records/add/', RedirectView.as_view(pattern_name='add_record', permanent=True)),
-    # path('records/<int:record_id>/edit/', RedirectView.as_view(pattern_name='edit_record', permanent=True)),
-    # path('records/upload-csv/', RedirectView.as_view(pattern_name='upload_csv', permanent=True)),
-    # path('records/download-template/', RedirectView.as_view(pattern_name='download_csv_template', permanent=True)),
-    # Health check endpoint
-    path('health/', health_check, name='health_check'),
+    path("api/v1/", include("money_journey.api.urls")),
+    path("app/", app_index, name="frontend"),
+    re_path(r"^app/(?P<route>.*)$", app_index),
+    path("admin/", admin.site.urls),
+    path("", home, name="index"),
+    path("legacy/", home, name="legacy"),
+    path("accounts/", include("accounts.urls")),
+    path("funds/", include("funds.urls")),
+    path("analytics/", include("analytics.urls")),
+    path("savings-calculator/", include("savings_calculator.urls")),
+    path("health/", health_check, name="health_check"),
 ]

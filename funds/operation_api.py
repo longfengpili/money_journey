@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from funds.importers import import_fund_csv
 from funds.snapshots import refresh_daily_snapshots
-from funds.views import download_csv_template
+from funds.csv_template import download_csv_template
 from money_journey.api.base import FamilyAdmin, FamilyAPIView
 
 
@@ -29,7 +29,7 @@ class ImportApi(FamilyAPIView):
 
 class ImportTemplateApi(FamilyAPIView):
     def get(self, request):
-        return download_csv_template(request._request)
+        return download_csv_template()
 
 
 class SnapshotRefreshApi(FamilyAPIView):

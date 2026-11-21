@@ -13,9 +13,9 @@
 
 本地前端在 `frontend/` 执行 `npm ci`、`npm run dev`，访问 `http://127.0.0.1:5173/app/`。默认代理 Django 开发端口 8000，可用 `MJ_BACKEND_URL` 指定其他后端。类型与构建检查为 `npm run build`，逻辑测试为 `npm test`，真实浏览器流程为 `npm run test:e2e`；浏览器测试账号通过 `MJ_E2E_CREDENTIALS` 指定的本地 JSON 文件提供，不提交凭据。
 
-生产镜像自动构建前端，静态资源由 Django/WhiteNoise 同域提供，继续使用 Session + CSRF。旧页面仍在原路由，旧首页为 `/legacy/`；设置 `FRONTEND_ENABLED=False` 可回退默认首页。部署与 HTTPS 要求见 [部署指南](DEPLOYMENT.md)。
+生产镜像自动构建前端，静态资源由 Django/WhiteNoise 同域提供，继续使用 Session + CSRF。已确认退役旧页面，旧书签跳转到对应新页面，旧表单提交返回 410；不再支持 `FRONTEND_ENABLED` 首页回退。旧提交仍受 Django CSRF 校验：安全凭证缺失或过期时先返回 403；通过校验后返回 410，均不执行旧业务写入。部署与 HTTPS 要求见 [部署指南](DEPLOYMENT.md)。
 
-各阶段进度见 [执行记录](docs/superpowers/plans/2026-11-21-component-frontend-progress.md)，待确认的旧文件见 [删除候选清单](docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md)。当前未删除旧文件。
+各阶段进度见 [执行记录](docs/superpowers/plans/2026-11-21-component-frontend-progress.md)，旧文件清理记录见 [删除清单](docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md)。
 
 ## 🎯 功能特性
 

@@ -228,3 +228,42 @@ test("无归属历史资产必须由管理员明确选择所有者", async ({ pa
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("button", { name: "关闭编辑" }).click();
 });
+
+test("旧书签跳转新页面，旧表单不再执行", async ({ page }) => {
+  await page.goto("/legacy/");
+  await expect(page).toHaveURL(/\/app\/$/);
+  await expect(page.getByText("返回原版页面 ↗")).toHaveCount(0);
+  await page.goto("/savings-calculator/results/");
+  await expect(page).toHaveURL(/\/app\/calculator$/);
+  const context = await (
+    await page.request.get("/api/v1/auth/context/")
+  ).json();
+  const response = await page.request.post("/savings-calculator/calculate/", {
+    form: { csrfmiddlewaretoken: context.csrf_token },
+  });
+  expect(response.status()).toBe(410);
+  expect((await response.json()).code).toBe("LEGACY_ENDPOINT_RETIRED");
+  const bookmark = await page.request.get("/funds/?bank=ICBC", {
+    maxRedirects: 0,
+  });
+  expect(bookmark.status()).toBe(302);
+  expect(bookmark.headers().location).toBe("/app/funds?bank=ICBC");
+});
+
+test("成员特殊名称只作为文字展示", async ({ page }) => {
+  const name = '</script><script>alert("name")</script>&家人';
+  let dialogs = 0;
+  page.on("dialog", async (dialog) => {
+    dialogs += 1;
+    await dialog.dismiss();
+  });
+  await page.route("**/api/v1/analytics/summary/*", async (route) => {
+    const response = await route.fetch();
+    const payload = await response.json();
+    payload.owner_summary[0].first_name = name;
+    await route.fulfill({ response, json: payload });
+  });
+  await page.goto("/app/");
+  await expect(page.getByRole("cell", { name, exact: true })).toBeVisible();
+  expect(dialogs).toBe(0);
+});

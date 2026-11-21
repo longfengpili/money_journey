@@ -1,12 +1,12 @@
-# 组件化重构后的待确认删除清单
+# 组件化重构后的删除清单与执行记录
 
-状态：仅列候选，未执行文件、目录或业务记录删除。用户确认后再统一修改。
+状态：用户于 2026-11-21 确认删除，已按下列具体路径执行文件清理；业务数据、数据库卷与 Git 历史保留。
 
 ## 旧页面相关候选
 
-以下内容当前仍承担旧页面回退，暂时保留。只有确认终止旧页面支持，并同步调整路由和测试后才能删除。
+以下为批准时的对象与前置条件。执行时已终止旧模板支持，旧 GET/HEAD 地址保留查询参数并跳转新页面，旧提交入口返回 410 且不执行写入。
 
-| 对象 | 当前用途与删除前置条件 |
+| 对象 | 批准时的用途与删除前置条件 |
 | --- | --- |
 | templates/index.html、templates/base.html | /legacy/ 与旧页面布局；删除会使回退入口不可用 |
 | accounts/templates/accounts/login.html、register.html、user_approval_list.html、create_member.html | 旧登录、注册、审批、成员创建；须先关闭对应旧页面入口 |
@@ -17,9 +17,9 @@
 | static/css/style.css、static/js/main.js | 原模板依赖，新 React 前端独立；须确认无旧页面引用 |
 | funds/demorecord.py、analytics/demorecord.py | 原演示数据；analytics 新 API 仍复用 DEMO_DATA，因此当前不能直接删除 |
 
-旧视图和路由不能整文件删除：accounts/views.py、funds/views.py、analytics/views.py、savings_calculator/views.py 仍有回退用途，CSV API 也仍复用原模板下载函数。若决定清理，应先分离下载逻辑，再逐项移除模板路由；权限、表单、查询、导入、快照、计算引擎、模型和迁移都需要继续保留。
+旧视图和路由保留文件，仅改为兼容跳转：accounts/views.py、funds/views.py、analytics/views.py、savings_calculator/views.py 已不再渲染旧模板；CSV API 改用 funds/csv_template.py，游客演示改用 analytics/demo.py，原演示模块已删除；权限、表单、查询、导入、快照、计算引擎、模型和迁移都需要继续保留。
 
-## 本轮生成但可单独确认的本地文件
+## 一并确认并清理的本地文件
 
 | 路径 | 说明 |
 | --- | --- |
@@ -35,11 +35,11 @@
 - 独立测试库中验收账号与样例保留，不在用户未指定具体记录前自动清理。
 - Git 开发分支、提交历史和 Docker 缓存保留，不自动清理。
 
-本清单不代表已经获得删除授权。旧页面清理与本次新前端交付分开处理。
+本次操作依据用户对本清单的“确认删除”；未扩展到未列出的文件或目录。
 
 ## 本地旧构建哈希文件明细
 
-仅列当前宿主构建未引用的本地文件，未删除；正式镜像由干净构建阶段生成，不依赖这些历史文件。
+执行前逐项检查宿主 dist/index.html 未引用以下 10 个文件后删除。正式镜像由干净构建阶段生成，不依赖这些历史文件。其后新产生的构建哈希文件不在本次删除范围内。
 
 - `frontend/dist/assets/index-B08BlP1z.css`
 - `frontend/dist/assets/index-B2GyIYsr.js`
@@ -51,3 +51,15 @@
 - `frontend/dist/assets/index-DbvzHx46.js`
 - `frontend/dist/assets/index-Jl7lV3xH.css`
 - `frontend/dist/assets/index-P6dJY0bL.js`
+
+## 2026-11-21 执行记录
+
+- 共删除 36 个明确列出的文件，包括 23 个旧页面/静态/演示文件、3 个 CLI 生成文件和 10 个已列名的旧构建资源。没有递归清空目录。
+- 保留四个旧 views.py 与原 URL 名称；书签跳转新页面，旧写入返回 LEGACY_ENDPOINT_RETIRED。旧 CSV 下载地址跳转新 API，沿用新 API 的访问权限。
+- 移除 FRONTEND_ENABLED 开关及侧栏旧版链接；默认首页固定进入 /app/，Django Admin 继续保留。
+- 原权限、输入校验、共享统计、快照与计算器集成测试迁到新 API；补充旧入口无副作用和浏览器名称转义检查。
+- 没有修改模型、迁移、数据库业务记录或数据库卷。未合并 main 或推送远程。
+
+- 旧提交仍受 Django CSRF 校验：安全凭证缺失或过期时先返回 403；通过校验后返回 410，均不执行旧业务写入。
+
+- 验证：SQLite 108 项（2 跳过）、MySQL 108 项全部通过，前端 3 项单测/类型构建/格式与 Chrome 10 组流程通过；独立审查无遗留问题。测试容器已更新。

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import can_write_assets
-from analytics.demorecord import DEMO_DATA
+from analytics.demo import DEMO_DATA
 from analytics.queries import (
     get_snapshot_trend,
     normalize_filters,

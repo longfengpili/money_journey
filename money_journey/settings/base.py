@@ -81,7 +81,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = "money_journey.urls"
 
 FRONTEND_DIST = Path(os.environ.get('FRONTEND_DIST', BASE_DIR / 'frontend' / 'dist'))
-FRONTEND_ENABLED = os.environ.get('FRONTEND_ENABLED', 'True') == 'True'
 CSRF_FAILURE_VIEW = 'money_journey.api.base.csrf_failure'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

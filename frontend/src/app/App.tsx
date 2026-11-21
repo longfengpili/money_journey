@@ -66,7 +66,6 @@ function Workspace() {
         </nav>
         <div className="sidebar-bottom">
           <span className="label">一个家庭 · 共同规划</span>
-          <a href="/analytics/dashboard/">返回原版页面 ↗</a>
         </div>
       </aside>
       <div className="workspace">

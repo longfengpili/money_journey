@@ -10,7 +10,8 @@ from savings_calculator.forms import AgeRangeForm, BasicParametersForm
 class CalculatorApiTests(TestCase):
     setUp = test_views.CalculationViewTests.setUp
 
-    def test_legacy_login_clears_guest_planning_results(self):
+    def test_admin_login_clears_guest_planning_results(self):
+        self.member.is_staff = True
         self.member.set_password("test-password")
         self.member.save()
         session = self.client.session
@@ -18,7 +19,7 @@ class CalculatorApiTests(TestCase):
         session["calculation_results"] = [{"total": 1}]
         session.save()
         self.client.post(
-            "/accounts/login/",
+            "/admin/login/",
             {
                 "username": self.member.username,
                 "password": "test-password",

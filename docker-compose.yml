@@ -29,7 +29,6 @@ services:
       - db
     environment:
       DJANGO_SETTINGS_MODULE: money_journey.settings.base
-      FRONTEND_ENABLED: ${FRONTEND_ENABLED:-True}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}

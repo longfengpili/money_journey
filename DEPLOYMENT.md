@@ -12,7 +12,9 @@ Dockerfile 首阶段构建 React 前端，运行阶段只保留 Python 与静态
 docker build --build-arg NODE_BUILD_IMAGE=node:20.20.2-alpine -t money_journey:frontend .
 ```
 
-常规部署仍可使用 `docker compose -f docker-compose.prod.yml up -d --build`。开发与生产 Compose 都传递 `FRONTEND_ENABLED`，默认 True；若需回退默认首页，将环境文件设为 False 后重新创建 web 容器。`/legacy/`、原资产与计算页面继续保留，回退不修改业务数据。
+常规部署仍可使用 `docker compose -f docker-compose.prod.yml up -d --build`。用户已确认退役旧页面：旧 GET/HEAD 地址跳转到对应 `/app/` 页面并保留筛选参数；旧表单提交返回 410，不执行写入。`FRONTEND_ENABLED` 回退开关已退出，CSV 模板与游客演示由新 API 独立提供。若需部署旧版本，应使用历史提交构建，不能再通过环境开关恢复旧模板。
+
+旧提交仍受 Django CSRF 校验：安全凭证缺失或过期时先返回 403；通过校验后返回 410，均不执行旧业务写入。
 
 生产使用 HTTPS 可信反向代理，转发 Host，并由代理覆盖 `X-Forwarded-Proto: https`；Django 生产配置据此识别安全请求。应用端口应仅对可信代理开放，不能直接信任客户端提供的代理头。`CSRF_TRUSTED_ORIGINS` 填写实际 HTTPS 入口；Secure/HttpOnly Cookie 保持开启，新前端从身份上下文响应读取 CSRF token，不读取 HttpOnly Cookie。
 
@@ -20,7 +22,7 @@ docker build --build-arg NODE_BUILD_IMAGE=node:20.20.2-alpine -t money_journey:f
 
 本地开发在 `frontend/` 运行 `npm ci` 与 `npm run dev`。默认代理 `http://127.0.0.1:8000`，保留浏览器 Host；若连接 38000 测试容器，可在同一终端设 `$env:MJ_BACKEND_URL='http://127.0.0.1:38000'`。构建使用 `npm run build`，不需要全局安装 Node 包。
 
-后端回归使用独立测试设置或独立 MySQL 测试库，浏览器验收使用隔离账号；测试凭据、TLS 私钥、截图和报告不进入 Git。旧文件删除清单见 `docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md`，用户确认前保持原样。
+后端回归使用独立测试设置或独立 MySQL 测试库，浏览器验收使用隔离账号；测试凭据、TLS 私钥、截图和报告不进入 Git。用户确认后的文件清理记录见 `docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md`。业务数据和数据库卷保持原样。
 
 ## 项目结构更改
 

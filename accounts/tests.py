@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AnonymousUser, User
+from django.db import DatabaseError
 from django.test import TestCase
 from django.urls import reverse
 from unittest.mock import patch
@@ -14,17 +15,17 @@ from funds.models import FundRecord
 
 class FamilyPermissionTests(TestCase):
     def setUp(self):
-        self.member = User.objects.create_user('member')
-        self.other = User.objects.create_user('other')
-        self.manager = User.objects.create_user('manager')
+        self.member = User.objects.create_user("member")
+        self.other = User.objects.create_user("other")
+        self.manager = User.objects.create_user("manager")
         for user in (self.member, self.other, self.manager):
             UserProfile.objects.create(user=user, is_approved=True)
         self.manager.userprofile.is_family_admin = True
         self.manager.userprofile.save()
         self.record = FundRecord.objects.create(
             user=self.other,
-            bank='ICBC',
-            category='CURRENT',
+            bank="ICBC",
+            category="CURRENT",
             amount=100,
         )
 
@@ -39,7 +40,7 @@ class FamilyPermissionTests(TestCase):
         self.assertFalse(can_edit_record(self.member, self.record))
         self.assertTrue(can_edit_record(self.manager, self.record))
         self.assertFalse(can_write_assets(AnonymousUser()))
-        missing_profile = User.objects.create_user('missing')
+        missing_profile = User.objects.create_user("missing")
         self.assertFalse(can_write_assets(missing_profile))
         self.other.userprofile.is_approved = False
         self.other.userprofile.save()
@@ -52,86 +53,77 @@ class FamilyPermissionTests(TestCase):
     def test_manager_creates_member_without_password_or_privileges(self):
         self.client.force_login(self.manager)
         response = self.client.post(
-            reverse('accounts:create_member'),
+            "/api/v1/members/",
             {
-                'username': 'mother',
-                'first_name': '母亲',
-                'is_superuser': 'on',
-                'is_family_admin': 'on',
-                'is_staff': 'on',
+                "username": "mother",
+                "first_name": "母亲",
+                "is_superuser": "on",
+                "is_family_admin": "on",
+                "is_staff": "on",
             },
         )
-        self.assertEqual(response.status_code, 302)
-        user = User.objects.get(username='mother')
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(username="mother")
         self.assertFalse(user.has_usable_password())
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
         self.assertFalse(user.userprofile.is_family_admin)
         self.assertTrue(user.userprofile.is_approved)
-        self.client.post(
-            reverse('accounts:create_member'), {'username': 'mother'}
-        )
-        self.assertEqual(User.objects.filter(username='mother').count(), 1)
+        self.client.post("/api/v1/members/", {"username": "mother"})
+        self.assertEqual(User.objects.filter(username="mother").count(), 1)
 
     def test_member_cannot_create_or_approve_members(self):
         self.client.force_login(self.member)
         self.assertEqual(
             self.client.post(
-                reverse('accounts:create_member'),
-                {'username': 'forbidden'},
+                "/api/v1/members/",
+                {"username": "forbidden"},
             ).status_code,
             403,
         )
-        self.client.post(
-            reverse('accounts:approve_user', args=[self.other.pk])
-        )
-        self.assertFalse(User.objects.filter(username='forbidden').exists())
+        self.client.post(f"/api/v1/approvals/{self.other.pk}/")
+        self.assertFalse(User.objects.filter(username="forbidden").exists())
 
     def test_manager_can_access_approval_and_navigation(self):
         self.client.force_login(self.manager)
-        self.assertEqual(
-            self.client.get(
-                reverse('accounts:user_approval_list'),
-            ).status_code,
-            200,
-        )
-        self.assertContains(self.client.get('/legacy/'), '创建家庭成员')
+        self.assertEqual(self.client.get("/api/v1/members/").status_code, 200)
+        context = self.client.get("/api/v1/auth/context/").json()
+        self.assertTrue(context["capabilities"]["manage_family"])
 
     def test_approval_admin_links_resolve_to_accessible_pages(self):
         admin = User.objects.create_superuser(
-            'admin', password='test-password',
+            "admin", password="test-password"
         )
         self.client.force_login(admin)
-        response = self.client.get(reverse('accounts:user_approval_list'))
+        self.assertEqual(self.client.get("/api/v1/members/").status_code, 200)
         for route in (
-            'admin:auth_user_changelist',
-            'admin:accounts_userprofile_changelist',
+            "admin:auth_user_changelist",
+            "admin:accounts_userprofile_changelist",
         ):
-            url = reverse(route)
-            self.assertContains(response, f'href="{url}"')
-            self.assertEqual(self.client.get(url).status_code, 200)
-        self.assertNotContains(response, '/admin/records/')
+            self.assertEqual(self.client.get(reverse(route)).status_code, 200)
 
     def test_family_manager_sees_only_accessible_actions(self):
         self.client.force_login(self.manager)
-        response = self.client.get(reverse('accounts:user_approval_list'))
-        self.assertContains(
-            response, f'href="{reverse("accounts:create_member")}"',
-        )
-        self.assertNotContains(response, '管理所有用户')
-        self.assertNotContains(response, '管理用户资料')
+        context = self.client.get("/api/v1/auth/context/").json()
+        self.assertTrue(context["capabilities"]["manage_family"])
+        self.assertFalse(self.manager.is_staff)
+        self.assertEqual(self.client.get("/api/v1/members/").status_code, 200)
+        self.assertEqual(self.client.get("/admin/").status_code, 302)
 
     def test_member_creation_rolls_back_if_profile_fails(self):
         self.client.force_login(self.manager)
         with patch(
-            'accounts.views.UserProfile.objects.create',
-            side_effect=RuntimeError,
+            "accounts.api.UserProfile.objects.create",
+            side_effect=DatabaseError("隔离测试写入失败"),
         ):
-            with self.assertRaises(RuntimeError):
-                self.client.post(
-                    reverse('accounts:create_member'), {'username': 'rollback'}
+            with self.assertLogs("money_journey.api.base", level="ERROR"):
+                response = self.client.post(
+                    "/api/v1/members/", {"username": "rollback"}
                 )
-        self.assertFalse(User.objects.filter(username='rollback').exists())
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json()["code"], "SERVER_ERROR")
+        self.assertNotIn("隔离测试", response.content.decode())
+        self.assertFalse(User.objects.filter(username="rollback").exists())
 
     def test_staff_cannot_promote_self_through_admin(self):
         from django.contrib.auth.models import Permission
@@ -140,24 +132,24 @@ class FamilyPermissionTests(TestCase):
         self.member.save()
         self.member.user_permissions.set(
             Permission.objects.filter(
-                content_type__app_label__in=['auth', 'accounts'],
+                content_type__app_label__in=["auth", "accounts"],
             )
         )
         self.client.force_login(self.member)
         for route, pk, payload in (
             (
-                'admin:accounts_userprofile_change',
+                "admin:accounts_userprofile_change",
                 self.member.userprofile.pk,
                 {
-                    'user': self.member.pk,
-                    'is_approved': 'on',
-                    'is_family_admin': 'on',
+                    "user": self.member.pk,
+                    "is_approved": "on",
+                    "is_family_admin": "on",
                 },
             ),
             (
-                'admin:auth_user_change',
+                "admin:auth_user_change",
                 self.member.pk,
-                {'username': 'member', 'is_superuser': 'on'},
+                {"username": "member", "is_superuser": "on"},
             ),
         ):
             self.assertEqual(

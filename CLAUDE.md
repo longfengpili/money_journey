@@ -1,5 +1,7 @@
 # Claude项目指南
 
+> 2026-11-21：组件化前端已完成且用户确认清理旧模板。当前架构与部署以 README.md、DEPLOYMENT.md 和 docs/superpowers/plans/2026-11-21-component-frontend-progress.md 为准。下文保留历史背景，旧模板结构与回退入口不再适用。
+
 本文档为Claude AI助手提供项目上下文和开发指南，帮助Claude更好地理解和维护"Money Journey"项目。
 
 ## 📋 项目概述

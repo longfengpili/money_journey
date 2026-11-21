@@ -7,7 +7,6 @@ services:
     restart: unless-stopped
     environment:
       DJANGO_SETTINGS_MODULE: money_journey.settings.production
-      FRONTEND_ENABLED: ${FRONTEND_ENABLED:-True}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
