@@ -43,4 +43,5 @@ volumes:
 
 networks:
   money_journey_network:
-    driver: bridge
+    external: true
+    name: mydb_default
