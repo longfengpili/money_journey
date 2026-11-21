@@ -108,42 +108,47 @@ function flyCoin(
       const cards = Array.from(
         charts.querySelectorAll<HTMLElement>(".dashboard-chart-card"),
       );
-      const area = charts.getBoundingClientRect();
       const burst = Array.from(
         { length: 15 + Math.floor(Math.random() * 8) },
-        () => {
+        (_, index) => {
           const ray = document.createElement("span");
           ray.className = "dashboard-gold-ray";
           ray.setAttribute("aria-hidden", "true");
           ray.style.left = `${centerX}px`;
           ray.style.top = `${centerY}px`;
-          ray.style.width = `${5 + Math.random() * 3}px`;
-          ray.style.height = `${38 + Math.random() * 58}px`;
+          ray.style.width = `${1 + Math.random() * 1.2}px`;
+          ray.style.height = `${80 + Math.random() * 100}px`;
           document.body.append(ray);
           rays.push(ray);
-          const endX = area.left + Math.random() * area.width;
-          const endY = area.top + Math.random() * Math.min(area.height, 650);
-          const angle = -70 + Math.random() * 140;
-          const bend = (Math.random() - 0.5) * 100;
+          const target = (
+            cards[index % cards.length] ?? charts
+          ).getBoundingClientRect();
+          const endX =
+            target.left + target.width / 2 + (Math.random() - 0.5) * 24;
+          const endY =
+            target.top + target.height / 2 + (Math.random() - 0.5) * 24;
+          const travelX = endX - centerX;
+          const travelY = endY - centerY;
+          const angle = (Math.atan2(travelY, travelX) * 180) / Math.PI - 90;
           return play(
             ray,
             [
               {
-                transform: `translate(0, 0) rotate(${angle}deg) scale(.3)`,
+                transform: `translate(0, 0) rotate(${angle}deg) scaleY(.2)`,
                 opacity: 0,
               },
               {
-                transform: `translate(0, 0) rotate(${angle}deg) scale(1)`,
+                transform: `translate(${travelX * 0.12}px, ${travelY * 0.12}px) rotate(${angle}deg) scaleY(1)`,
                 opacity: 1,
                 offset: 0.18,
               },
               {
-                transform: `translate(${(endX - centerX) * 0.6 + bend}px, ${(endY - centerY) * 0.55}px) rotate(${angle + 80}deg) scale(.8)`,
+                transform: `translate(${travelX * 0.6}px, ${travelY * 0.6}px) rotate(${angle}deg) scaleY(.8)`,
                 opacity: 1,
                 offset: 0.65,
               },
               {
-                transform: `translate(${endX - centerX}px, ${endY - centerY}px) rotate(${angle + 140}deg) scale(.15)`,
+                transform: `translate(${travelX}px, ${travelY}px) rotate(${angle}deg) scaleY(.15)`,
                 opacity: 0,
               },
             ],
@@ -170,10 +175,10 @@ function flyCoin(
         ...burst,
       ]);
       cards.forEach((card) => {
-        card.classList.add("is-energized");
+        card.classList.add("is-unfolding");
         card.addEventListener(
           "animationend",
-          () => card.classList.remove("is-energized"),
+          () => card.classList.remove("is-unfolding"),
           { once: true },
         );
       });
@@ -290,6 +295,16 @@ export default function Dashboard() {
   );
   const orbitAmounts = rankedCategories.map((row) => Number(row.total_amount));
   const orbitPercentages = percentages(orbitAmounts);
+  const savingsTotal = sumMoney(
+    compassData.category_summary
+      .filter((row) => row.category === "SAVINGS")
+      .map((row) => row.total_amount),
+  );
+  const otherTotal = sumMoney(
+    compassData.category_summary
+      .filter((row) => row.category !== "SAVINGS")
+      .map((row) => row.total_amount),
+  );
   let orbitPosition = 0;
   const orbitGradient = orbitTotal
     ? `conic-gradient(from -90deg, ${orbitAmounts
@@ -354,16 +369,21 @@ export default function Dashboard() {
           <div className="dashboard-eyebrow">
             FAMILY PORTFOLIO · {activeScope}
           </div>
-          <div className="dashboard-hero-label">
-            {includesHistoricalRecords ? "资产记录金额合计" : "家庭资产总额"}
-          </div>
-          <div className="dashboard-hero-value">
-            ¥{money(data.total_amount)}
-          </div>
+          <h2 className="dashboard-halo-heading">看见资金的流向</h2>
           <div className="dashboard-hero-foot">
             {includesHistoricalRecords
               ? "包含历史状态记录，续存资金可能与当前资产重复"
-              : "根据当前筛选条件精确汇总"}
+              : "每一道光，代表一类真实资产。"}
+          </div>
+          <div className="dashboard-structure" aria-label="资产结构金额">
+            <div>
+              <span>非储蓄类资产</span>
+              <strong>¥{money(otherTotal)}</strong>
+            </div>
+            <div>
+              <span>储蓄存款</span>
+              <strong>¥{money(savingsTotal)}</strong>
+            </div>
           </div>
           <div className="dashboard-cockpit-signal">
             <span className="dashboard-cockpit-dot" aria-hidden="true" />
@@ -372,79 +392,107 @@ export default function Dashboard() {
               : "点击类别聚焦罗盘并筛选下方视图"}
           </div>
         </div>
-        <div className="dashboard-orbit" aria-label="资产类别分布">
+        <section className="dashboard-orbit" aria-label="资金光环">
           <div className="dashboard-orbit-field" aria-hidden="true">
             <span className="dashboard-orbit-track dashboard-orbit-track-outer" />
             <span className="dashboard-orbit-track dashboard-orbit-track-inner" />
             <span className="dashboard-orbit-flow" />
             <span className="dashboard-orbit-spark" />
+            <span className="dashboard-orbit-aura" />
+            {Array.from({ length: 16 }, (_, index) => (
+              <span
+                key={index}
+                className="dashboard-orbit-beam"
+                style={{
+                  transform: `rotate(${index * 22.5}deg)`,
+                  animationDelay: `${index * -0.22}s`,
+                }}
+              />
+            ))}
             <span
               className="dashboard-orbit-progress"
               style={{ background: orbitGradient }}
             />
           </div>
           <div className="dashboard-orbit-core">
-            <span>{focusedCategory ? "当前聚焦" : "资产主力"}</span>
-            <strong>
-              {orbitTotal
-                ? `${orbitPercentages[focusedCategory ? rankedCategories.indexOf(focusedCategory) : 0]}%`
-                : "—"}
-            </strong>
+            <span>
+              {includesHistoricalRecords ? "资产记录金额合计" : "家庭资产总额"}
+            </span>
+            <strong>¥{money(data.total_amount)}</strong>
             <small>
-              {(focusedCategory || rankedCategories[0])?.category_display ||
-                "暂无资产"}
+              {focusedCategory
+                ? `已筛选 · ${focusedCategory.category_display}`
+                : activeScope}
             </small>
           </div>
           <div className="dashboard-orbit-nodes">
-            {rankedCategories.map((row, index) => (
-              <button
-                key={row.category || index}
-                type="button"
-                className={`dashboard-orbit-node${focusedCategory ? (selectedCategory === row.category ? " is-selected" : " is-muted") : ""}`}
-                onClick={(event) => {
-                  coinCleanupRef.current?.();
-                  if (returnTopTimerRef.current !== null)
-                    window.clearTimeout(returnTopTimerRef.current);
-                  if (
-                    !window.matchMedia("(prefers-reduced-motion: reduce)")
-                      .matches
-                  ) {
-                    heldDataRef.current = data;
-                    setTransitioning(true);
-                    setAnimationDone(false);
-                    coinCleanupRef.current = flyCoin(
-                      event.currentTarget,
-                      dashboardRef.current,
-                      row.category_display || row.category || "资产",
-                      orbitPercentages[index],
-                      () => setAnimationDone(true),
-                    );
+            {rankedCategories.map((row, index) => {
+              const angle =
+                -Math.PI / 2 +
+                (Math.PI * 2 * index) / rankedCategories.length +
+                (rankedCategories.length === 4 ? Math.PI / 4 : 0);
+              return (
+                <button
+                  key={row.category || index}
+                  type="button"
+                  className={`dashboard-orbit-node${focusedCategory ? (selectedCategory === row.category ? " is-selected" : " is-muted") : ""}`}
+                  style={
+                    {
+                      "--node-x": `${Math.cos(angle) * 220}px`,
+                      "--node-y": `${Math.sin(angle) * 220}px`,
+                    } as React.CSSProperties
                   }
-                  const next = new URLSearchParams(filters);
-                  if (selectedCategory === row.category)
-                    next.delete("category");
-                  else next.set("category", row.category || "");
-                  next.delete("page");
-                  setParams(next);
-                }}
-                aria-label={`聚焦${row.category_display || row.category}，占比${orbitPercentages[index]}%`}
-                aria-pressed={selectedCategory === row.category}
-              >
-                <span
-                  className="dashboard-orbit-node-icon"
-                  style={{ color: orbitColors[index % orbitColors.length] }}
-                  aria-hidden="true"
+                  onClick={(event) => {
+                    const clearingCategory = selectedCategory === row.category;
+                    coinCleanupRef.current?.();
+                    if (returnTopTimerRef.current !== null)
+                      window.clearTimeout(returnTopTimerRef.current);
+                    if (
+                      !window.matchMedia("(prefers-reduced-motion: reduce)")
+                        .matches
+                    ) {
+                      heldDataRef.current = data;
+                      setTransitioning(true);
+                      setAnimationDone(false);
+                      coinCleanupRef.current = flyCoin(
+                        event.currentTarget,
+                        dashboardRef.current,
+                        clearingCategory
+                          ? "全部资产"
+                          : row.category_display || row.category || "资产",
+                        clearingCategory ? 100 : orbitPercentages[index],
+                        () => setAnimationDone(true),
+                      );
+                    }
+                    const next = new URLSearchParams(filters);
+                    if (clearingCategory) next.delete("category");
+                    else next.set("category", row.category || "");
+                    next.delete("page");
+                    setParams(next);
+                  }}
+                  aria-label={`聚焦${row.category_display || row.category}，占比${orbitPercentages[index]}%`}
+                  aria-pressed={selectedCategory === row.category}
                 >
-                  ¥
-                </span>
-                <span className="dashboard-orbit-node-text">
-                  <span>{row.category_display || row.category}</span>
-                  <strong>{orbitPercentages[index]}%</strong>
-                </span>
-              </button>
-            ))}
+                  <span
+                    className="dashboard-orbit-node-icon"
+                    style={{ color: orbitColors[index % orbitColors.length] }}
+                    aria-hidden="true"
+                  >
+                    ¥
+                  </span>
+                  <span className="dashboard-orbit-node-text">
+                    <span>{row.category_display || row.category}</span>
+                    <strong>{orbitPercentages[index]}%</strong>
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        </div>
+          <div className="dashboard-halo-caption">
+            分类占比合计 {orbitTotal ? 100 : 0}% · {rankedCategories.length}{" "}
+            类资产
+          </div>
+        </section>
         <div className="dashboard-hero-side">
           <div>
             <span className="dashboard-metric-icon" aria-hidden="true">

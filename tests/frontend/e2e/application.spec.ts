@@ -56,6 +56,9 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
     page.getByRole("heading", { name: "家庭资金总览" }),
   ).toBeVisible();
   await expect(page.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
+  const halo = page.getByRole("region", { name: "资金光环" });
+  await expect(halo.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
+  await expect(halo.getByText("分类占比合计 100%")).toBeVisible();
   await expect(page.getByRole("img", { name: "银行资金分布" })).toBeVisible();
   await expect(page.getByRole("img", { name: "成员资产结构" })).toBeVisible();
   await page.locator(".dashboard-charts").scrollIntoViewIfNeeded();
@@ -123,6 +126,90 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
     path: test.info().outputPath("calculator-mobile.png"),
     fullPage: true,
   });
+});
+
+test("资金光环分类可筛选并恢复全量资产", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/app/");
+  const halo = page.getByRole("region", { name: "资金光环" });
+  const savings = halo.getByRole("button", { name: /聚焦储蓄存款/ });
+  await savings.click();
+  await expect(page).toHaveURL(/category=SAVINGS/);
+  await expect(savings).toHaveAttribute("aria-pressed", "true");
+  await expect(halo.getByText("¥680,000.00", { exact: true })).toBeVisible();
+  await expect(halo.getByText("分类占比合计 100%")).toBeVisible();
+  await expect(halo.getByRole("button", { name: /聚焦基金/ })).toBeVisible();
+  await savings.click();
+  await expect(page).not.toHaveURL(/category=/);
+  await expect(halo.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
+});
+
+test("金币内容随类别筛选与恢复全量切换", async ({ page }) => {
+  await page.goto("/app/");
+  const savings = page
+    .getByRole("region", { name: "资金光环" })
+    .getByRole("button", { name: /聚焦储蓄存款/ });
+  const coin = page.locator(".dashboard-filter-coin");
+  await savings.click();
+  await expect(coin).toContainText("储蓄存款");
+  await expect(coin).toContainText("53%");
+  const ray = page.locator(".dashboard-gold-ray").first();
+  await expect(ray).toBeVisible();
+  expect(
+    await ray.evaluate((element) =>
+      parseFloat(getComputedStyle(element).width),
+    ),
+  ).toBeLessThan(3);
+  const rayAngles = await ray.evaluate((element) =>
+    (
+      (
+        element.getAnimations()[0]?.effect as KeyframeEffect | null
+      )?.getKeyframes() ?? []
+    )
+      .map(
+        (frame) => /rotate\((-?[\d.]+)deg\)/.exec(String(frame.transform))?.[1],
+      )
+      .filter(Boolean),
+  );
+  expect(new Set(rayAngles).size).toBe(1);
+  const distances = await page.evaluate(() => {
+    const rayEnds = [
+      ...document.querySelectorAll<HTMLElement>(".dashboard-gold-ray"),
+    ]
+      .map((element) => {
+        const frames =
+          (
+            element.getAnimations()[0]?.effect as KeyframeEffect | null
+          )?.getKeyframes() ?? [];
+        const transform = String(frames.at(-1)?.transform ?? "");
+        const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(transform);
+        if (!match) return null;
+        return {
+          x: parseFloat(element.style.left) + Number(match[1]),
+          y: parseFloat(element.style.top) + Number(match[2]),
+        };
+      })
+      .filter((point): point is { x: number; y: number } => point !== null);
+    return [
+      ...document.querySelectorAll<HTMLElement>(".dashboard-chart-card"),
+    ].map((card) => {
+      const box = card.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      const y = box.top + box.height / 2;
+      return Math.min(
+        ...rayEnds.map((point) => Math.hypot(point.x - x, point.y - y)),
+      );
+    });
+  });
+  expect(Math.max(...distances)).toBeLessThan(45);
+  await expect(coin).toHaveCount(0);
+  await expect(page.locator(".dashboard-chart-card.is-unfolding")).toHaveCount(
+    3,
+  );
+  await savings.click();
+  await expect(coin).toContainText("全部资产");
+  await expect(coin).toContainText("100%");
+  await expect(page).not.toHaveURL(/category=/);
 });
 
 test("游客各页面使用统一极光玻璃主题", async ({ page }) => {
