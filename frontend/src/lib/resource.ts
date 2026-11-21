@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 
-export function useResource<T>(url: string, version = 0) {
+export function useResource<T>(
+  url: string,
+  version = 0,
+  keepPreviousData = false,
+) {
   const [state, setState] = useState<{
     data?: T;
     error?: Error;
@@ -9,7 +13,10 @@ export function useResource<T>(url: string, version = 0) {
   }>({ loading: true });
   useEffect(() => {
     const controller = new AbortController();
-    setState({ loading: true });
+    setState((previous) => ({
+      data: keepPreviousData ? previous.data : undefined,
+      loading: true,
+    }));
     api<T>(url, { signal: controller.signal }).then(
       (data) => {
         if (!controller.signal.aborted) setState({ data, loading: false });
@@ -19,6 +26,6 @@ export function useResource<T>(url: string, version = 0) {
       },
     );
     return () => controller.abort();
-  }, [url, version]);
+  }, [url, version, keepPreviousData]);
   return state;
 }

@@ -1,0 +1,665 @@
+/* 家庭资金驾驶舱：动效围绕真实资产结构展开。 */
+.glass-shell .dashboard-cockpit {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) minmax(330px, 1.2fr) minmax(
+      165px,
+      0.65fr
+    );
+  align-items: center;
+  gap: clamp(12px, 2vw, 30px);
+  min-height: 390px;
+  padding: 28px clamp(22px, 3vw, 38px);
+  background:
+    radial-gradient(circle at 54% 48%, #c4dcffb8 0, transparent 37%),
+    radial-gradient(circle at 96% 7%, #ddc8ff9c 0, transparent 33%),
+    linear-gradient(115deg, #ffffffed, #eef3ffed 58%, #f5efffe8);
+}
+
+.glass-shell .dashboard-cockpit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(#9aabe914 1px, transparent 1px),
+    linear-gradient(90deg, #9aabe914 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at center, #000 16%, transparent 78%);
+  pointer-events: none;
+}
+
+.glass-shell .dashboard-cockpit::after {
+  z-index: 0;
+  top: -115px;
+  right: 27%;
+  width: 450px;
+  height: 450px;
+  border: 0;
+  background: radial-gradient(circle, #9dc9ff59, transparent 67%);
+  box-shadow: none;
+  animation: cockpit-glow 15s ease-in-out infinite alternate;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-main {
+  z-index: 2;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-label {
+  margin-top: 24px;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-value {
+  font-size: clamp(34px, 3.5vw, 56px);
+  line-height: 1.15;
+}
+
+.dashboard-cockpit-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 30px;
+  padding: 8px 12px;
+  border: 1px solid #c5d6f4;
+  border-radius: 99px;
+  background: #ffffffa8;
+  color: #516582;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.dashboard-cockpit-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ccbbb;
+  box-shadow: 0 0 0 4px #2ccbbb24;
+  animation: cockpit-breathe 3.2s ease-in-out infinite;
+}
+
+.dashboard-orbit {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  min-height: 330px;
+  padding-top: 295px;
+}
+
+.dashboard-orbit-field,
+.dashboard-orbit-core {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.dashboard-orbit-field {
+  width: 270px;
+  height: 270px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #ffffffd9 18%,
+    #e6efffa8 65%,
+    transparent 72%
+  );
+  box-shadow: 0 0 65px #8bb4f13b;
+}
+
+.dashboard-orbit-track {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dashboard-orbit-track-outer {
+  inset: 0;
+  border: 1px dashed #8196d58a;
+  animation: cockpit-turn 42s linear infinite;
+}
+
+.dashboard-orbit-track-inner {
+  inset: 24px;
+  border: 1px dashed #a6b6e4aa;
+  animation: cockpit-turn 32s linear infinite reverse;
+}
+
+.dashboard-orbit-flow {
+  position: absolute;
+  inset: 37px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 10deg,
+    transparent 0 72%,
+    #8a8bec70 85%,
+    transparent 95%
+  );
+  mask: radial-gradient(transparent 60%, #000 62% 66%, transparent 68%);
+  animation: cockpit-turn 9s linear infinite;
+}
+
+.dashboard-orbit-spark {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  animation: cockpit-turn 14s linear infinite;
+}
+
+.dashboard-orbit-spark::after {
+  content: "";
+  position: absolute;
+  top: 23px;
+  left: 25px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6f79e5;
+  box-shadow:
+    0 0 0 5px #777be42b,
+    0 0 18px #777be495;
+}
+
+.dashboard-orbit-progress {
+  position: absolute;
+  inset: 47px;
+  border-radius: 50%;
+  box-shadow: 0 0 22px #878ee751;
+  mask: radial-gradient(transparent 57%, #000 59% 75%, transparent 77%);
+  animation: cockpit-ring-enter 850ms ease-out both;
+}
+
+.dashboard-orbit-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 125px;
+  height: 125px;
+  border: 1px solid #ffffffed;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, #fff, #e9efffee);
+  box-shadow:
+    0 12px 32px #8d9bc73b,
+    inset 0 0 22px #ffffffd9;
+  color: #5e6d8e;
+  text-align: center;
+}
+
+.dashboard-orbit-core span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.dashboard-orbit-core strong {
+  margin: 3px 0;
+  color: #3c418f;
+  font-size: 29px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-orbit-core small {
+  font-size: 11px;
+}
+
+.dashboard-orbit-nodes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboard-orbit-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #ffffffed;
+  border-radius: 13px;
+  background: #ffffffdf;
+  box-shadow: 0 8px 24px #8799ca30;
+  color: #2e3c5c;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 220ms ease,
+    filter 220ms ease;
+  animation: cockpit-node-enter 600ms ease-out both;
+}
+
+.dashboard-orbit-node:hover,
+.dashboard-orbit-node:focus-visible,
+.dashboard-orbit-node.is-selected {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px #777bd048;
+}
+
+.dashboard-orbit-node:focus-visible {
+  outline: 2px solid #6966e8;
+  outline-offset: 2px;
+}
+
+.dashboard-orbit-node.is-muted {
+  opacity: 0.55;
+  filter: saturate(0.55);
+}
+
+.dashboard-orbit-node.is-muted:hover,
+.dashboard-orbit-node.is-muted:focus-visible {
+  opacity: 0.85;
+  filter: none;
+}
+
+.dashboard-orbit-node-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: currentColor;
+  font-size: 0;
+}
+
+.dashboard-orbit-node-icon::after {
+  content: "¥";
+  color: white;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.dashboard-orbit-node-text {
+  display: grid;
+  gap: 1px;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.dashboard-orbit-node-text strong {
+  color: #354272;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-filter-coin {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #ffe6a3;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff9d7, #f4bc54 64%, #d88c37);
+  box-shadow:
+    0 0 18px #f7c462b3,
+    inset 0 0 0 3px #ffffff80;
+  color: #85501e;
+  font-weight: 800;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.dashboard-filter-coin-label {
+  max-width: 38px;
+  overflow: hidden;
+  color: #804719;
+  font-size: 8px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-filter-coin-percent {
+  color: #704017;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-gold-ray {
+  position: fixed;
+  z-index: 1001;
+  border-radius: 99px;
+  background: linear-gradient(
+    transparent,
+    #b97016 18%,
+    #fff4bd 45%,
+    #df9525 78%,
+    transparent
+  );
+  box-shadow:
+    0 0 9px 2px #d2912ab3,
+    0 0 24px 5px #f7c66b91;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.dashboard-chart-card.is-energized {
+  animation: cockpit-chart-energize 800ms ease-out;
+}
+
+.dashboard-charts {
+  transition:
+    opacity 280ms ease,
+    filter 280ms ease;
+}
+
+.dashboard-filtering .dashboard-charts {
+  opacity: 0.68;
+  filter: saturate(0.75);
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-side {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: center;
+  gap: 10px;
+  width: auto;
+  margin-top: 0;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-side > div {
+  position: relative;
+  min-height: 92px;
+  padding: 13px 15px 13px 52px;
+  animation: cockpit-node-enter 600ms ease-out both;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-side > div:nth-child(2) {
+  animation-delay: 120ms;
+}
+.glass-shell .dashboard-cockpit .dashboard-hero-side > div:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-side strong {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: clamp(18px, 1.8vw, 24px);
+}
+
+.glass-shell .dashboard-cockpit .dashboard-hero-side .dashboard-metric-icon {
+  position: absolute;
+  top: 14px;
+  left: 13px;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 9px;
+  background: #6966e81c;
+  color: #6966e8;
+  font-size: 17px;
+}
+
+.glass-shell
+  .dashboard-cockpit
+  .dashboard-hero-side
+  > div:nth-child(2)
+  .dashboard-metric-icon {
+  background: #2ccbbb1c;
+  color: #1aab9d;
+}
+
+.glass-shell
+  .dashboard-cockpit
+  .dashboard-hero-side
+  > div:nth-child(3)
+  .dashboard-metric-icon {
+  background: #ffad6f2b;
+  color: #c27a38;
+}
+
+.glass-shell .dashboard .dashboard-motion {
+  opacity: 0;
+  translate: 0 20px;
+  transition:
+    opacity 650ms ease,
+    translate 650ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 220ms ease;
+}
+
+.glass-shell .dashboard .dashboard-motion.is-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.dashboard-chart-card .chart,
+.dashboard-maturity .chart,
+.dashboard-trend .chart {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition:
+    opacity 750ms ease 150ms,
+    transform 750ms ease 150ms;
+}
+
+.dashboard-chart-card.is-visible .chart,
+.dashboard-maturity.is-visible .chart,
+.dashboard-trend.is-visible .chart {
+  opacity: 1;
+  transform: none;
+}
+
+.glass-shell .dashboard-chart-card,
+.glass-shell .dashboard-maturity,
+.glass-shell .dashboard-trend,
+.glass-shell .dashboard-members {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-shell .dashboard-chart-card::before,
+.glass-shell .dashboard-maturity::before,
+.glass-shell .dashboard-trend::before,
+.glass-shell .dashboard-members::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #7775e7a8,
+    #2ccbbb8a,
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: cockpit-data-flow 10s linear infinite;
+  pointer-events: none;
+}
+
+.glass-shell .dashboard-chart-card:nth-child(2)::before {
+  animation-delay: -2s;
+}
+.glass-shell .dashboard-chart-card:nth-child(3)::before {
+  animation-delay: -4s;
+}
+.glass-shell .dashboard-maturity::before {
+  animation-delay: -6s;
+}
+.glass-shell .dashboard-trend::before {
+  animation-delay: -8s;
+}
+
+.dashboard-member-track {
+  display: block;
+  width: min(150px, 100%);
+  height: 4px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e6eaf6;
+}
+
+.dashboard-member-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6966e8, #2ccbbb);
+  transform-origin: left;
+}
+
+.dashboard-members.is-visible .dashboard-member-track > span {
+  animation: cockpit-member-grow 850ms ease-out both;
+}
+
+.dashboard-maturity-meter {
+  display: block;
+  width: min(86px, 100%);
+  height: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e5eaf7;
+}
+
+.dashboard-maturity-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6966e8, #7ab6ff);
+  transform-origin: left;
+}
+
+.dashboard-maturity.is-visible .dashboard-maturity-meter > span {
+  animation: cockpit-member-grow 850ms ease-out both;
+}
+
+@keyframes cockpit-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes cockpit-glow {
+  to {
+    transform: translate3d(22px, 12px, 0);
+    opacity: 0.6;
+  }
+}
+@keyframes cockpit-breathe {
+  50% {
+    box-shadow: 0 0 0 7px #2ccbbb12;
+  }
+}
+@keyframes cockpit-ring-enter {
+  from {
+    opacity: 0;
+    scale: 0.72;
+  }
+}
+@keyframes cockpit-node-enter {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+@keyframes cockpit-data-flow {
+  45%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes cockpit-member-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes cockpit-chart-energize {
+  35% {
+    box-shadow:
+      0 0 0 2px #f3c66288,
+      0 0 32px #f3c66266;
+  }
+}
+
+@media (max-width: 1100px) {
+  .glass-shell .dashboard-cockpit {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 0.6fr);
+  }
+  .dashboard-orbit {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .glass-shell .dashboard-cockpit .dashboard-hero-side {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  .glass-shell .dashboard-cockpit {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-orbit {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .glass-shell .dashboard-cockpit .dashboard-hero-side {
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .glass-shell .dashboard-cockpit .dashboard-hero-side > div,
+  .glass-shell .dashboard-cockpit .dashboard-hero-side > div:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-orbit-field {
+    width: 245px;
+    height: 245px;
+  }
+  .glass-shell .dashboard-cockpit .dashboard-hero-side {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-shell .dashboard-cockpit::after,
+  .dashboard-cockpit-dot,
+  .dashboard-orbit-track,
+  .dashboard-orbit-flow,
+  .dashboard-orbit-spark,
+  .dashboard-orbit-progress,
+  .dashboard-orbit-node,
+  .glass-shell .dashboard-cockpit .dashboard-hero-side > div,
+  .glass-shell .dashboard-chart-card::before,
+  .glass-shell .dashboard-maturity::before,
+  .glass-shell .dashboard-trend::before,
+  .glass-shell .dashboard-members::before,
+  .dashboard-members.is-visible .dashboard-member-track > span {
+    animation: none;
+  }
+
+  .dashboard-chart-card.is-energized {
+    animation: none;
+  }
+
+  .dashboard-maturity.is-visible .dashboard-maturity-meter > span {
+    animation: none;
+  }
+
+  .glass-shell .dashboard .dashboard-motion {
+    opacity: 1;
+    translate: none;
+  }
+
+  .dashboard-chart-card .chart,
+  .dashboard-maturity .chart,
+  .dashboard-trend .chart {
+    opacity: 1;
+    transform: none;
+  }
+}

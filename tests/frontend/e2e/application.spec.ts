@@ -57,6 +57,15 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
   await expect(page.getByText("¥1,280,000.00", { exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: "银行资金分布" })).toBeVisible();
   await expect(page.getByRole("img", { name: "成员资产结构" })).toBeVisible();
+  await page.locator(".dashboard-charts").scrollIntoViewIfNeeded();
+  await expect(page.locator(".dashboard-chart-card").first()).toHaveCSS(
+    "opacity",
+    "1",
+  );
+  await expect(page.locator(".dashboard-chart-card .chart").first()).toHaveCSS(
+    "opacity",
+    "1",
+  );
   await expect(
     page.getByRole("img", { name: "未来半年到期金额" }),
   ).toBeVisible();
@@ -71,6 +80,8 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(".dashboard-maturity").scrollIntoViewIfNeeded();
+  await expect(page.locator(".dashboard-maturity")).toHaveClass(/is-visible/);
   await expect
     .poll(() =>
       page.evaluate(

@@ -133,6 +133,7 @@ _demo_category_amounts = (
     (250000, 100000, 70000, 30000),
     (130000, 70000, 30000, 20000),
 )
+_demo_category_counts = ((2, 2, 1, 1), (2, 1, 1, 1), (1, 1, 1, 1))
 DEMO_DATA['owner_category_summary'] = [
     {
         'owner': owner['owner'],
@@ -140,7 +141,64 @@ DEMO_DATA['owner_category_summary'] = [
         'category': category['category'],
         'category_display': category['category_display'],
         'total_amount': amount,
+        'record_count': count,
     }
-    for owner, amounts in zip(DEMO_DATA['owner_summary'], _demo_category_amounts)
-    for category, amount in zip(DEMO_DATA['category_summary'], amounts)
+    for owner, amounts, counts in zip(
+        DEMO_DATA['owner_summary'], _demo_category_amounts,
+        _demo_category_counts,
+    )
+    for category, amount, count in zip(
+        DEMO_DATA['category_summary'], amounts, counts,
+    )
 ]
+
+
+def filter_demo_category(data, category):
+    """按演示数据的类别交叉汇总，保持各视图金额一致。"""
+    selected = next(
+        (
+            row for row in data['category_summary']
+            if row['category'] == category
+        ),
+        None,
+    )
+    data['category_summary'] = [selected] if selected else []
+    data['owner_category_summary'] = [
+        row for row in data['owner_category_summary']
+        if row['category'] == category
+    ]
+    data['owner_summary'] = [
+        {
+            **owner,
+            'total_amount': row['total_amount'],
+            'record_count': row['record_count'],
+        }
+        for owner in data['owner_summary']
+        for row in data['owner_category_summary']
+        if owner['owner'] == row['owner']
+    ]
+    bank_amounts = {
+        'SAVINGS': (220000, 190000, 160000, 110000, 0),
+        'CURRENT': (110000, 110000, 100000, 0, 0),
+        'WEALTH_MANAGEMENT': (60000, 50000, 0, 70000, 0),
+        'FUND': (30000, 0, 20000, 50000, 0),
+    }
+    amounts = bank_amounts.get(category, ())
+    data['bank_summary'] = [
+        {**bank, 'total_amount': Decimal(amount), 'record_count': 1}
+        for bank, amount in zip(data['bank_summary'], amounts)
+        if amount or (
+            bank['bank'] == 'CMB' and category in ('SAVINGS', 'CURRENT')
+        )
+    ]
+    data['total_amount'] = (
+        selected['total_amount'] if selected else Decimal('0')
+    )
+    data['total_records'] = selected['record_count'] if selected else 0
+    data['owner_count'] = len(data['owner_summary'])
+    data['status_summary'] = [
+        {**row, 'total_amount': data['total_amount'],
+         'record_count': data['total_records']}
+        for row in data['status_summary']
+    ] if selected else []
+    data['maturity_summary'] = []

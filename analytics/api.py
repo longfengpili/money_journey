@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import can_write_assets
-from analytics.demo import DEMO_DATA, demo_maturity_summary
+from analytics.demo import DEMO_DATA, demo_maturity_summary, filter_demo_category
 from analytics.queries import (
     get_maturity_summary,
     get_snapshot_trend,
@@ -78,6 +78,8 @@ class SummaryApi(APIView):
                     row["total_amount"] = Decimal(str(row["total_amount"]))
             data["total_amount"] = Decimal(str(data["total_amount"]))
             data["maturity_summary"] = demo_maturity_summary()
+            if request.GET.get("category"):
+                filter_demo_category(data, request.GET["category"])
         else:
             data = summarize_assets(
                 request.GET, owner_id=selected_owner(request.GET)
@@ -92,7 +94,10 @@ class SummaryApi(APIView):
                 "bank_choices": FundRecord.BANK_CHOICES,
                 "category_choices": FundRecord.CATEGORY_CHOICES,
                 "status_choices": FundRecord.SAVINGS_STATUS_CHOICES,
-                "filters": normalize_filters({} if demo else request.GET),
+                "filters": normalize_filters(
+                    {"category": request.GET.get("category", "")}
+                    if demo else request.GET
+                ),
             }
         )
         return Response(encode_values(data))

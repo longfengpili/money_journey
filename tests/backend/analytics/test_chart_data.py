@@ -137,3 +137,19 @@ class AnalyticsPageTests(TestCase):
         self.assertEqual(self.trend(owner="before"), [])
         self.assertEqual(payload["filters"]["owner"], "")
         self.assertEqual(self.client.get("/api/v1/funds/").status_code, 403)
+
+    def test_guest_demo_category_filter_keeps_totals_consistent(self):
+        self.client.logout()
+        payload = self.summary(category="FUND")
+        self.assertEqual(payload["filters"]["category"], "FUND")
+        self.assertEqual(payload["total_amount"], "100000.00")
+        self.assertEqual(payload["total_records"], 3)
+        self.assertEqual(
+            [row["category"] for row in payload["category_summary"]],
+            ["FUND"],
+        )
+        for dimension in ("owner_summary", "bank_summary", "status_summary"):
+            self.assertEqual(
+                sum(float(row["total_amount"]) for row in payload[dimension]),
+                100000,
+            )
