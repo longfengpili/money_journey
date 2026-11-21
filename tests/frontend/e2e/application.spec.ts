@@ -31,6 +31,10 @@ async function signIn(page: import("@playwright/test").Page, actor: Actor) {
 test("游客总览、图表与手机导航可用", async ({ page }) => {
   await page.goto("/app/");
   await expect(page).toHaveURL(/\/app\/$/);
+  await expect(page.locator(".app-layout.glass-shell")).toBeVisible();
+  await expect(page.locator(".dashboard-hero-side")).toContainText(
+    "未来半年到期",
+  );
   const navigation = page.getByRole("navigation", { name: "主要导航" });
   expect(await navigation.getByRole("link").allTextContents()).toEqual([
     "资金计算器",
@@ -74,6 +78,22 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
       ),
     )
     .toBeTruthy();
+  await expect
+    .poll(() =>
+      page
+        .locator(".dashboard canvas")
+        .evaluateAll((canvases) =>
+          Math.max(
+            ...canvases.map((canvas) =>
+              Math.abs(
+                (canvas as HTMLCanvasElement).width / devicePixelRatio -
+                  canvas.getBoundingClientRect().width,
+              ),
+            ),
+          ),
+        ),
+    )
+    .toBeLessThan(2);
   await page.screenshot({
     path: test.info().outputPath("dashboard-mobile.png"),
     fullPage: true,
@@ -91,6 +111,21 @@ test("游客总览、图表与手机导航可用", async ({ page }) => {
     path: test.info().outputPath("calculator-mobile.png"),
     fullPage: true,
   });
+});
+
+test("游客各页面使用统一极光玻璃主题", async ({ page }) => {
+  for (const path of [
+    "/app/",
+    "/app/calculator",
+    "/app/login",
+    "/app/register",
+  ]) {
+    await page.goto(path);
+    await expect(page.locator(".app-layout.glass-shell")).toBeVisible();
+    const card = page.locator(".card").filter({ visible: true }).first();
+    await expect(card).toBeVisible();
+    await expect(card).toHaveCSS("color", "rgb(23, 37, 65)");
+  }
 });
 
 test("游客计算、结果恢复、半年筛选与 CSV 导出", async ({ page }) => {

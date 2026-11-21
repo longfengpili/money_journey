@@ -14,9 +14,11 @@ const colors = [
 export default function StackedChart({
   labels,
   series,
+  aurora = false,
 }: {
   labels: string[];
   series: { label: string; values: (string | number)[] }[];
+  aurora?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -28,7 +30,9 @@ export default function StackedChart({
         datasets: series.map((group, index) => ({
           label: group.label,
           data: group.values.map(Number),
-          backgroundColor: colors[index % colors.length],
+          backgroundColor: aurora
+            ? ["#6966e8", "#2ccbbb", "#ffad6f", "#7ab6ff", "#e78cb7"][index % 5]
+            : colors[index % colors.length],
           borderRadius: 4,
           borderSkipped: false,
           maxBarThickness: 32,
@@ -42,11 +46,23 @@ export default function StackedChart({
           ? false
           : { duration: 250 },
         scales: {
-          x: { stacked: true, beginAtZero: true, grid: { color: "#edf0f6" } },
-          y: { stacked: true, grid: { display: false } },
+          x: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { color: aurora ? "#dbe4f2" : "#edf0f6" },
+            ticks: { color: aurora ? "#64718f" : "#667085" },
+          },
+          y: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { color: aurora ? "#64718f" : "#667085" },
+          },
         },
         plugins: {
-          legend: { position: "bottom", labels: { boxWidth: 10 } },
+          legend: {
+            position: "bottom",
+            labels: { boxWidth: 10, color: aurora ? "#566686" : "#667085" },
+          },
           tooltip: {
             callbacks: {
               label: (item) =>
@@ -56,8 +72,18 @@ export default function StackedChart({
         },
       },
     });
-    return () => chart.destroy();
-  }, [JSON.stringify(labels), JSON.stringify(series)]);
+    let resizeFrame = 0;
+    const resize = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => chart.resize());
+    };
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(resizeFrame);
+      chart.destroy();
+    };
+  }, [aurora, JSON.stringify(labels), JSON.stringify(series)]);
   return (
     <div className={labels.length ? "chart" : "chart chart-empty"}>
       {labels.length ? (

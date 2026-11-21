@@ -7,11 +7,13 @@ export default function Chart({
   labels,
   values,
   type = "bar",
+  aurora = false,
 }: {
   title: string;
   labels: string[];
   values: (string | number)[];
   type?: "bar" | "horizontalBar" | "doughnut" | "line";
+  aurora?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -26,16 +28,25 @@ export default function Chart({
             data: values.map(Number),
             backgroundColor:
               type === "line"
-                ? "#3559e018"
-                : [
-                    "#3559e0",
-                    "#12a89d",
-                    "#74a1f8",
-                    "#a68be8",
-                    "#f4b759",
-                    "#ed8da5",
-                  ],
-            borderColor: type === "line" ? "#3559e0" : "transparent",
+                ? aurora
+                  ? "#6966e829"
+                  : "#3559e018"
+                : aurora
+                  ? ["#6966e8", "#2ccbbb", "#ffad6f", "#7ab6ff", "#e78cb7"]
+                  : [
+                      "#3559e0",
+                      "#12a89d",
+                      "#74a1f8",
+                      "#a68be8",
+                      "#f4b759",
+                      "#ed8da5",
+                    ],
+            borderColor:
+              type === "line"
+                ? aurora
+                  ? "#6966e8"
+                  : "#3559e0"
+                : "transparent",
             borderWidth: 2,
             borderRadius: type === "doughnut" ? 0 : 7,
             borderSkipped: false,
@@ -54,7 +65,11 @@ export default function Chart({
           ? false
           : { duration: 250 },
         plugins: {
-          legend: { display: type === "doughnut", position: "bottom" },
+          legend: {
+            display: type === "doughnut",
+            position: "bottom",
+            labels: { color: aurora ? "#566686" : "#667085" },
+          },
           tooltip: {
             callbacks: {
               label: (item) =>
@@ -68,15 +83,30 @@ export default function Chart({
               scales: {
                 [type === "horizontalBar" ? "x" : "y"]: {
                   beginAtZero: true,
-                  grid: { color: "#edf0f6" },
+                  grid: { color: aurora ? "#dbe4f2" : "#edf0f6" },
+                  ticks: { color: aurora ? "#64718f" : "#667085" },
+                },
+                [type === "horizontalBar" ? "y" : "x"]: {
+                  grid: { display: false },
+                  ticks: { color: aurora ? "#64718f" : "#667085" },
                 },
               },
             }
           : {}),
       },
     });
-    return () => chart.destroy();
-  }, [type, title, JSON.stringify(labels), JSON.stringify(values)]);
+    let resizeFrame = 0;
+    const resize = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => chart.resize());
+    };
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(resizeFrame);
+      chart.destroy();
+    };
+  }, [type, title, aurora, JSON.stringify(labels), JSON.stringify(values)]);
   return (
     <div className={values.length ? "chart" : "chart chart-empty"}>
       {values.length ? (

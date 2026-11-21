@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useResource } from "../../lib/resource";
 import type { Summary } from "../../lib/types";
-import { money } from "../../lib/money";
+import { money, sumMoney } from "../../lib/money";
 import { Button, ErrorNotice, Loading, PageTitle } from "../../components/ui";
 import Filters from "../../components/Filters";
 import Chart from "../../components/Chart";
@@ -27,6 +27,7 @@ export default function Dashboard() {
   const data = state.data;
   const trendRows = trend.data?.results ?? [];
   const maturityRows = data.maturity_summary ?? [];
+  const maturityTotal = sumMoney(maturityRows.map((row) => row.total_amount));
   const memberCategories = data.category_summary.map((category) => ({
     label: category.category_display || category.category || "其他",
     values: data.owner_summary.map(
@@ -88,6 +89,10 @@ export default function Dashboard() {
             <strong>{data.owner_count}</strong>
             <small>位</small>
           </div>
+          <div>
+            <span>未来半年到期</span>
+            <strong>¥{money(maturityTotal)}</strong>
+          </div>
         </div>
       </div>
       <details className="dashboard-filter-panel">
@@ -115,6 +120,7 @@ export default function Dashboard() {
             <span>按金额排序</span>
           </div>
           <Chart
+            aurora
             title="银行资金分布"
             type="horizontalBar"
             labels={data.bank_summary.map((row) => row.bank_display || "")}
@@ -127,6 +133,7 @@ export default function Dashboard() {
             <span>资金结构</span>
           </div>
           <Chart
+            aurora
             type="doughnut"
             title="资产类别分布"
             labels={data.category_summary.map(
@@ -141,6 +148,7 @@ export default function Dashboard() {
             <span>按类别分层</span>
           </div>
           <StackedChart
+            aurora
             labels={data.owner_summary.map(
               (row) => row.first_name || "待核对所有者",
             )}
@@ -160,6 +168,7 @@ export default function Dashboard() {
         <div className="dashboard-maturity-content">
           <div className="dashboard-maturity-chart">
             <Chart
+              aurora
               title="未来半年到期金额"
               labels={maturityRows.map((row) => row.month.slice(5) + "月")}
               values={maturityRows.map((row) => row.total_amount)}
@@ -201,6 +210,7 @@ export default function Dashboard() {
             仅跟随所有者筛选；其他筛选用于实时统计。
           </p>
           <Chart
+            aurora
             title="资金快照趋势"
             type="line"
             labels={trendRows.map((row) => row.snapshot_date)}

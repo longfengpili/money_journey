@@ -316,6 +316,9 @@ main {
   height: 300px;
   position: relative;
 }
+.chart canvas {
+  max-width: 100%;
+}
 .table-wrap {
   overflow-x: auto;
 }

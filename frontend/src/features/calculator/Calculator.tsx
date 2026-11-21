@@ -268,6 +268,7 @@ export default function Calculator() {
           <div className="card">
             <h2>资金变化趋势</h2>
             <Chart
+              aurora
               title="规划资金总额"
               type="line"
               labels={result.results.map((row) => row.month)}

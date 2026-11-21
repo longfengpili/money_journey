@@ -45,7 +45,7 @@ function Workspace() {
     return () => window.removeEventListener("session-expired", expired);
   }, [refresh, navigate]);
   return (
-    <div className="app-layout">
+    <div className="app-layout glass-shell">
       <aside className={menu ? "sidebar open" : "sidebar"}>
         <Link className="brand" to="/">
           <span className="brand-mark">MJ</span>

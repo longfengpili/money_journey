@@ -1,0 +1,429 @@
+/* 极光玻璃主题统一应用于总览、业务页面及弹窗。 */
+.glass-shell {
+  min-height: 100vh;
+  color: #172541;
+  background:
+    radial-gradient(circle at 17% 2%, #a7dafa 0, transparent 28%),
+    radial-gradient(circle at 95% 17%, #d9bbff 0, transparent 35%),
+    linear-gradient(135deg, #e6efff, #f1edff 62%, #e4f5f1);
+}
+
+.glass-shell .sidebar {
+  border-color: #ffffffc9;
+  background: #ffffff8f;
+  backdrop-filter: blur(24px);
+}
+
+.glass-shell .brand,
+.glass-shell a.brand,
+.glass-shell a.brand:hover,
+.glass-shell .topbar,
+.glass-shell .page-title h1 {
+  color: #172541;
+}
+
+.glass-shell .brand-mark {
+  background: #6966e8;
+  color: white;
+  box-shadow: 0 7px 20px #6966e84d;
+}
+
+.glass-shell .brand small,
+.glass-shell .sidebar-bottom .label,
+.glass-shell .topbar > .label,
+.glass-shell .page-title p {
+  color: #64718f;
+}
+
+.glass-shell .sidebar nav a {
+  color: #596883;
+}
+
+.glass-shell .sidebar nav a:hover,
+.glass-shell .sidebar nav a.active {
+  color: #3c3b9e;
+  background: #6966e825;
+}
+
+.glass-shell .sidebar-bottom {
+  padding: 15px;
+  border: 1px solid #ffffffd9;
+  border-radius: 14px;
+  background: #ffffff78;
+}
+
+.glass-shell .topbar {
+  border-color: #ffffffc9;
+  background: #ffffffa8;
+  backdrop-filter: blur(20px);
+}
+
+.glass-shell .topbar .badge {
+  background: #6966e81c;
+  color: #4f4caf;
+}
+
+.glass-shell .button,
+.glass-shell button:not(.primary) {
+  border-color: #c8d3e9;
+  background: #ffffffbd;
+  color: #293a5c;
+  box-shadow: 0 3px 10px #6577aa16;
+}
+
+.glass-shell .button:hover,
+.glass-shell button:not(.primary):hover {
+  background: #ffffff;
+  border-color: #9cace0;
+}
+
+.glass-shell .button.primary,
+.glass-shell button.primary {
+  border-color: #6966e8;
+  background: #6966e8;
+  color: #fff;
+}
+
+.glass-shell .button.primary:hover,
+.glass-shell button.primary:hover {
+  background: #5754d4;
+}
+
+.glass-shell .workspace main {
+  padding-top: 30px;
+}
+
+.glass-shell .card,
+.glass-shell dialog,
+.glass-shell .asset-mobile {
+  border-color: #ffffffed;
+  background: #ffffffd9;
+  color: #172541;
+  box-shadow: 0 14px 35px #6c82ab1c;
+  backdrop-filter: blur(18px);
+}
+
+.glass-shell dialog {
+  background: #f9fbff;
+}
+
+.glass-shell dialog::backdrop {
+  background: #1b284b70;
+  backdrop-filter: blur(6px);
+}
+
+.glass-shell p,
+.glass-shell .label,
+.glass-shell .muted,
+.glass-shell .section-note,
+.glass-shell .empty,
+.glass-shell .stat-label,
+.glass-shell .stat-foot,
+.glass-shell .loading {
+  color: #64718f;
+}
+
+.glass-shell a:not(.button) {
+  color: #514ed0;
+}
+
+.glass-shell a.brand,
+.glass-shell a.brand:hover {
+  color: #172541;
+}
+
+.glass-shell .eyebrow {
+  color: #6966e8;
+}
+
+.glass-shell .badge {
+  background: #6966e81c;
+  color: #514ed0;
+}
+
+.glass-shell .badge.muted {
+  background: #e9eef8;
+  color: #64718f;
+}
+
+.glass-shell input,
+.glass-shell select,
+.glass-shell textarea {
+  border-color: #c8d3e9;
+  background: #ffffffd9;
+  color: #172541;
+  color-scheme: light;
+}
+
+.glass-shell input::placeholder,
+.glass-shell textarea::placeholder {
+  color: #8290a9;
+}
+
+.glass-shell input[type="checkbox"],
+.glass-shell input[type="radio"] {
+  accent-color: #6966e8;
+}
+
+.glass-shell input::file-selector-button {
+  padding: 6px 10px;
+  border: 1px solid #c8d3e9;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #293a5c;
+}
+
+.glass-shell button:focus-visible,
+.glass-shell a:focus-visible,
+.glass-shell input:focus-visible,
+.glass-shell select:focus-visible {
+  outline-color: #6966e8;
+}
+
+.glass-shell th {
+  background: #edf3ff;
+  color: #566686;
+}
+
+.glass-shell td,
+.glass-shell .asset-group + .asset-group,
+.glass-shell .age-row,
+.glass-shell .member-delete {
+  border-color: #dbe4f2;
+}
+
+.glass-shell .notice {
+  background: #eae9ff;
+  color: #3f3d93;
+}
+
+.glass-shell .notice.error {
+  background: #fff0f2;
+  color: #a42c49;
+}
+
+.glass-shell .notice.success {
+  background: #e1f6ef;
+  color: #176b5b;
+}
+
+.glass-shell .field-error {
+  color: #b93250;
+}
+
+.glass-shell .member-delete p {
+  color: #64718f;
+}
+
+.glass-shell .member-delete button:last-child {
+  border-color: #e7abb8;
+  color: #aa3152;
+}
+
+.glass-shell .member-delete button:last-child:hover {
+  background: #fff0f2;
+}
+
+.glass-shell .dashboard .page-title {
+  margin-bottom: 22px;
+}
+
+.glass-shell .dashboard .page-title h1 {
+  font-size: clamp(30px, 3vw, 38px);
+  letter-spacing: -0.05em;
+}
+
+.glass-shell .dashboard-login-prompt {
+  border-color: #ffffffed;
+  background: linear-gradient(110deg, #ffffffd9, #eef0ffd9);
+  box-shadow: 0 12px 28px #6c82ab1c;
+}
+
+.glass-shell .dashboard-login-prompt p {
+  color: #64718f;
+}
+
+.glass-shell .dashboard-hero {
+  display: block;
+  min-height: 0;
+  padding: 32px;
+  margin-bottom: 16px;
+  border: 1px solid #ffffffed;
+  border-radius: 22px;
+  color: #172541;
+  background:
+    radial-gradient(circle at 78% 55%, #a5caff 0, transparent 33%),
+    linear-gradient(110deg, #ffffffed, #f2ebffdb);
+  box-shadow: 0 18px 40px #6c82ab26;
+}
+
+.glass-shell .dashboard-hero::after {
+  z-index: -1;
+  top: -80px;
+  right: -35px;
+  width: 310px;
+  height: 310px;
+  border: 1px solid #ffffff9c;
+  background: transparent;
+  box-shadow:
+    inset 0 0 75px #a893f130,
+    0 0 0 45px #ffffff21,
+    0 0 0 91px #ffffff17;
+}
+
+.glass-shell .dashboard-hero-main {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-shell .dashboard-eyebrow,
+.glass-shell .dashboard-kicker {
+  color: #6966e8;
+}
+
+.glass-shell .dashboard-hero-label,
+.glass-shell .dashboard-hero-foot {
+  color: #64718f;
+}
+
+.glass-shell .dashboard-hero-label {
+  margin-top: 20px;
+}
+
+.glass-shell .dashboard-hero-value {
+  font-size: clamp(40px, 5vw, 66px);
+  letter-spacing: -0.065em;
+  color: #2d3c73;
+  text-shadow: 0 8px 28px #9bb1ee3d;
+}
+
+.glass-shell .dashboard-hero-side {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.glass-shell .dashboard-hero-side > div {
+  padding: 14px 16px;
+  border-color: #ffffffed;
+  background: #ffffffb8;
+}
+
+.glass-shell .dashboard-hero-side span,
+.glass-shell .dashboard-hero-side small {
+  color: #64718f;
+}
+
+.glass-shell .dashboard-hero-side strong {
+  font-size: clamp(17px, 2vw, 24px);
+}
+
+.glass-shell .dashboard-filter-panel,
+.glass-shell .dashboard .card {
+  border-color: #ffffffed;
+  background: #ffffffd9;
+  color: #172541;
+  box-shadow: 0 12px 30px #6c82ab1c;
+  backdrop-filter: blur(18px);
+}
+
+.glass-shell .dashboard-filter-panel summary {
+  color: #514ed0;
+}
+
+.glass-shell .dashboard .filters .field > span,
+.glass-shell .dashboard-section-heading > span,
+.glass-shell .dashboard-chart-heading > span,
+.glass-shell .dashboard-maturity-title p,
+.glass-shell .dashboard .section-note {
+  color: #64718f;
+}
+
+.glass-shell .dashboard .filters select {
+  border-color: #c8d3e9;
+  background: #ffffffd9;
+  color: #172541;
+}
+
+.glass-shell .dashboard-section-heading h2 {
+  color: #172541;
+}
+
+.glass-shell .dashboard-charts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.glass-shell .dashboard-chart-card {
+  padding: 24px;
+}
+
+.glass-shell .dashboard-chart-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.glass-shell .dashboard-maturity-chart {
+  background: #eef2ffad;
+}
+
+.glass-shell .dashboard-maturity-badge {
+  background: #6966e81c;
+  color: #514ed0;
+}
+
+.glass-shell .dashboard th {
+  background: #edf3ff;
+  color: #566686;
+}
+
+.glass-shell .dashboard td {
+  border-color: #dbe4f2;
+}
+
+.glass-shell .dashboard .empty {
+  color: #64718f;
+}
+
+.glass-shell .dashboard .card,
+.glass-shell .dashboard-hero {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.glass-shell .dashboard .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 35px #6c82ab30;
+}
+
+@media (max-width: 760px) {
+  .glass-shell .dashboard-hero {
+    padding: 24px;
+  }
+
+  .glass-shell .dashboard-hero-side {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .glass-shell .dashboard-hero-side > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .glass-shell .dashboard-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .glass-shell .dashboard-chart-card:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-shell .dashboard .card,
+  .glass-shell .dashboard-hero {
+    transition: none;
+  }
+}
