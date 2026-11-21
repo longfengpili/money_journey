@@ -14,4 +14,4 @@ export type Asset = {
   interest_rate: string | null; deposit_period: number | null;
   due_date: string | null; start_date: string | null; can_edit: boolean;
 };
-export type FundOptions = { owners: Member[]; bank_choices: Choices; category_choices: Choices; status_choices: Choices };
+export type FundOptions = { owners: Member[]; members: Member[]; bank_choices: Choices; category_choices: Choices; status_choices: Choices };
