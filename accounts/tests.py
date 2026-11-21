@@ -95,7 +95,7 @@ class FamilyPermissionTests(TestCase):
             ).status_code,
             200,
         )
-        self.assertContains(self.client.get('/'), '创建家庭成员')
+        self.assertContains(self.client.get('/legacy/'), '创建家庭成员')
 
     def test_approval_admin_links_resolve_to_accessible_pages(self):
         admin = User.objects.create_superuser(

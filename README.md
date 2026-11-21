@@ -1,11 +1,21 @@
 # Money Journey - 资金旅程管理应用
 
-![Django](https://img.shields.io/badge/Django-6.0.3-green)
+![Django](https://img.shields.io/badge/Django-5.2-green)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
 ![Docker](https://img.shields.io/badge/Docker-支持-2496ED)
 
-一个基于Django的个人资金管理与追踪系统，帮助您记录、分析和管理资金旅程，轻松掌握财务状况。
+基于 Django 与 React 的家庭资金管理系统，每个账号代表一个人，家庭成员共享查看资产，按角色管理归属与操作。
+
+## 组件化前端
+
+默认首页进入 `/app/`，包含资金总览、资产列表与编辑、CSV 与快照、储蓄规划、注册及家庭成员审批。前端使用 React、TypeScript、Vite、Tailwind CSS 和 BoardUI 免费组件；后端通过 `/api/v1/` 提供 JSON，金额使用十进制字符串。
+
+本地前端在 `frontend/` 执行 `npm ci`、`npm run dev`，访问 `http://127.0.0.1:5173/app/`。默认代理 Django 开发端口 8000，可用 `MJ_BACKEND_URL` 指定其他后端。类型与构建检查为 `npm run build`，逻辑测试为 `npm test`，真实浏览器流程为 `npm run test:e2e`；浏览器测试账号通过 `MJ_E2E_CREDENTIALS` 指定的本地 JSON 文件提供，不提交凭据。
+
+生产镜像自动构建前端，静态资源由 Django/WhiteNoise 同域提供，继续使用 Session + CSRF。旧页面仍在原路由，旧首页为 `/legacy/`；设置 `FRONTEND_ENABLED=False` 可回退默认首页。部署与 HTTPS 要求见 [部署指南](DEPLOYMENT.md)。
+
+各阶段进度见 [执行记录](docs/superpowers/plans/2026-11-21-component-frontend-progress.md)，待确认的旧文件见 [删除候选清单](docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md)。当前未删除旧文件。
 
 ## 🎯 功能特性
 
@@ -67,9 +77,9 @@
 
 ## 🏗️ 技术栈
 
-- **后端框架**：Django 6.0.3
+- **后端框架**：Django 5.2 + Django REST framework
 - **数据库**：MySQL 8.0
-- **前端**：Bootstrap 5 + Chart.js
+- **前端**：React 19 + TypeScript + Vite + Tailwind CSS v4 + BoardUI 免费基础 + Chart.js；旧模板保留 Bootstrap
 - **认证系统**：Django内置认证
 - **容器化**：Docker + Docker Compose
 - **配置管理**：环境变量 + 配置分离（开发/生产）

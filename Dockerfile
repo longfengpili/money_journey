@@ -1,3 +1,11 @@
+ARG NODE_BUILD_IMAGE=node:22-alpine
+FROM ${NODE_BUILD_IMAGE} AS frontend_build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --include=dev --no-audit --no-fund
+COPY frontend/ ./
+RUN npm run build
+
 FROM python:3.11-slim
 
 # Set environment variables
@@ -28,8 +36,11 @@ COPY requirements/production.txt .
 RUN pip install --upgrade pip && \
     pip install -r production.txt
 
+ENV FRONTEND_DIST=/opt/money_journey_frontend
+
 # Copy project files
 COPY . .
+COPY --from=frontend_build /frontend/dist /opt/money_journey_frontend
 
 # Copy supervisor configuration
 COPY docker/django/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

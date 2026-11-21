@@ -17,13 +17,13 @@ class ImportApi(FamilyAPIView):
     parser_classes = [MultiPartParser]
 
     def post(self, request):
-        upload = request.FILES.get('csv_file')
+        upload = request.FILES.get("csv_file")
         if upload is None:
-            raise ValidationError({'csv_file': ['请选择 CSV 文件']})
+            raise ValidationError({"csv_file": ["请选择 CSV 文件"]})
         try:
             result = import_fund_csv(upload, actor=request.user)
         except DjangoValidationError as exc:
-            raise ValidationError({'csv_file': exc.messages})
+            raise ValidationError({"csv_file": exc.messages})
         return Response(asdict(result))
 
 
@@ -39,5 +39,5 @@ class SnapshotRefreshApi(FamilyAPIView):
         try:
             result = refresh_daily_snapshots(request.user)
         except DjangoValidationError as exc:
-            raise ValidationError({'__all__': exc.messages})
+            raise ValidationError({"__all__": exc.messages})
         return Response(asdict(result))

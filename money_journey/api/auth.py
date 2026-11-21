@@ -18,15 +18,20 @@ def auth_context(request):
     user = request.user
     authenticated = user.is_authenticated
     return {
-        'user': {
-            'id': user.pk, 'username': user.username,
-            'name': user.first_name.strip() or user.username,
-        } if authenticated else None,
-        'capabilities': {
-            'write_assets': can_write_assets(user),
-            'manage_family': is_family_admin(user),
+        "user": (
+            {
+                "id": user.pk,
+                "username": user.username,
+                "name": user.first_name.strip() or user.username,
+            }
+            if authenticated
+            else None
+        ),
+        "capabilities": {
+            "write_assets": can_write_assets(user),
+            "manage_family": is_family_admin(user),
         },
-        'csrf_token': get_token(request),
+        "csrf_token": get_token(request),
     }
 
 
@@ -43,20 +48,23 @@ def sign_in(request):
     try:
         data = json.loads(request.body)
     except (ValueError, UnicodeDecodeError):
-        return error_response('VALIDATION_ERROR', '请求格式错误')
+        return error_response("VALIDATION_ERROR", "请求格式错误")
     if not isinstance(data, dict) or not all(
-        isinstance(data.get(key), str) for key in ('username', 'password')
+        isinstance(data.get(key), str) for key in ("username", "password")
     ):
-        return error_response('VALIDATION_ERROR', '请输入用户名和密码')
+        return error_response("VALIDATION_ERROR", "请输入用户名和密码")
     form = AuthenticationForm(request, data=data)
     if not form.is_valid():
-        return error_response('INVALID_LOGIN', '用户名或密码错误，或账号已停用')
+        return error_response(
+            "INVALID_LOGIN", "用户名或密码错误，或账号已停用"
+        )
     user = form.get_user()
     if not can_write_assets(user):
-        return error_response('APPROVAL_PENDING', '账号尚未批准，请联系家庭管理员',
-                              status=403)
+        return error_response(
+            "APPROVAL_PENDING", "账号尚未批准，请联系家庭管理员", status=403
+        )
     login(request, user)
-    request.session.pop('frontend_calculation', None)
+    request.session.pop("frontend_calculation", None)
     return JsonResponse(auth_context(request))
 
 

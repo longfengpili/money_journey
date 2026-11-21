@@ -2,6 +2,26 @@
 
 本文档提供使用Docker部署Money Journey应用的详细说明。
 
+## 组件化前端部署（2026-11-21）
+
+Dockerfile 首阶段构建 React 前端，运行阶段只保留 Python 与静态产物，不运行 Node 服务。前端位于 `/opt/money_journey_frontend`，避免开发环境的 `.:/app` 源码挂载遮挡。`/app/` 由 Django 提供入口，`/static/app/` 由 WhiteNoise 发布，`/api/v1/` 为接口，`/admin/` 保持系统维护用途。
+
+默认构建使用官方 `node:22-alpine`。本次验收因该基础层下载缓慢，使用相同项目兼容的官方 Node 20.20.2 构建完成；可复现命令为：
+
+```powershell
+docker build --build-arg NODE_BUILD_IMAGE=node:20.20.2-alpine -t money_journey:frontend .
+```
+
+常规部署仍可使用 `docker compose -f docker-compose.prod.yml up -d --build`。开发与生产 Compose 都传递 `FRONTEND_ENABLED`，默认 True；若需回退默认首页，将环境文件设为 False 后重新创建 web 容器。`/legacy/`、原资产与计算页面继续保留，回退不修改业务数据。
+
+生产使用 HTTPS 可信反向代理，转发 Host，并由代理覆盖 `X-Forwarded-Proto: https`；Django 生产配置据此识别安全请求。应用端口应仅对可信代理开放，不能直接信任客户端提供的代理头。`CSRF_TRUSTED_ORIGINS` 填写实际 HTTPS 入口；Secure/HttpOnly Cookie 保持开启，新前端从身份上下文响应读取 CSRF token，不读取 HttpOnly Cookie。
+
+本地独立测试入口保持 `http://127.0.0.1:38000/app/`。实际验证覆盖生产设置与本机自签证书 TLS 代理，但不代替真实域名证书和外部代理环境验收。
+
+本地开发在 `frontend/` 运行 `npm ci` 与 `npm run dev`。默认代理 `http://127.0.0.1:8000`，保留浏览器 Host；若连接 38000 测试容器，可在同一终端设 `$env:MJ_BACKEND_URL='http://127.0.0.1:38000'`。构建使用 `npm run build`，不需要全局安装 Node 包。
+
+后端回归使用独立测试设置或独立 MySQL 测试库，浏览器验收使用隔离账号；测试凭据、TLS 私钥、截图和报告不进入 Git。旧文件删除清单见 `docs/superpowers/plans/2026-11-21-frontend-deletion-candidates.md`，用户确认前保持原样。
+
 ## 项目结构更改
 
 本次Docker化部署添加了以下文件：
