@@ -30,18 +30,15 @@ def check_outdated_records():
     except Exception as e:
         logger.error(f"检查失败: {str(e)}")
 
-def clean_old_records():
-    """清理过期记录任务"""
-    logger.info(f"开始清理过期记录 - {datetime.now()}")
-    
-    try:
-        # 清理3年前的记录
-        cutoff_date = timezone.now() - timedelta(days=365 * 3)
-        deleted_count, _ = FundRecord.objects.filter(
-            created_at__lt=cutoff_date
-        ).delete()
-        
-        logger.info(f"清理完成，删除 {deleted_count} 条过期记录")
-        
-    except Exception as e:
-        logger.error(f"清理失败: {str(e)}")
+def clean_old_records(*, now=None):
+    """只读报告长期未更新的结束状态记录。"""
+    current_time = now if now is not None else timezone.now()
+    cutoff_date = current_time - timedelta(days=365 * 3)
+    count = FundRecord.objects.filter(
+        updated_at__lt=cutoff_date,
+        savings_status__in=('WITHDRAWN', 'ROLLED_OVER'),
+    ).count()
+    logger.info(
+        '历史记录检查完成，截止 %s，候选 %s 条，数据保留', cutoff_date, count
+    )
+    return count

@@ -116,7 +116,7 @@ docker-compose -f docker-compose.prod.yml logs -f
 ### 5. 定时任务配置
 应用使用`django-crontab`管理定时任务，配置在`money_journey/settings/base.py`中：
 - **到期存款检测**：每天19-21点执行，检测未来7天内到期的存款记录，通过PushPlus发送通知
-- **旧记录清理**：可配置的清理任务（目前未启用）
+- **历史记录检查**：`clean_old_records` 仅报告长期未更新的结束状态候选记录，目前未加入定时配置
 
 定时任务在容器启动时自动添加（通过entrypoint.sh）：
 ```bash

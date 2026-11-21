@@ -1,15 +1,12 @@
 import csv
-from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
-from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
@@ -18,7 +15,8 @@ from accounts.permissions import (
 )
 from funds.forms import FundRecordForm
 from funds.importers import import_fund_csv
-from funds.models import FundRecord, FundSnapshot
+from funds.models import FundRecord
+from funds.snapshots import refresh_daily_snapshots
 
 from .demorecord import DEMO_CURRENT_RECORDS, DEMO_OTHER_RECORDS
 
@@ -198,55 +196,18 @@ def download_csv_template(request):
 @login_required
 @require_POST
 def create_snapshot(request):
-    """创建资金快照（仅限登陆用户）"""
-    if not request.user.is_authenticated:
-        messages.error(request, '只有登陆才可以创建快照')
-        return redirect('funds:record_list')
-    
-    today = timezone.now().date()
-    if FundSnapshot.objects.filter(snapshot_date=today).exists():
-        messages.warning(request, '今日已经创建了快照，无需重复创建')
-        return redirect('funds:record_list')
-
-    users = User.objects.all()
+    """家庭管理员原子刷新当天全部成员快照。"""
     try:
-        for user in users:
-            # 获取当前所有ACTIVE状态的记录
-            active_records = FundRecord.objects.filter(savings_status='ACTIVE', user=user)
-
-            # 计算总金额和记录数量
-            total_amount_result = active_records.aggregate(total=Sum('amount'))['total']
-            total_amount = total_amount_result if total_amount_result is not None else Decimal('0')
-            record_count = active_records.count()
-
-            # 按银行汇总（将Decimal转换为float以便JSON序列化）
-            bank_summary = {}
-            for bank, total in active_records.values('bank').annotate(
-                total=Sum('amount')
-            ).values_list('bank', 'total'):
-                bank_summary[bank] = float(total) if total else 0.0
-
-            # 按类别汇总（将Decimal转换为float以便JSON序列化）
-            category_summary = {}
-            for category, total in active_records.values('category').annotate(
-                total=Sum('amount')
-            ).values_list('category', 'total'):
-                category_summary[category] = float(total) if total else 0.0
-
-            # 创建快照
-            snapshot = FundSnapshot.objects.create(
-                created_by=request.user,
-                owner=user.username,
-                user=user,
-                total_amount=total_amount,
-                record_count=record_count,
-                bank_summary=bank_summary,
-                category_summary=category_summary
-            )
-
-            messages.success(request, f'{user.username}的快照创建成功！总金额：¥{total_amount:,.2f}，记录数：{record_count}')
-
-    except Exception as e:
-        messages.error(request, f'创建快照失败：{str(e)}')
-
+        result = refresh_daily_snapshots(request.user)
+    except ValidationError as exc:
+        messages.error(request, '；'.join(exc.messages))
+    except DatabaseError:
+        messages.error(request, '快照刷新失败，本次更改已回滚，请稍后重试')
+    else:
+        count = result.created_count + result.updated_count
+        messages.success(
+            request,
+            f'已刷新 {result.snapshot_date} 的 {count} 位成员快照'
+            f'（新增 {result.created_count} 条，更新 {result.updated_count} 条）',
+        )
     return redirect('funds:record_list')

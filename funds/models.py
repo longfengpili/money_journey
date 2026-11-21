@@ -123,10 +123,10 @@ class FundSnapshot(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='关联用户', 
                             null=True, blank=True, help_text='快照所属用户',
                             related_name='fund_snapshots')
-    owner = models.CharField('所有者', max_length=100, null=True, blank=True, help_text='快照所属用户')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者',
+    owner = models.CharField('所有者', max_length=150, null=True, blank=True, help_text='快照所属用户')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='最近生成者',
                                   related_name='created_fund_snapshots')
-    snapshot_date = models.DateField('快照时间', default=timezone.now)
+    snapshot_date = models.DateField('快照时间', default=timezone.localdate)
     total_amount = models.DecimalField('总金额', max_digits=20, decimal_places=2)
     record_count = models.IntegerField('记录数量')
 
@@ -141,6 +141,11 @@ class FundSnapshot(models.Model):
         verbose_name = '资金快照'
         verbose_name_plural = '资金快照'
         ordering = ['-snapshot_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'snapshot_date'], name='unique_snapshot_user_date',
+            ),
+        ]
 
     def __str__(self):
         return f"快照 {self.snapshot_date.strftime('%Y-%m-%d %H:%M')} - ¥{self.total_amount}"

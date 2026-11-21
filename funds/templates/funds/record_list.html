@@ -33,10 +33,10 @@
         资金记录列表
     </h1>
     <div class="d-flex gap-2">
-        {% if user.is_authenticated %}
+        {% if is_family_admin %}
         <form action="{% url 'funds:create_snapshot' %}" method="post" class="d-inline">
             {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确定要创建当前资金快照吗？')">
+            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确定要刷新当天全家资金快照吗？')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="lucide lucide-camera me-1">
@@ -44,7 +44,7 @@
                         d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
                     <circle cx="12" cy="13" r="3" />
                 </svg>
-                创建快照
+                刷新当天快照
             </button>
         </form>
         {% endif %}

@@ -132,14 +132,21 @@ class FundRecordAdmin(admin.ModelAdmin):
 class FundSnapshotAdmin(admin.ModelAdmin):
     list_display = (
         'snapshot_date',
+        'owner',
         'created_by',
         'total_amount',
         'record_count',
         'created_at',
     )
     list_filter = ('created_by', 'snapshot_date')
-    search_fields = ('created_by__username',)
+    search_fields = ('owner', 'user__username', 'created_by__username')
     readonly_fields = (
+        'user',
+        'owner',
+        'created_by',
+        'snapshot_date',
+        'total_amount',
+        'record_count',
         'created_at',
         'updated_at',
         'bank_summary',
@@ -150,6 +157,8 @@ class FundSnapshotAdmin(admin.ModelAdmin):
             '基本信息',
             {
                 'fields': (
+                    'user',
+                    'owner',
                     'created_by',
                     'snapshot_date',
                     'total_amount',
@@ -161,3 +170,19 @@ class FundSnapshotAdmin(admin.ModelAdmin):
         ('时间信息', {'fields': ('created_at', 'updated_at')}),
     )
     date_hierarchy = 'snapshot_date'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return can_write_assets(request.user) and super().has_view_permission(
+            request, obj
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        return is_family_admin(request.user) and super().has_delete_permission(
+            request, obj
+        )
